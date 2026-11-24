@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Paper } from "@/lib/arxiv/types";
 import type { ExplainerResult } from "@/lib/explainer/generate";
+import { notifySpend } from "@/components/chrome/use-budget";
 import { sampleExplainer } from "@/lib/explainer/samples";
 
 export type ExplainerState = { status: "idle" | "loading" } | ExplainerResult;
@@ -19,6 +20,8 @@ function request(id: string): Promise<ExplainerResult> {
       .then((result) => {
         // Transient problems are retried the next time the paper is wanted.
         if (result.status === "fallback" && (result.reason === "unavailable" || result.reason === "rate-limited")) results.delete(id);
+        // A fresh generation (or a refusal for budget reasons) changes what the pill should say.
+        if ((result.status === "ready" && result.source === "claude") || result.status === "fallback") notifySpend();
         return result;
       });
     results.set(id, pending);
