@@ -45,11 +45,11 @@ test("long author lists collapse and expand", async ({ page }) => {
 
 test("abstract expands and collapses", async ({ page }) => {
   const s = first(page);
-  const toggle = s.getByRole("button", { name: "More" });
+  const toggle = s.getByRole("button", { name: "More", exact: true });
   const abstract = s.locator('p[id^="abstract-"]');
   const collapsed = (await abstract.boundingBox())!.height;
   await toggle.click();
-  await expect(s.getByRole("button", { name: "Less" })).toHaveAttribute("aria-expanded", "true");
+  await expect(s.getByRole("button", { name: "Less", exact: true })).toHaveAttribute("aria-expanded", "true");
   expect((await abstract.boundingBox())!.height).toBeGreaterThan(collapsed);
 });
 
@@ -67,9 +67,43 @@ test("like, save and not interested toggle", async ({ page }) => {
   }
 });
 
-test("buttons inside a paper don't move the feed when pressed with Space", async ({ page }) => {
+test("liking and not interested are mutually exclusive", async ({ page }) => {
+  const s = first(page);
+  await s.getByRole("button", { name: "Like", exact: true }).click();
+  await s.getByRole("button", { name: "Not interested", exact: true }).click();
+  await expect(s.getByRole("button", { name: "Like", exact: true })).toHaveAttribute("aria-pressed", "false");
+  await s.getByRole("button", { name: "Like", exact: true }).click();
+  await expect(s.getByRole("button", { name: "Not interested", exact: true })).toHaveAttribute("aria-pressed", "false");
+});
+
+const feedTop = (page: Page) => page.locator('[role="feed"]').evaluate((el) => el.scrollTop);
+
+test("Space on a paper button toggles it without moving the feed", async ({ page }) => {
   await first(page).getByRole("button", { name: "Like", exact: true }).focus();
   await page.keyboard.press(" ");
-  await expect(first(page).getByRole("button", { name: "Liked", exact: true })).toBeVisible();
-  expect(await page.locator('[role="feed"]').evaluate((el) => el.scrollTop)).toBe(0);
+  await expect(first(page).getByRole("button", { name: "Liked", exact: true })).toBeFocused();
+  // Hold the assertion for longer than a smooth scroll would take to start.
+  await page.waitForTimeout(500);
+  expect(await feedTop(page)).toBe(0);
+  await expect(first(page)).toHaveAttribute("data-active", "");
+});
+
+test("ArrowDown on a paper button still pages the feed", async ({ page }) => {
+  await first(page).getByRole("button", { name: "Save", exact: true }).focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(page.locator('[role="feed"] > article[data-index="1"]')).toHaveAttribute("data-active", "");
+});
+
+test("keyboard scrolls a tall info column before paging", async ({ page }) => {
+  await page.setViewportSize({ width: 430, height: 700 });
+  const column = first(page).getByRole("region", { name: "Paper details" });
+  expect(await column.evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true);
+  await column.focus();
+  await page.keyboard.press("ArrowDown");
+  await expect.poll(() => column.evaluate((el) => el.scrollTop)).toBeGreaterThan(0);
+  expect(await feedTop(page)).toBe(0);
+  // At the bottom edge, the next press pages the feed.
+  await column.evaluate((el) => (el.scrollTop = el.scrollHeight));
+  await page.keyboard.press("ArrowDown");
+  await expect(page.locator('[role="feed"] > article[data-index="1"]')).toHaveAttribute("data-active", "");
 });
