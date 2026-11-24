@@ -94,6 +94,27 @@ test("one long trackpad gesture (with momentum) moves only one paper", async ({ 
   await expectAt(page, 1);
 });
 
+test("a busy main thread mid-gesture doesn't turn momentum into extra pages", async ({ page }) => {
+  // A real trackpad stamps each event when it happens, even while the page is
+  // busy; send the events over CDP with those hardware-style timestamps (16 ms
+  // apart) so the stall below doesn't look like a pause in the gesture.
+  const cdp = await page.context().newCDPSession(page);
+  const start = Date.now() / 1000;
+  for (let i = 0; i < 30; i++) {
+    if (i === 3 || i === 15) {
+      // Block the main thread for 400 ms, as rendering the next paper can on a slow device.
+      await page.evaluate(() => {
+        setTimeout(() => {
+          const t = performance.now();
+          while (performance.now() - t < 400);
+        }, 0);
+      });
+    }
+    await cdp.send("Input.dispatchMouseEvent", { type: "mouseWheel", x: 700, y: 450, deltaX: 0, deltaY: 40, timestamp: start + i * 0.016 });
+  }
+  await expectAt(page, 1);
+});
+
 test("active paper follows native scrolling, including upward", async ({ page }) => {
   await feed(page).evaluate((el) => el.scrollTo({ top: el.clientHeight * 3, behavior: "instant" }));
   await expectAt(page, 3);
