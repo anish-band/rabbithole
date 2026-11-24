@@ -9,6 +9,7 @@ A full-screen arXiv feed with mood-based recommendations. Each screen shows an a
 - Throttle arXiv API requests to at most one every 3 seconds, and cache responses on disk under `data/`.
 
 ## Engineering workflow (treat this like a real team project)
+- **Local mode until a GitHub remote exists** (check `git remote`): issues are the numbered `#n` tasks in `PLAN.md`; instead of a GitHub PR, write the PR description (Summary / Changes / How to test / `Closes #n`) as the body of a `git merge --no-ff` merge commit titled `Merge <branch>: <conventional title> (#n)`. Don't create the remote or push yourself; the owner will. Once `origin` exists, switch to real GitHub issues and PRs.
 - **One GitHub issue per task.** Work happens on a branch named `<type>/<issue#>-<slug>` (e.g. `feat/3-arxiv-client`), never directly on `main`.
 - **Conventional Commits** for every commit: `feat:`, `fix:`, `refactor:`, `style:`, `docs:`, `test:`, `chore:`, `perf:`, with an optional scope, e.g. `feat(feed): add arrow-key navigation`. Make several small, focused commits per branch, not one big commit.
 - **Author:** commits use the repo's git config identity (the owner) only. Never add `Co-Authored-By` trailers, "Generated with Claude" lines, or any AI attribution to commits, PR titles, or PR bodies.

@@ -47,18 +47,18 @@
 ## Tasks
 - [x] Scaffold Next.js 16 + Tailwind + TypeScript
 - [x] Budget guard + rate limit (`src/lib/budget.ts`, `src/lib/claude.ts`, `GET /api/budget`)
-- [ ] arXiv client: search + fetch by ID, Atom XML parsing, 3 s throttle, disk cache (`src/lib/arxiv.ts`) + a small script to smoke test it
-- [ ] Feed shell: full-screen scroll-snap feed with mock papers; arrow keys / j,k / wheel / swipe navigation; prefetching
-- [ ] Paper screen layout: split view, info panel (title, authors, chips, abstract, links, like/save/not-interested), responsive stack
-- [ ] Design pass 1: Apple/YouTube look — top bar with frosted glass, typography, light/dark, transitions
-- [ ] On-device taste store (localStorage): likes, saves, skips, history; saved-papers drawer
-- [ ] Local embeddings + ranking (`src/lib/rank.ts`) with disk cache
-- [ ] Mood bar → Claude query expansion (structured output, cached) → `/api/feed` returns ranked real papers; default feed without mood
-- [ ] Explainer schema + SVG animation player with a hand-written sample script (no Claude yet)
-- [ ] Explainer generation via Claude (one call → script + TL;DR + key points), lazy for current/next paper, disk cache, fallback title card
-- [ ] Budget pill in the top bar + graceful "budget used up" state
-- [ ] Design pass 2: polish animations, loading skeletons, empty/error states, keyboard shortcut hint overlay (`?`)
-- [ ] Final check: fresh `npm run build`, click through the app in the browser, write `README.md` (setup, env vars, how the budget works)
+- [ ] **#1** arXiv client: search + fetch by ID, Atom XML parsing, 3 s throttle, disk cache (`src/lib/arxiv.ts`) + a small script to smoke test it
+- [ ] **#2** Feed shell: full-screen scroll-snap feed with mock papers; arrow keys / j,k / wheel / swipe navigation; prefetching
+- [ ] **#3** Paper screen layout: split view, info panel (title, authors, chips, abstract, links, like/save/not-interested), responsive stack
+- [ ] **#4** Design pass 1: Apple/YouTube look — top bar with frosted glass, typography, light/dark, transitions
+- [ ] **#5** On-device taste store (localStorage): likes, saves, skips, history; saved-papers drawer
+- [ ] **#6** Local embeddings + ranking (`src/lib/rank.ts`) with disk cache
+- [ ] **#7** Mood bar → Claude query expansion (structured output, cached) → `/api/feed` returns ranked real papers; default feed without mood
+- [ ] **#8** Explainer schema + SVG animation player with a hand-written sample script (no Claude yet)
+- [ ] **#9** Explainer generation via Claude (one call → script + TL;DR + key points), lazy for current/next paper, disk cache, fallback title card
+- [ ] **#10** Budget pill in the top bar + graceful "budget used up" state
+- [ ] **#11** Design pass 2: polish animations, loading skeletons, empty/error states, keyboard shortcut hint overlay (`?`)
+- [ ] **#12** Final check: fresh `npm run build`, click through the app in the browser, write `README.md` (setup, env vars, how the budget works)
 
 ## Blocked
 (none yet)
