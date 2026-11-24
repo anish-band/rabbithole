@@ -16,6 +16,7 @@ const iconButton =
  */
 export function SavedDrawer() {
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const closeRef = useRef<HTMLButtonElement>(null);
   const saved = savedPapers(useTaste());
 
   return (
@@ -31,7 +32,7 @@ export function SavedDrawer() {
         {saved.length ? (
           <span
             aria-hidden
-            className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-semibold text-white tabular-nums"
+            className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-accent px-1 text-[10px] font-semibold text-background tabular-nums"
           >
             {saved.length > 99 ? "99+" : saved.length}
           </span>
@@ -49,7 +50,7 @@ export function SavedDrawer() {
             <h2 id="saved-title" className="text-callout font-semibold">
               Saved
             </h2>
-            <button type="button" onClick={() => dialogRef.current?.close()} aria-label="Close" className={iconButton}>
+            <button ref={closeRef} type="button" onClick={() => dialogRef.current?.close()} aria-label="Close" className={iconButton}>
               <X aria-hidden className="size-5" />
             </button>
           </div>
@@ -83,7 +84,11 @@ export function SavedDrawer() {
                     </div>
                     <button
                       type="button"
-                      onClick={() => updateTaste((s) => toggle(s, paper, "saved"))}
+                      onClick={() => {
+                        updateTaste((s) => toggle(s, paper, "saved"));
+                        // This button unmounts; keep focus inside the dialog.
+                        closeRef.current?.focus();
+                      }}
                       aria-label={`Remove “${paper.title}” from saved`}
                       className={`${iconButton} shrink-0`}
                     >
