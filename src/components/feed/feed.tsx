@@ -26,7 +26,7 @@ type FeedProps = {
   /** Shown while the first page loads. */
   loadingLabel?: string;
   /** Shown when the source has nothing at all. */
-  emptyMessage?: { title: string; detail: string };
+  emptyMessage?: { title: string; detail: string; action?: ReactNode };
 };
 
 /**
