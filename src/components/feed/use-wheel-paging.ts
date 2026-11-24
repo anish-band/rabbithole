@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, type RefObject } from "react";
+import { innerScrollerCanTake } from "./inner-scroller";
 
 /** Wheel distance (px) that counts as an intent to move one paper. */
 const THRESHOLD = 30;
@@ -34,18 +35,10 @@ export function useWheelPaging(containerRef: RefObject<HTMLElement | null>, page
     const normalize = (e: WheelEvent) =>
       e.deltaMode === WheelEvent.DOM_DELTA_LINE ? e.deltaY * 16 : e.deltaMode === WheelEvent.DOM_DELTA_PAGE ? e.deltaY * root.clientHeight : e.deltaY;
 
-    const innerScrollerCanTake = (e: WheelEvent) => {
-      const inner = (e.target as HTMLElement | null)?.closest<HTMLElement>("[data-allow-wheel]");
-      if (!inner || !root.contains(inner)) return false;
-      return e.deltaY > 0
-        ? inner.scrollTop + inner.clientHeight < inner.scrollHeight - 1
-        : inner.scrollTop > 0;
-    };
-
     function onWheel(e: WheelEvent) {
       if (e.ctrlKey) return; // pinch-zoom
       if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return; // horizontal gesture
-      if (innerScrollerCanTake(e)) return;
+      if (innerScrollerCanTake(e.target, root, e.deltaY > 0 ? 1 : -1)) return;
 
       e.preventDefault();
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { innerScrollerCanTake } from "./inner-scroller";
 
 type Handlers = {
   next: () => void;
@@ -28,6 +29,7 @@ function ownsSpace(target: EventTarget | null) {
  * ↓ / j / PageDown / Space → next paper, ↑ / k / PageUp / Shift+Space → previous,
  * Home → first, End → last. Ignored while typing or with Cmd/Ctrl/Alt held;
  * Space is left alone on buttons and links; held keys page at most 4×/second.
+ * Inside a scrollable info column, arrows/Page/Space scroll it first.
  */
 export function useFeedKeyboard({ next, prev, first, last }: Handlers) {
   useEffect(() => {
@@ -49,6 +51,9 @@ export function useFeedKeyboard({ next, prev, first, last }: Handlers) {
                 : null;
 
       if (!action) return;
+      // Arrow/Page/Space scroll a focused inner scroller natively until it hits an edge.
+      const scrollKey = ["ArrowDown", "ArrowUp", "PageDown", "PageUp", " "].includes(e.key);
+      if (scrollKey && innerScrollerCanTake(e.target, null, action === next ? 1 : -1)) return;
       e.preventDefault();
       if (e.repeat) {
         const now = performance.now();
