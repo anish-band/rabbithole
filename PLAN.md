@@ -53,13 +53,17 @@
 - [x] **#4** Design pass 1: Apple/YouTube look — top bar with frosted glass, typography, light/dark, transitions
 - [x] **#5** On-device taste store (localStorage): likes, saves, skips, history; saved-papers drawer
 - [x] **#6** Local embeddings + ranking (`src/lib/rank/`) with disk cache
-- [ ] **#7** Mood bar → Claude query expansion (structured output, cached) → `/api/feed` returns ranked real papers; default feed without mood
+- [x] **#7** Mood bar → Claude query expansion (structured output, cached) → `/api/feed` returns ranked real papers; default feed without mood
 - [ ] **#8** Explainer schema + SVG animation player with a hand-written sample script (no Claude yet)
 - [ ] **#9** Explainer generation via Claude (one call → script + TL;DR + key points), lazy for current/next paper, disk cache, fallback title card
 - [ ] **#10** Budget pill in the top bar + graceful "budget used up" state
 - [ ] **#11** Design pass 2: polish animations, loading skeletons, empty/error states, keyboard shortcut hint overlay (`?`)
 - [ ] **#12** Final check: fresh `npm run build`, click through the app in the browser, write `README.md` (setup, env vars, how the budget works)
 - [x] **#15** Render LaTeX math in titles and abstracts (KaTeX `<MathText>`, text-mode macros, unit + e2e tests)
+
+## v2 (milestone `v2`, not part of the autonomous loop)
+Production readiness. These need owner decisions (AWS cost, infra), so they're picked up only when asked:
+#21 CI in GitHub Actions · #22 ranking/mood relevance eval · #23 explainer faithfulness eval · #24 Postgres ledger + caches · #25 AWS deploy + monitoring/alarms · #26 async explainer worker queue · #27 load test (arXiv mocked) · #28 usage-limit outage postmortem
 
 ## Blocked
 (none yet)
