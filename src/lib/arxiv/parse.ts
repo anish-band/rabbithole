@@ -5,6 +5,7 @@ const parser = new XMLParser({
   ignoreAttributes: false,
   attributeNamePrefix: "@_",
   removeNSPrefix: true, // arxiv:primary_category -> primary_category
+  parseTagValue: false, // keep titles like "2.0" as text; numbers are converted explicitly
   isArray: (name) => ["entry", "author", "link", "category"].includes(name),
 });
 
