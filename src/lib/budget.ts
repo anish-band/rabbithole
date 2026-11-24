@@ -154,8 +154,9 @@ export function budgetStatus(): BudgetStatus & { byRoute: Record<string, number>
   return {
     budgetUsd: BUDGET_USD,
     spentUsd: Number(ledger.spentUsd.toFixed(4)),
-    // In-flight reservations count: they are what the next call is checked against.
-    remainingUsd: Number(Math.max(0, BUDGET_USD - ledger.spentUsd - reservedUsd).toFixed(4)),
+    // Ledger only: counting in-flight worst-case reservations would make the pill
+    // dip ~$0.33 during every generation (the "used up" threshold already allows for one).
+    remainingUsd: Number(Math.max(0, BUDGET_USD - ledger.spentUsd).toFixed(4)),
     calls: ledger.calls,
     configured: Boolean(process.env.ANTHROPIC_API_KEY),
     rateLimitedMs: inWindow.length >= RATE_LIMIT_PER_MIN ? 60_000 - (now - inWindow[0]) : 0,
