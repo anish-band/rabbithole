@@ -269,3 +269,33 @@ article:not([data-active]) .reveal-group > * {
     animation: none;
   }
 }
+
+/* Small anchored card (budget popover): fades and settles in from the bar. */
+.popover-card {
+  transition:
+    opacity 200ms ease,
+    transform 300ms var(--ease-spring),
+    overlay 300ms allow-discrete,
+    display 300ms allow-discrete;
+}
+.popover-card:not(:popover-open) {
+  opacity: 0;
+  transform: translateY(-6px) scale(0.98);
+}
+@starting-style {
+  .popover-card:popover-open {
+    opacity: 0;
+    transform: translateY(-6px) scale(0.98);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .popover-card,
+  .popover-card:not(:popover-open) {
+    transform: none;
+  }
+  @starting-style {
+    .popover-card:popover-open {
+      transform: none;
+    }
+  }
+}

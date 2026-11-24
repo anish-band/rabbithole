@@ -1,5 +1,6 @@
 import { ChevronDown, ChevronUp, Rabbit } from "lucide-react";
 import type { ReactNode } from "react";
+import { BudgetPill } from "./budget-pill";
 import { SavedDrawer } from "./saved-drawer";
 
 export type FeedNav = {
@@ -29,6 +30,7 @@ export function TopBar({ nav, children }: { nav: FeedNav; children?: ReactNode }
           <span className="max-sm:sr-only">Rabbithole</span>
         </h1>
         <div className="flex min-w-0 flex-1 items-center justify-center">{children}</div>
+        <BudgetPill />
         <SavedDrawer />
         <span aria-hidden className="h-5 w-px bg-hairline" />
         <nav aria-label="Feed" className="flex items-center gap-1">
