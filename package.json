@@ -13,7 +13,8 @@
     "test": "node --import tsx --test \"src/**/*.test.ts\"",
     "smoke:rank": "node --conditions=react-server --import tsx scripts/rank-smoke.ts",
     "eval:rank:build": "node --conditions=react-server --import tsx scripts/eval/rank-build.ts",
-    "eval:rank": "node --conditions=react-server --import tsx scripts/eval/rank.ts"
+    "eval:rank": "node --conditions=react-server --import tsx scripts/eval/rank.ts",
+    "load:feed": "node scripts/load/feed.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.13.0",
