@@ -19,7 +19,13 @@ export function Abstract({ text, id }: { text: string; id: string }) {
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(el);
-    return () => observer.disconnect();
+    // Web fonts (incl. KaTeX) can change line breaks without resizing the clamped box.
+    let live = true;
+    document.fonts?.ready.then(() => live && measure());
+    return () => {
+      live = false;
+      observer.disconnect();
+    };
   }, [expanded, text]);
 
   return (
