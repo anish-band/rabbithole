@@ -16,6 +16,7 @@ test("top bar floats over the feed with a frosted material", async ({ page }) =>
   });
   expect(style.position).toBe("fixed");
   expect(style.image).toBe("none"); // no gradients
+  expect(style.backdrop).toContain("blur(");
   // The explainer starts below the bar, not under it.
   const barBox = (await bar.boundingBox())!;
   const stage = (await slide(page, 0).getByRole("figure", { name: "Explainer" }).boundingBox())!;
