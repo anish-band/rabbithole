@@ -56,7 +56,7 @@
 - [x] **#7** Mood bar → Claude query expansion (structured output, cached) → `/api/feed` returns ranked real papers; default feed without mood
 - [x] **#8** Explainer schema + SVG animation player with a hand-written sample script (no Claude yet)
 - [x] **#9** Explainer generation via Claude (one call → script + TL;DR + key points), lazy for current/next paper, disk cache, fallback title card
-- [ ] **#10** Budget pill in the top bar + graceful "budget used up" state
+- [x] **#10** Budget pill in the top bar + graceful "budget used up" state
 - [ ] **#11** Design pass 2: polish animations, loading skeletons, empty/error states, keyboard shortcut hint overlay (`?`)
 - [ ] **#12** Final check: fresh `npm run build`, click through the app in the browser, write `README.md` (setup, env vars, how the budget works)
 - [x] **#15** Render LaTeX math in titles and abstracts (KaTeX `<MathText>`, text-mode macros, unit + e2e tests)
