@@ -1,7 +1,6 @@
 import "server-only";
 import fs from "fs/promises";
 import path from "path";
-import { getPaper } from "./client";
 import type { Paper } from "./types";
 
 /**
@@ -23,13 +22,14 @@ export async function rememberPapers(papers: Paper[]) {
   );
 }
 
-/** A paper by id: from what we've served before, else from arXiv (throttled, cached). */
+/**
+ * A paper this server has served, or null. Deliberately no arXiv fallback: an
+ * endpoint that spends budget per paper must not accept arbitrary ids.
+ */
 export async function knownPaper(id: string): Promise<Paper | null> {
   try {
     return JSON.parse(await fs.readFile(file(id), "utf8")) as Paper;
   } catch {
-    const paper = await getPaper(id);
-    if (paper) await rememberPapers([paper]).catch(() => {});
-    return paper;
+    return null;
   }
 }
