@@ -71,14 +71,6 @@
 
   /* Critically damped spring (response ~0.35s, no overshoot), sampled for linear(). */
   --ease-spring: linear(0, 0.147, 0.39, 0.599, 0.75, 0.849, 0.911, 0.949, 0.971, 0.984, 0.991, 0.995, 0.997, 0.998, 0.999, 1);
-  --animate-reveal: reveal 600ms var(--ease-spring) both;
-
-  @keyframes reveal {
-    from {
-      opacity: 0;
-      transform: translateY(12px);
-    }
-  }
   --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Inter", "Segoe UI", sans-serif;
 }
 
