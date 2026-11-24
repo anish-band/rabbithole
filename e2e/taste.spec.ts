@@ -41,6 +41,7 @@ test("saved papers appear in the drawer and can be removed", async ({ page }) =>
 
   await drawer.getByRole("button", { name: /^Remove/ }).click();
   await expect(drawer.getByText("Nothing saved yet")).toBeVisible();
+  await expect(drawer.getByRole("button", { name: "Close" })).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(drawer).toBeHidden();
   await expect(open).toBeFocused();
