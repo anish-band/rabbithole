@@ -1,6 +1,7 @@
 import "server-only";
 import fixtures from "@/fixtures/papers.json";
 import { searchPapers } from "@/lib/arxiv";
+import { rememberPapers } from "@/lib/arxiv/known";
 import type { Paper } from "@/lib/arxiv/types";
 import { expandMood } from "@/lib/mood/expand";
 import { arxivQuery, type MoodPlan } from "@/lib/mood/query";
@@ -94,6 +95,9 @@ export async function getFeedPage({ mood, signals = {}, exclude = [], round = 0,
     }
     if (page.length >= pageSize) break;
   }
+
+  // Explainers look papers up by id; remember what we served (best-effort).
+  await rememberPapers(page).catch((err) => console.warn("[feed] remember failed:", err instanceof Error ? err.message : err));
 
   // `r` is the round that filled the page (it may have more), or the first untried one.
   return {

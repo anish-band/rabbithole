@@ -256,3 +256,16 @@ article:not([data-active]) .reveal-group > * {
     animation-duration: 1ms !important;
   }
 }
+
+/* "Generating…" dot on the explainer stage. Opacity only; still under reduced motion. */
+@keyframes ex-pulse {
+  50% { opacity: 0.3; }
+}
+.ex-pulse {
+  animation: ex-pulse 1.4s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .ex-pulse {
+    animation: none;
+  }
+}
