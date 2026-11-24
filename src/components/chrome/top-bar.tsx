@@ -26,7 +26,7 @@ export function TopBar({ nav, children }: { nav: FeedNav; children?: ReactNode }
       <div className="mx-auto flex h-14 max-w-[1600px] items-center gap-3 px-4 min-[900px]:px-10">
         <h1 className="flex items-center gap-2 text-callout font-semibold tracking-[-0.016em]">
           <Rabbit aria-hidden className="size-5 text-accent" strokeWidth={2} />
-          Rabbithole
+          <span className="max-sm:sr-only">Rabbithole</span>
         </h1>
         <div className="flex min-w-0 flex-1 items-center justify-center">{children}</div>
         <SavedDrawer />
