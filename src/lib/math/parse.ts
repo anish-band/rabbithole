@@ -1,120 +1,24 @@
 /**
- * Splits arXiv-style text (titles, abstracts) into prose and LaTeX math.
+ * Parses arXiv-style text (titles, abstracts) into a small tree of prose,
+ * LaTeX math and text-mode formatting, in a single pass so formatting and
+ * math can nest: `\emph{the $x$ case}`, `\textbf{\emph{x}}`, `{\bf a {b} c}`.
  *
  * Math delimiters: `$...$`, `\(...\)` (inline) and `$$...$$`, `\[...\]` (display).
  * Single-dollar math follows Pandoc's rules so prices are not mistaken for math:
  * the opening `$` must not be followed by whitespace, the closing `$` must not be
- * preceded by whitespace or followed by a digit. `\$` is a literal dollar sign.
- * Unclosed delimiters stay as plain text.
+ * preceded by whitespace or followed by a digit, and a `$` inside braces (e.g. in
+ * `\text{...}`) does not close. `\$` is a literal dollar sign, `\\` a line break.
+ * Unclosed delimiters and unknown macros stay as plain text.
  */
 
-export type Segment =
+export type Style = "em" | "strong" | "smallcaps" | "underline" | "plain";
+
+export type RichNode =
   | { type: "text"; value: string }
-  | { type: "math"; value: string; display: boolean };
+  | { type: "math"; value: string; display: boolean }
+  | { type: "styled"; style: Style; children: RichNode[] };
 
-function isSpace(ch: string | undefined) {
-  return ch === undefined || /\s/.test(ch);
-}
-
-/** Index of the closing `$` for inline math opened at `start`, or -1. */
-function findInlineDollarClose(text: string, start: number): number {
-  for (let i = start + 1; i < text.length; i++) {
-    const ch = text[i];
-    if (ch === "\\") {
-      i++; // skip escaped char, including \$
-      continue;
-    }
-    if (ch === "$") {
-      if (i === start + 1) return -1; // empty "$$" handled by caller
-      if (isSpace(text[i - 1]) || /\d/.test(text[i + 1] ?? "")) return -1;
-      return i;
-    }
-  }
-  return -1;
-}
-
-/** Index where `close` starts after `from`, skipping escaped characters, or -1. */
-function findClose(text: string, from: number, close: string): number {
-  for (let i = from; i <= text.length - close.length; i++) {
-    if (text.startsWith(close, i)) return i;
-    if (text[i] === "\\" && close !== "\\)" && close !== "\\]") i++;
-  }
-  return -1;
-}
-
-export function parseMathText(input: string): Segment[] {
-  const segments: Segment[] = [];
-  let buffer = "";
-
-  const flushText = () => {
-    if (buffer) segments.push({ type: "text", value: buffer });
-    buffer = "";
-  };
-  const pushMath = (value: string, display: boolean) => {
-    flushText();
-    segments.push({ type: "math", value: value.trim(), display });
-  };
-
-  let i = 0;
-  while (i < input.length) {
-    const ch = input[i];
-    const next = input[i + 1];
-
-    // Literal dollar.
-    if (ch === "\\" && next === "$") {
-      buffer += "$";
-      i += 2;
-      continue;
-    }
-
-    // \( ... \) and \[ ... \]
-    if (ch === "\\" && (next === "(" || next === "[")) {
-      const close = next === "(" ? "\\)" : "\\]";
-      const end = findClose(input, i + 2, close);
-      if (end > i + 2) {
-        pushMath(input.slice(i + 2, end), next === "[");
-        i = end + 2;
-        continue;
-      }
-    }
-
-    if (ch === "$") {
-      // $$ ... $$
-      if (next === "$") {
-        const end = findClose(input, i + 2, "$$");
-        if (end > i + 2) {
-          pushMath(input.slice(i + 2, end), true);
-          i = end + 2;
-          continue;
-        }
-        buffer += "$$";
-        i += 2;
-        continue;
-      }
-      // $ ... $
-      if (!isSpace(next)) {
-        const end = findInlineDollarClose(input, i);
-        if (end !== -1) {
-          pushMath(input.slice(i + 1, end), false);
-          i = end + 1;
-          continue;
-        }
-      }
-    }
-
-    buffer += ch;
-    i++;
-  }
-
-  flushText();
-  return segments;
-}
-
-export type Inline =
-  | { type: "plain"; value: string }
-  | { type: "em" | "strong" | "smallcaps" | "underline"; value: string };
-
-const MACROS: Record<string, Inline["type"]> = {
+const MACROS: Record<string, Style> = {
   emph: "em",
   textit: "em",
   textsl: "em",
@@ -124,40 +28,197 @@ const MACROS: Record<string, Inline["type"]> = {
   textrm: "plain",
   textsf: "plain",
   texttt: "plain",
+  textup: "plain",
   text: "plain",
 };
 
-/** Typographic substitutions for LaTeX text mode. */
+const OLD_STYLE: Record<string, Style> = { em: "em", it: "em", sl: "em", bf: "strong", sc: "smallcaps", rm: "plain", sf: "plain", tt: "plain" };
+
+const isSpace = (ch: string | undefined) => ch === undefined || /\s/.test(ch);
+
+/** End index (exclusive) of inline `$...$` math starting at `start`, or -1. */
+function inlineDollarEnd(text: string, start: number): number {
+  if (isSpace(text[start + 1])) return -1;
+  let depth = 0;
+  for (let i = start + 1; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === "\\") {
+      i++;
+      continue;
+    }
+    if (ch === "{") depth++;
+    else if (ch === "}") depth = Math.max(0, depth - 1);
+    else if (ch === "$" && depth === 0) {
+      if (i === start + 1 || isSpace(text[i - 1]) || /\d/.test(text[i + 1] ?? "")) return -1;
+      return i + 1;
+    }
+  }
+  return -1;
+}
+
+/** End index (exclusive) of a delimited span whose body starts at `from`, or -1. */
+function delimitedEnd(text: string, from: number, close: string): number {
+  for (let i = from; i <= text.length - close.length; i++) {
+    if (text.startsWith(close, i)) return i + close.length;
+    if (text[i] === "\\" && close[0] !== "\\") i++;
+  }
+  return -1;
+}
+
+/** If a math span starts at `i`, return [end, body, display]; otherwise null. */
+function mathAt(text: string, i: number): [number, string, boolean] | null {
+  const ch = text[i];
+  const next = text[i + 1];
+  if (ch === "\\" && (next === "(" || next === "[")) {
+    const end = delimitedEnd(text, i + 2, next === "(" ? "\\)" : "\\]");
+    if (end !== -1) return [end, text.slice(i + 2, end - 2), next === "["];
+  }
+  if (ch === "$" && next === "$") {
+    const end = delimitedEnd(text, i + 2, "$$");
+    if (end !== -1) return [end, text.slice(i + 2, end - 2), true];
+  } else if (ch === "$") {
+    const end = inlineDollarEnd(text, i);
+    if (end !== -1) return [end, text.slice(i + 1, end - 1), false];
+  }
+  return null;
+}
+
+/** Index of the `}` balancing the `{` at `open`, treating math spans as atomic; or -1. */
+function matchingBrace(text: string, open: number): number {
+  let depth = 0;
+  for (let i = open; i < text.length; i++) {
+    const ch = text[i];
+    if (ch === "\\") {
+      const math = mathAt(text, i);
+      if (math) {
+        i = math[0] - 1;
+        continue;
+      }
+      i++;
+      continue;
+    }
+    if (ch === "$") {
+      const math = mathAt(text, i);
+      if (math) {
+        i = math[0] - 1;
+        continue;
+      }
+    }
+    if (ch === "{") depth++;
+    else if (ch === "}" && --depth === 0) return i;
+  }
+  return -1;
+}
+
+export function parseRich(input: string): RichNode[] {
+  const nodes: RichNode[] = [];
+  let buffer = "";
+  const flush = () => {
+    if (buffer) nodes.push({ type: "text", value: cleanTextMode(buffer) });
+    buffer = "";
+  };
+
+  let i = 0;
+  while (i < input.length) {
+    const ch = input[i];
+    const next = input[i + 1];
+
+    if (ch === "\\" && next === "\\") {
+      buffer += " "; // LaTeX line break
+      i += 2;
+      continue;
+    }
+    if (ch === "\\" && next === "$") {
+      buffer += "$";
+      i += 2;
+      continue;
+    }
+
+    if (ch === "$" || (ch === "\\" && (next === "(" || next === "["))) {
+      const math = mathAt(input, i);
+      if (math && math[1].trim()) {
+        flush();
+        nodes.push({ type: "math", value: math[1].trim(), display: math[2] });
+        i = math[0];
+        continue;
+      }
+      if (ch === "$" && next === "$") {
+        buffer += "$$";
+        i += 2;
+        continue;
+      }
+    }
+
+    // \macro{...}
+    if (ch === "\\") {
+      const name = /^[a-zA-Z]+/.exec(input.slice(i + 1))?.[0];
+      if (name && MACROS[name] && input[i + 1 + name.length] === "{") {
+        const open = i + 1 + name.length;
+        const close = matchingBrace(input, open);
+        if (close !== -1) {
+          flush();
+          nodes.push({ type: "styled", style: MACROS[name], children: parseRich(input.slice(open + 1, close)) });
+          i = close + 1;
+          continue;
+        }
+      }
+    }
+
+    // {\bf ...}
+    if (ch === "{") {
+      const old = /^\{\\([a-z]{2})\s+/.exec(input.slice(i));
+      if (old && OLD_STYLE[old[1]]) {
+        const close = matchingBrace(input, i);
+        if (close !== -1) {
+          flush();
+          nodes.push({ type: "styled", style: OLD_STYLE[old[1]], children: parseRich(input.slice(i + old[0].length, close)) });
+          i = close + 1;
+          continue;
+        }
+      }
+    }
+
+    buffer += ch;
+    i++;
+  }
+
+  flush();
+  return nodes;
+}
+
+const URL_PATTERN = /\bhttps?:\/\/\S+/g;
+
+/** Typographic substitutions for LaTeX text mode. URLs are left untouched. */
 export function cleanTextMode(text: string): string {
+  let out = "";
+  let last = 0;
+  for (const match of text.matchAll(URL_PATTERN)) {
+    out += cleanProse(text.slice(last, match.index)) + match[0];
+    last = match.index + match[0].length;
+  }
+  return out + cleanProse(text.slice(last));
+}
+
+function cleanProse(text: string): string {
   return text
-    .replace(/---/g, "—")
-    .replace(/--/g, "–")
+    .replace(/(?<=\S)---(?=\S)/g, "—")
+    .replace(/(?<=\S)--(?=\S)/g, "–")
+    .replace(/ --- /g, " — ")
+    .replace(/ -- /g, " – ")
     .replace(/``/g, "“")
     .replace(/''/g, "”")
     .replace(/(^|[^\\])~/g, "$1 ")
     .replace(/\\([%&_#{}])/g, "$1")
-    .replace(/\\ldots\b|\\dots\b/g, "…")
+    .replace(/\\(ldots|dots)\b/g, "…")
     .replace(/\\,/g, " ");
 }
 
-/**
- * Turns the text-mode formatting macros arXiv abstracts use outside math
- * (`\emph{}`, `\textbf{}`, ...) into inline runs. Unknown macros are kept as-is.
- */
-export function parseTextMacros(text: string): Inline[] {
-  const out: Inline[] = [];
-  const pattern = /\\([a-zA-Z]+)\{([^{}]*)\}|\{\\(em|it|bf|sc)\s+([^{}]*)\}/g;
-  let last = 0;
-  for (const match of text.matchAll(pattern)) {
-    const [whole, cmd, arg, oldCmd, oldArg] = match;
-    const type = cmd
-      ? MACROS[cmd]
-      : ({ em: "em", it: "em", bf: "strong", sc: "smallcaps" } as const)[oldCmd as "em" | "it" | "bf" | "sc"];
-    if (!type) continue;
-    if (match.index > last) out.push({ type: "plain", value: cleanTextMode(text.slice(last, match.index)) });
-    out.push({ type, value: cleanTextMode(cmd ? arg : oldArg) });
-    last = match.index + whole.length;
-  }
-  if (last < text.length) out.push({ type: "plain", value: cleanTextMode(text.slice(last)) });
-  return out.filter((r) => r.value !== "");
+/** Flatten a tree to the math segments it contains (useful for checks). */
+export function mathNodes(nodes: RichNode[]): Extract<RichNode, { type: "math" }>[] {
+  return nodes.flatMap((n) => (n.type === "math" ? [n] : n.type === "styled" ? mathNodes(n.children) : []));
+}
+
+/** Concatenated prose (no math), for checks and plain-text fallbacks. */
+export function plainText(nodes: RichNode[]): string {
+  return nodes.map((n) => (n.type === "text" ? n.value : n.type === "styled" ? plainText(n.children) : "")).join("");
 }
