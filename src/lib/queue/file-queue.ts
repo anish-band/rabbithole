@@ -141,19 +141,23 @@ export class FileQueue<P> {
     if ((await this.read<Lock>(file))?.owner === owner) await fs.unlink(file).catch(() => {});
   }
 
-  /** Claim the oldest runnable job: queued and past its backoff, or running under a stale lease. */
-  async claim(owner: string, now = Date.now()): Promise<Job<P> | null> {
+  /** Jobs not yet finished or dead (queued, backing off, or running), oldest first. */
+  async live(): Promise<Job<P>[]> {
     let names: string[];
     try {
       names = (await fs.readdir(path.join(this.dir, "jobs"))).filter((n) => n.endsWith(".json"));
     } catch {
-      return null;
+      return [];
     }
     const jobs = (await Promise.all(names.map((n) => this.read<Job<P>>(path.join(this.dir, "jobs", n))))).filter(
-      (j): j is Job<P> => !!j && (j.status === "queued" || j.status === "running") && j.runAfter <= now,
+      (j): j is Job<P> => !!j && (j.status === "queued" || j.status === "running"),
     );
-    jobs.sort((a, b) => a.createdAt - b.createdAt);
-    for (const job of jobs) {
+    return jobs.sort((a, b) => a.createdAt - b.createdAt);
+  }
+
+  /** Claim the oldest runnable job: queued and past its backoff, or running under a stale lease. */
+  async claim(owner: string, now = Date.now()): Promise<Job<P> | null> {
+    for (const job of (await this.live()).filter((j) => j.runAfter <= now)) {
       if (!(await this.lock(job.key, owner, now))) continue;
       const claimed: Job<P> = { ...job, status: "running", attempts: job.attempts + 1, updatedAt: now };
       await this.write(this.file("jobs", job.key), claimed);
