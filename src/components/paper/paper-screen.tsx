@@ -38,7 +38,7 @@ export function PaperScreen({ paper, active = false, wantExplainer = active }: P
         tabIndex={0}
         role="region"
         aria-label="Paper details"
-        className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-2xl outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent min-[900px]:flex min-[900px]:flex-col min-[900px]:py-4">
+        className="-mx-2 min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-2xl px-2 outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent min-[900px]:flex min-[900px]:flex-col min-[900px]:py-4">
         <div className="min-[900px]:my-auto min-[900px]:max-w-[560px]">
           <InfoPanel paper={paper} summary={summary} actions={actions} onAction={toggle} />
         </div>

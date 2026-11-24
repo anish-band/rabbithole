@@ -4,7 +4,7 @@ import { Pause, Play, RotateCcw } from "lucide-react";
 import { useId, useState } from "react";
 import { MathText } from "@/components/math-text";
 import { CANVAS, type ScenesExplainer } from "@/lib/explainer/schema";
-import { StageDefs, StageElement } from "./elements";
+import { MathLayer, StageDefs, StageElement } from "./elements";
 
 const controlButton =
   "flex size-9 shrink-0 items-center justify-center rounded-full text-white/80 transition-[background-color,color,transform] duration-200 ease-spring hover:bg-white/10 hover:text-white active:scale-[0.94] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/70";
@@ -44,21 +44,32 @@ export function ExplainerPlayer({ script, active }: { script: ScenesExplainer; a
 
   return (
     <div data-paused={playing ? undefined : ""} className="ex-player flex h-full w-full flex-col">
-      <div className="relative min-h-0 flex-1">
-        <svg
-          viewBox={`0 0 ${CANVAS.width} ${CANVAS.height}`}
-          preserveAspectRatio="xMidYMid meet"
-          role="img"
-          aria-label={`Animated explainer, scene ${scene + 1} of ${count}`}
-          className="absolute inset-0 size-full"
+      {/* The stage box is the largest 16:9 rectangle that fits, so the SVG and
+          the HTML math layer share one coordinate system. */}
+      <div className="relative min-h-0 flex-1 [container-type:size]">
+        <div
+          className="absolute inset-0 m-auto"
+          style={{
+            width: `min(100cqw, 100cqh * ${CANVAS.width} / ${CANVAS.height})`,
+            height: `min(100cqh, 100cqw * ${CANVAS.height} / ${CANVAS.width})`,
+          }}
         >
-          <StageDefs ids={ids} />
-          <g key={`${run}-${scene}`} className="ex-scene">
-            {current.elements.map((el, i) => (
-              <StageElement key={i} el={el} ids={ids} />
-            ))}
-          </g>
-        </svg>
+          <svg
+            viewBox={`0 0 ${CANVAS.width} ${CANVAS.height}`}
+            role="img"
+            aria-label={`Animated explainer, scene ${scene + 1} of ${count}`}
+            className="absolute inset-0 size-full"
+          >
+            <StageDefs ids={ids} />
+            <g key={`${run}-${scene}`} className="ex-scene">
+              {current.elements.map((el, i) => (el.kind === "math" ? null : <StageElement key={i} el={el} ids={ids} />))}
+            </g>
+          </svg>
+          {/* Part of the same picture; the caption carries the meaning for screen readers. */}
+          <div key={`${run}-${scene}`} aria-hidden className="ex-scene pointer-events-none absolute inset-0 [container-type:inline-size]">
+            <MathLayer elements={current.elements} />
+          </div>
+        </div>
       </div>
 
       <p aria-live="polite" className="mx-auto min-h-[2lh] max-w-[60ch] px-2 pt-3 text-center text-callout text-pretty text-white/85">

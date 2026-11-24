@@ -235,11 +235,6 @@ article:not([data-active]) .reveal-group > * {
   animation-fill-mode: both;
 }
 .ex-math {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 100%;
-  height: 100%;
   line-height: 1;
   white-space: nowrap;
 }
