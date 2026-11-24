@@ -86,7 +86,13 @@ export function Feed({ source, initialItems }: FeedProps) {
         article.focus({ preventScroll: true });
       }
     };
-    const from = () => targetRef.current ?? activeRef.current;
+    // Start from the pending target, else from where the container actually is.
+    // (activeRef can lag a frame behind the scroll position right after settling.)
+    const from = () => {
+      if (targetRef.current !== null) return targetRef.current;
+      const root = containerRef.current;
+      return root && root.clientHeight > 0 ? Math.round(root.scrollTop / root.clientHeight) : activeRef.current;
+    };
     return {
       next: () => scrollToIndex(from() + 1),
       prev: () => scrollToIndex(from() - 1),
