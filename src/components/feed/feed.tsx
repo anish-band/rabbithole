@@ -3,7 +3,10 @@
 import { useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from "react";
 import type { FeedNav } from "@/components/chrome/top-bar";
 import type { FeedItem, FeedSource } from "@/lib/feed/types";
+import { ShortcutsDialog } from "@/components/chrome/shortcuts-dialog";
 import { PaperScreen } from "@/components/paper/paper-screen";
+import { reactionsFor, toggle, type Reaction } from "@/lib/taste/store";
+import { readTaste, updateTaste } from "@/lib/taste/use-taste";
 import { FeedMessage, FeedSkeleton, pillButton } from "./feed-placeholder";
 import { useActiveIndex } from "./use-active-index";
 import { useFeedItems, usePrefetch } from "./use-feed-items";
@@ -49,11 +52,15 @@ export function Feed({ source, initialItems, Header, headerContent, loadingLabel
   const [target, setTarget] = useState<number | null>(null);
   const activeRef = useRef(active);
   const countRef = useRef(items.length);
+  const itemsRef = useRef(items);
+  const shortcutsRef = useRef<HTMLDialogElement>(null);
+  const [announcement, setAnnouncement] = useState("");
 
   useEffect(() => {
     activeRef.current = active;
     countRef.current = items.length;
-  }, [active, items.length]);
+    itemsRef.current = items;
+  }, [active, items]);
 
   // Clear the target once the scroll has settled. `scrollend` where supported,
   // otherwise a short idle timer after the last `scroll` event.
@@ -105,11 +112,24 @@ export function Feed({ source, initialItems, Header, headerContent, loadingLabel
       const root = containerRef.current;
       return root && root.clientHeight > 0 ? Math.round(root.scrollTop / root.clientHeight) : activeRef.current;
     };
+    const SAID: Record<Reaction, [on: string, off: string]> = {
+      liked: ["Liked", "Removed like"],
+      saved: ["Saved", "Removed from saved"],
+      hidden: ["Marked not interested", "Undid not interested"],
+    };
     return {
       next: () => scrollToIndex(from() + 1),
       prev: () => scrollToIndex(from() - 1),
       first: () => scrollToIndex(0),
       last: () => scrollToIndex(countRef.current - 1),
+      react: (reaction: Reaction) => {
+        const paper = itemsRef.current[activeRef.current]?.paper;
+        if (!paper) return;
+        updateTaste((s) => toggle(s, paper, reaction));
+        const on = reactionsFor(readTaste(), paper.id)[reaction];
+        setAnnouncement(SAID[reaction][on ? 0 : 1]);
+      },
+      help: () => shortcutsRef.current?.showModal(),
     };
   }, []);
   useFeedKeyboard(handlers);
@@ -120,7 +140,11 @@ export function Feed({ source, initialItems, Header, headerContent, loadingLabel
 
   return (
     <>
-      {Header ? <Header nav={{ next: handlers.next, prev: handlers.prev, active: target ?? active, count: items.length }}>{headerContent}</Header> : null}
+      {Header ? <Header nav={{ next: handlers.next, prev: handlers.prev, help: handlers.help, active: target ?? active, count: items.length }}>{headerContent}</Header> : null}
+      <ShortcutsDialog ref={shortcutsRef} />
+      <p aria-live="polite" className="sr-only">
+        {announcement}
+      </p>
       <div
         ref={containerRef}
         role="feed"
