@@ -33,7 +33,7 @@ async function main() {
 
   // "Attention Is All You Need"
   const paper = await getPaper("1706.03762");
-  assert(paper?.title.toLowerCase().includes("attention"), "lookup by id failed");
+  assert(paper && paper.title.toLowerCase().includes("attention"), "lookup by id failed");
   console.log(`lookup: ${paper.id}${paper.version} "${paper.title}" by ${paper.authors.length} authors`);
 
   console.log(`OK in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
