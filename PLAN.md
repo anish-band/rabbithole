@@ -65,7 +65,7 @@
 Evals and infra. Work them in this order. Each task's GitHub issue is the spec, so read it first.
 
 - [x] **#21** CI in GitHub Actions: lint, unit, build and e2e on every PR and push to `main`, with caching, failure artifacts, one retry in CI only, and the check required by branch protection. To prove the check blocks merges, open a deliberately broken PR, then close it without merging. Don't delete its branch.
-- [ ] **#28** Postmortem for the 2026-11-24 API usage-limit outage (`docs/postmortems/`).
+- [x] **#28** Postmortem for the 2026-11-24 API usage-limit outage (`docs/postmortems/`).
 - [ ] **#22** Offline relevance eval for mood expansion and ranking (`npm run eval:rank`), using a frozen candidate pool from cached arXiv data with no live arXiv calls. **Claude spend cap for this task: $0.25.** Use Haiku for query plans and any judge labels, and cache every call.
 - [ ] **#23** Explainer faithfulness eval (`npm run eval:faithfulness`), run on already-cached explainers. **Claude spend cap for this task: $1.00.** Use a cheap judge model through `callClaude()`. Measure the prompt change by regenerating only a few explainers (≤ 5).
 - [ ] **#27** Load test `POST /api/feed` with `RABBITHOLE_FIXTURES=1` (never send load to arXiv), fix the first bottleneck, and report before/after numbers.
