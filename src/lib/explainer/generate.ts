@@ -16,7 +16,7 @@ import type { Explainer } from "./schema";
  * remembered for a day so a bad paper can't drain the budget; budget, rate
  * limit and availability failures are not remembered.
  */
-export const PROMPT_VERSION = 1;
+export const PROMPT_VERSION = 2;
 const DIR = path.join(process.cwd(), "data", "explainers");
 const RETRY_FAILED_AFTER_MS = 24 * 60 * 60 * 1000;
 const MAX_TOKENS = 16_000;
@@ -69,6 +69,11 @@ Animation: every element has enter {at ms from scene start, effect fade|draw|gro
 Script: 4–6 scenes, each 5000–9000 ms, caption 1–2 plain sentences (≤ 200 chars, may use $inline math$). Scene 1 sets up the problem, the middle scenes show the key mechanism or insight, the last shows the result. Repeat persistent elements (e.g. the same axes) in later scenes with a quick fade (at 0, duration 300).
 
 Be faithful to the abstract: no invented numbers, datasets or claims. If the abstract is abstract, visualise the structure of the idea (inputs → mechanism → outcome) rather than fake data.
+Faithfulness rules (captions and on-screen labels too):
+- Tie every number and result to exactly the method, model, dataset and setting the abstract ties it to. Never put numbers from different settings in one label or caption, and never credit one component's result to another (e.g. an ensemble vs a single model).
+- Only write a formula if the abstract states it or it is the standard definition of a named quantity. Otherwise show the idea with shapes and words.
+- Don't invent concrete examples (sample prompts, user requests, inputs). Use generic labels such as "an intent" or "a query".
+- Explain a mechanism only as far as the abstract does; don't add how or why it works.
 
 Also write a TL;DR (one plain-English sentence for a curious non-expert, ≤ 200 chars) and exactly 3 key points (each ≤ 160 chars).
 
@@ -152,6 +157,14 @@ async function save(id: string, data: Generation, model: string): Promise<Explai
   };
   await writeJson(okFile(id), entry).catch((err) => console.warn("[explainer] cache write failed:", err));
   return { status: "ready", explainer, summary: entry.summary, source: "claude" };
+}
+
+/**
+ * Generate again with the current prompt, ignoring (and then replacing) the
+ * cache. For the faithfulness eval's before/after comparison; costs one call.
+ */
+export function regenerateExplainer(paper: Paper): Promise<ExplainerResult> {
+  return generate(paper);
 }
 
 const inFlight = new Map<string, Promise<ExplainerResult>>();
