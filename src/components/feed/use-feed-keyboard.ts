@@ -38,6 +38,8 @@ export function useFeedKeyboard({ next, prev, first, last }: Handlers) {
     function onKeyDown(e: KeyboardEvent) {
       if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || isTyping(e.target)) return;
       if (e.key === " " && ownsSpace(e.target)) return;
+      // Open dialogs (e.g. the saved drawer) own the keyboard.
+      if (e.target instanceof Element && e.target.closest("dialog")) return;
 
       const action =
         e.key === "ArrowDown" || e.key === "j" || e.key === "PageDown" || (e.key === " " && !e.shiftKey)
