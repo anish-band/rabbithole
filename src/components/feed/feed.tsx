@@ -157,7 +157,7 @@ export function Feed({ source, initialItems, Header, headerContent, loadingLabel
             onBlur={(e) => delete e.currentTarget.dataset.programmaticFocus}
             className="h-full snap-start snap-always outline-none focus-visible:not-data-programmatic-focus:outline-2 focus-visible:not-data-programmatic-focus:-outline-offset-4 focus-visible:not-data-programmatic-focus:outline-foreground/40"
           >
-            {inWindow(i) ? <PaperScreen paper={item.paper} active={i === active} /> : null}
+            {inWindow(i) ? <PaperScreen paper={item.paper} active={i === active} wantExplainer={i === active || i === active + 1} /> : null}
           </article>
         ))}
 
