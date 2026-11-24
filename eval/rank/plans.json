@@ -1,0 +1,1370 @@
+{
+ "weird physics": {
+  "claude": {
+   "mood": "weird physics",
+   "label": "Weird physics",
+   "keywords": [
+    [
+     "exotic",
+     "topological",
+     "phases"
+    ],
+    [
+     "quantum",
+     "gravity",
+     "holography"
+    ],
+    [
+     "anomalous",
+     "transport",
+     "strange",
+     "metal"
+    ],
+    [
+     "time",
+     "crystal",
+     "nonequilibrium"
+    ]
+   ],
+   "categories": [
+    "hep-th",
+    "cond-mat.str-el",
+    "quant-ph",
+    "gr-qc"
+   ],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "weird physics",
+   "keywords": [
+    [
+     "weird",
+     "physics"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ },
+ "practical llm agents": {
+  "claude": {
+   "mood": "practical llm agents",
+   "label": "Practical LLM agents",
+   "keywords": [
+    [
+     "tool",
+     "use",
+     "language",
+     "model"
+    ],
+    [
+     "llm",
+     "agent",
+     "benchmark",
+     "tool"
+    ],
+    [
+     "agentic",
+     "workflow",
+     "planning",
+     "execution"
+    ],
+    [
+     "multi-agent",
+     "llm",
+     "framework",
+     "deployment"
+    ]
+   ],
+   "categories": [
+    "cs.AI",
+    "cs.CL",
+    "cs.LG"
+   ],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "practical llm agents",
+   "keywords": [
+    [
+     "practical",
+     "llm",
+     "agents"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ },
+ "black holes": {
+  "claude": {
+   "mood": "black holes",
+   "label": "Black hole physics",
+   "keywords": [
+    [
+     "black",
+     "hole",
+     "merger",
+     "gravitational"
+    ],
+    [
+     "black",
+     "hole",
+     "event",
+     "horizon"
+    ],
+    [
+     "hawking",
+     "radiation",
+     "black",
+     "hole"
+    ],
+    [
+     "kerr",
+     "black",
+     "hole",
+     "spin"
+    ]
+   ],
+   "categories": [
+    "gr-qc",
+    "astro-ph.HE",
+    "hep-th"
+   ],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "black holes",
+   "keywords": [
+    [
+     "black",
+     "holes"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ },
+ "cars": {
+  "claude": {
+   "mood": "cars",
+   "label": "Automobiles and driving",
+   "keywords": [
+    [
+     "autonomous",
+     "driving"
+    ],
+    [
+     "vehicle",
+     "dynamics"
+    ],
+    [
+     "electric",
+     "vehicle",
+     "battery"
+    ],
+    [
+     "traffic",
+     "flow",
+     "simulation"
+    ]
+   ],
+   "categories": [
+    "cs.RO",
+    "eess.SY",
+    "cs.CV",
+    "physics.soc-ph"
+   ],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "cars",
+   "keywords": [
+    [
+     "cars"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ },
+ "self-driving perception": {
+  "claude": {
+   "label": "Self-driving perception",
+   "keywords": [
+    [
+     "autonomous",
+     "driving",
+     "perception"
+    ],
+    [
+     "3d",
+     "object",
+     "detection",
+     "lidar"
+    ],
+    [
+     "birds-eye-view",
+     "segmentation",
+     "camera"
+    ],
+    [
+     "multi-sensor",
+     "fusion",
+     "autonomous",
+     "vehicles"
+    ]
+   ],
+   "categories": [
+    "cs.CV",
+    "cs.RO",
+    "cs.LG"
+   ],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "self-driving perception",
+   "keywords": [
+    [
+     "self-driving",
+     "perception"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ },
+ "robot motion planning": {
+  "claude": {
+   "label": "Robot motion planning",
+   "keywords": [
+    [
+     "motion",
+     "planning",
+     "manipulator"
+    ],
+    [
+     "trajectory",
+     "optimization",
+     "robot"
+    ],
+    [
+     "sampling-based",
+     "motion",
+     "planning"
+    ],
+    [
+     "collision-free",
+     "path",
+     "planning"
+    ]
+   ],
+   "categories": [
+    "cs.RO",
+    "cs.AI"
+   ],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "robot motion planning",
+   "keywords": [
+    [
+     "robot",
+     "motion",
+     "planning"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ },
+ "gravitational waves": {
+  "claude": {
+   "label": "Gravitational wave science",
+   "keywords": [
+    [
+     "gravitational",
+     "waves",
+     "binary",
+     "merger"
+    ],
+    [
+     "pulsar",
+     "timing",
+     "array"
+    ],
+    [
+     "ligo",
+     "virgo",
+     "kagra",
+     "detection"
+    ],
+    [
+     "gravitational",
+     "wave",
+     "background",
+     "stochastic"
+    ]
+   ],
+   "categories": [
+    "gr-qc",
+    "astro-ph.HE",
+    "astro-ph.CO"
+   ],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "gravitational waves",
+   "keywords": [
+    [
+     "gravitational",
+     "waves"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ },
+ "holography and quantum gravity": {
+  "claude": {
+   "label": "Holography and quantum gravity",
+   "keywords": [
+    [
+     "holographic",
+     "duality",
+     "bulk",
+     "boundary"
+    ],
+    [
+     "adscft",
+     "correspondence",
+     "entanglement",
+     "entropy"
+    ],
+    [
+     "quantum",
+     "gravity",
+     "holographic",
+     "spacetime"
+    ],
+    [
+     "ryu-takayanagi",
+     "entanglement",
+     "wedge"
+    ]
+   ],
+   "categories": [
+    "hep-th",
+    "gr-qc"
+   ],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "holography and quantum gravity",
+   "keywords": [
+    [
+     "holography",
+     "quantum",
+     "gravity"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ },
+ "strange metals": {
+  "claude": {
+   "label": "Strange metals",
+   "keywords": [
+    [
+     "strange",
+     "metal",
+     "linear",
+     "resistivity"
+    ],
+    [
+     "non-fermi",
+     "liquid",
+     "quantum",
+     "critical"
+    ],
+    [
+     "planckian",
+     "dissipation",
+     "transport"
+    ],
+    [
+     "cuprate",
+     "strange",
+     "metal"
+    ]
+   ],
+   "categories": [
+    "cond-mat.str-el",
+    "hep-th"
+   ],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "strange metals",
+   "keywords": [
+    [
+     "strange",
+     "metals"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ },
+ "time crystals": {
+  "claude": {
+   "label": "Time crystals",
+   "keywords": [
+    [
+     "discrete",
+     "time",
+     "crystal"
+    ],
+    [
+     "time",
+     "crystal",
+     "periodic",
+     "driving"
+    ],
+    [
+     "floquet",
+     "time",
+     "crystal"
+    ],
+    [
+     "boundary",
+     "time",
+     "crystal",
+     "many-body"
+    ]
+   ],
+   "categories": [
+    "quant-ph"
+   ],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "time crystals",
+   "keywords": [
+    [
+     "time",
+     "crystals"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ },
+ "topological phases of matter": {
+  "claude": {
+   "label": "Topological phases of matter",
+   "keywords": [
+    [
+     "topological",
+     "phase",
+     "matter"
+    ],
+    [
+     "topological",
+     "insulator"
+    ],
+    [
+     "topological",
+     "order",
+     "anyons"
+    ],
+    [
+     "symmetry",
+     "protected",
+     "topological"
+    ]
+   ],
+   "categories": [
+    "cond-mat.str-el",
+    "hep-th"
+   ],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "topological phases of matter",
+   "keywords": [
+    [
+     "topological",
+     "phases",
+     "matter"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ },
+ "language models using tools": {
+  "claude": {
+   "label": "Tool-using language models",
+   "keywords": [
+    [
+     "tool",
+     "use",
+     "language",
+     "models"
+    ],
+    [
+     "tool",
+     "augmented",
+     "llm"
+    ],
+    [
+     "function",
+     "calling",
+     "llm"
+    ],
+    [
+     "api",
+     "calls",
+     "language",
+     "model"
+    ]
+   ],
+   "categories": [
+    "cs.CL",
+    "cs.AI",
+    "cs.LG"
+   ],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "language models using tools",
+   "keywords": [
+    [
+     "language",
+     "models",
+     "using",
+     "tools"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ },
+ "benchmarks for ai agents": {
+  "claude": {
+   "label": "AI agent benchmarks",
+   "keywords": [
+    [
+     "agent",
+     "benchmark"
+    ],
+    [
+     "llm",
+     "agents",
+     "evaluation",
+     "tasks"
+    ],
+    [
+     "tool",
+     "use",
+     "benchmark",
+     "language"
+    ],
+    [
+     "web",
+     "navigation",
+     "agents",
+     "benchmark"
+    ]
+   ],
+   "categories": [
+    "cs.AI",
+    "cs.CL",
+    "cs.LG"
+   ],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "benchmarks for ai agents",
+   "keywords": [
+    [
+     "benchmarks",
+     "ai",
+     "agents"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ },
+ "multi-agent systems": {
+  "claude": {
+   "label": "Multi-agent systems",
+   "keywords": [
+    [
+     "multi-agent",
+     "reinforcement",
+     "learning"
+    ],
+    [
+     "multi-agent",
+     "coordination",
+     "llm"
+    ],
+    [
+     "agent",
+     "society",
+     "simulation"
+    ],
+    [
+     "cooperative",
+     "game",
+     "agents"
+    ]
+   ],
+   "categories": [
+    "cs.MA",
+    "cs.AI",
+    "cs.LG"
+   ],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "multi-agent systems",
+   "keywords": [
+    [
+     "multi-agent",
+     "systems"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ },
+ "3d vision": {
+  "claude": {
+   "label": "3D vision",
+   "keywords": [
+    [
+     "neural",
+     "radiance",
+     "fields"
+    ],
+    [
+     "point",
+     "cloud",
+     "segmentation"
+    ],
+    [
+     "multi",
+     "view",
+     "stereo",
+     "reconstruction"
+    ],
+    [
+     "gaussian",
+     "splatting",
+     "scene"
+    ]
+   ],
+   "categories": [
+    "cs.CV",
+    "cs.GR",
+    "cs.RO"
+   ],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "3d vision",
+   "keywords": [
+    [
+     "3d",
+     "vision"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ },
+ "image and video generation": {
+  "claude": {
+   "label": "Image and video generation",
+   "keywords": [
+    [
+     "diffusion",
+     "image",
+     "generation"
+    ],
+    [
+     "text",
+     "video",
+     "generation"
+    ],
+    [
+     "latent",
+     "diffusion",
+     "model"
+    ],
+    [
+     "video",
+     "diffusion",
+     "transformer"
+    ]
+   ],
+   "categories": [
+    "cs.CV",
+    "cs.LG",
+    "cs.GR"
+   ],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "image and video generation",
+   "keywords": [
+    [
+     "image",
+     "video",
+     "generation"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ },
+ "quantum computing hardware": {
+  "claude": {
+   "label": "Quantum computing hardware",
+   "keywords": [
+    [
+     "superconducting",
+     "qubits"
+    ],
+    [
+     "trapped",
+     "ion",
+     "qubits"
+    ],
+    [
+     "quantum",
+     "error",
+     "correction",
+     "surface"
+    ],
+    [
+     "neutral",
+     "atom",
+     "quantum",
+     "processor"
+    ]
+   ],
+   "categories": [
+    "quant-ph"
+   ],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "quantum computing hardware",
+   "keywords": [
+    [
+     "quantum",
+     "computing",
+     "hardware"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ },
+ "hawking radiation": {
+  "claude": {
+   "label": "Black hole evaporation",
+   "keywords": [
+    [
+     "hawking",
+     "radiation"
+    ],
+    [
+     "black",
+     "hole",
+     "evaporation"
+    ],
+    [
+     "semiclassical",
+     "gravity",
+     "horizon"
+    ],
+    [
+     "hawking",
+     "temperature",
+     "quantum",
+     "field"
+    ]
+   ],
+   "categories": [
+    "hep-th",
+    "gr-qc",
+    "astro-ph.HE"
+   ],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "hawking radiation",
+   "keywords": [
+    [
+     "hawking",
+     "radiation"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ },
+ "neutron stars and high-energy astrophysics": {
+  "claude": {
+   "label": "Neutron stars and high-energy astrophysi",
+   "keywords": [
+    [
+     "neutron",
+     "star",
+     "equation",
+     "state"
+    ],
+    [
+     "magnetar",
+     "x-ray",
+     "burst"
+    ],
+    [
+     "pulsar",
+     "timing",
+     "gravitational",
+     "wave"
+    ],
+    [
+     "neutron",
+     "star",
+     "merger",
+     "kilonova"
+    ]
+   ],
+   "categories": [
+    "astro-ph.HE",
+    "astro-ph.SR",
+    "nucl-th"
+   ],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "neutron stars and high-energy astrophysi",
+   "keywords": [
+    [
+     "neutron",
+     "stars",
+     "high-energy",
+     "astrophysics"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ },
+ "ultracold atoms": {
+  "claude": {
+   "label": "Ultracold atomic gases",
+   "keywords": [
+    [
+     "ultracold",
+     "atoms"
+    ],
+    [
+     "bose-einstein",
+     "condensate"
+    ],
+    [
+     "optical",
+     "lattice",
+     "fermi",
+     "gas"
+    ],
+    [
+     "quantum",
+     "degenerate",
+     "gas"
+    ]
+   ],
+   "categories": [],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "ultracold atoms",
+   "keywords": [
+    [
+     "ultracold",
+     "atoms"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ },
+ "traffic and vehicle control": {
+  "claude": {
+   "label": "Traffic and vehicle control",
+   "keywords": [
+    [
+     "traffic",
+     "signal",
+     "control"
+    ],
+    [
+     "vehicle",
+     "platooning"
+    ],
+    [
+     "autonomous",
+     "vehicle",
+     "motion",
+     "planning"
+    ],
+    [
+     "intersection",
+     "management",
+     "connected",
+     "vehicles"
+    ]
+   ],
+   "categories": [
+    "eess.SY",
+    "cs.RO",
+    "math.OC"
+   ],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "traffic and vehicle control",
+   "keywords": [
+    [
+     "traffic",
+     "vehicle",
+     "control"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ },
+ "retrieval and search for llms": {
+  "claude": {
+   "label": "LLM retrieval and search",
+   "keywords": [
+    [
+     "retrieval",
+     "augmented",
+     "generation"
+    ],
+    [
+     "dense",
+     "passage",
+     "retrieval"
+    ],
+    [
+     "search",
+     "agents",
+     "language",
+     "models"
+    ],
+    [
+     "web",
+     "browsing",
+     "llm"
+    ]
+   ],
+   "categories": [
+    "cs.CL",
+    "cs.IR",
+    "cs.LG"
+   ],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "retrieval and search for llms",
+   "keywords": [
+    [
+     "retrieval",
+     "search",
+     "llms"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ },
+ "ai safety and security": {
+  "claude": {
+   "label": "AI safety and security",
+   "keywords": [
+    [
+     "adversarial",
+     "robustness",
+     "neural",
+     "networks"
+    ],
+    [
+     "jailbreak",
+     "large",
+     "language",
+     "models"
+    ],
+    [
+     "prompt",
+     "injection",
+     "attacks"
+    ],
+    [
+     "alignment",
+     "red",
+     "teaming",
+     "llm"
+    ]
+   ],
+   "categories": [
+    "cs.CR",
+    "cs.AI",
+    "cs.LG"
+   ],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "ai safety and security",
+   "keywords": [
+    [
+     "ai",
+     "safety",
+     "security"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ },
+ "reasoning in language models": {
+  "claude": {
+   "label": "Language model reasoning",
+   "keywords": [
+    [
+     "chain",
+     "thought",
+     "reasoning"
+    ],
+    [
+     "reasoning",
+     "large",
+     "language",
+     "models"
+    ],
+    [
+     "mathematical",
+     "reasoning",
+     "benchmark"
+    ],
+    [
+     "test-time",
+     "compute",
+     "scaling",
+     "reasoning"
+    ]
+   ],
+   "categories": [
+    "cs.CL",
+    "cs.AI",
+    "cs.LG"
+   ],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "reasoning in language models",
+   "keywords": [
+    [
+     "reasoning",
+     "language",
+     "models"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ },
+ "galaxies": {
+  "claude": {
+   "label": "Galaxy formation and evolution",
+   "keywords": [
+    [
+     "galaxy",
+     "formation",
+     "simulation"
+    ],
+    [
+     "galaxy",
+     "morphology",
+     "classification"
+    ],
+    [
+     "spiral",
+     "galaxy",
+     "rotation",
+     "curve"
+    ],
+    [
+     "active",
+     "galactic",
+     "nuclei",
+     "feedback"
+    ]
+   ],
+   "categories": [
+    "astro-ph.GA",
+    "astro-ph.CO"
+   ],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "galaxies",
+   "keywords": [
+    [
+     "galaxies"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ },
+ "superconductivity": {
+  "claude": {
+   "label": "Superconductivity research",
+   "keywords": [
+    [
+     "superconductivity",
+     "pairing"
+    ],
+    [
+     "superconducting",
+     "transition",
+     "temperature"
+    ],
+    [
+     "unconventional",
+     "superconductor"
+    ],
+    [
+     "cuprate",
+     "superconductivity"
+    ]
+   ],
+   "categories": [
+    "cond-mat.str-el"
+   ],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "superconductivity",
+   "keywords": [
+    [
+     "superconductivity"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ },
+ "something mind-bending": {
+  "claude": {
+   "label": "Mind-bending theory",
+   "keywords": [
+    [
+     "quantum",
+     "foundations",
+     "paradox"
+    ],
+    [
+     "emergent",
+     "spacetime",
+     "holography"
+    ],
+    [
+     "strange",
+     "loops",
+     "self-reference"
+    ],
+    [
+     "consciousness",
+     "integrated",
+     "information"
+    ]
+   ],
+   "categories": [
+    "quant-ph",
+    "hep-th",
+    "gr-qc",
+    "q-bio.NC"
+   ],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "something mind-bending",
+   "keywords": [
+    [
+     "mind-bending"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ },
+ "machine learning for physics": {
+  "claude": {
+   "label": "ML for physics",
+   "keywords": [
+    [
+     "neural",
+     "networks",
+     "physics",
+     "simulation"
+    ],
+    [
+     "physics-informed",
+     "neural",
+     "networks"
+    ],
+    [
+     "machine",
+     "learning",
+     "particle",
+     "physics"
+    ],
+    [
+     "surrogate",
+     "model",
+     "differential",
+     "equations"
+    ]
+   ],
+   "categories": [
+    "hep-ex",
+    "cs.LG",
+    "hep-ph"
+   ],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "machine learning for physics",
+   "keywords": [
+    [
+     "machine",
+     "learning",
+     "physics"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ },
+ "spinning black holes": {
+  "claude": {
+   "label": "Spinning black holes",
+   "keywords": [
+    [
+     "kerr",
+     "black",
+     "hole",
+     "spin"
+    ],
+    [
+     "black",
+     "hole",
+     "spin",
+     "measurement"
+    ],
+    [
+     "rapidly",
+     "rotating",
+     "black",
+     "hole"
+    ],
+    [
+     "kerr",
+     "black",
+     "hole",
+     "quasinormal"
+    ]
+   ],
+   "categories": [
+    "gr-qc",
+    "astro-ph.HE",
+    "hep-th"
+   ],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "spinning black holes",
+   "keywords": [
+    [
+     "spinning",
+     "black",
+     "holes"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ },
+ "how robots see the world": {
+  "claude": {
+   "label": "Robot visual perception",
+   "keywords": [
+    [
+     "robot",
+     "visual",
+     "perception"
+    ],
+    [
+     "embodied",
+     "vision",
+     "scene",
+     "understanding"
+    ],
+    [
+     "robotic",
+     "manipulation",
+     "visual",
+     "representation"
+    ],
+    [
+     "robot",
+     "depth",
+     "estimation",
+     "sensing"
+    ]
+   ],
+   "categories": [
+    "cs.RO",
+    "cs.CV"
+   ],
+   "source": "claude"
+  },
+  "fallback": {
+   "label": "how robots see the world",
+   "keywords": [
+    [
+     "how",
+     "robots",
+     "see",
+     "world"
+    ]
+   ],
+   "categories": [],
+   "source": "fallback"
+  }
+ }
+}

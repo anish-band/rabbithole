@@ -1,0 +1,6 @@
+{
+ "system": "claude plan → rank",
+ "p8": 0.4375,
+ "ndcg10": 0.5316395603554585,
+ "tolerance": 0.02
+}

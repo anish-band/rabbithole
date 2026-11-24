@@ -37,6 +37,20 @@ jobs:
       - name: Unit tests
         run: npm test
 
+      # Local embedding model (~23 MB from Hugging Face) and the pool's embeddings.
+      - name: Cache embeddings
+        uses: actions/cache@v4
+        with:
+          path: |
+            data/models
+            data/embeddings
+          key: embeddings-${{ hashFiles('src/lib/rank/embed.ts') }}-${{ hashFiles('eval/rank/pool.json') }}
+          restore-keys: embeddings-${{ hashFiles('src/lib/rank/embed.ts') }}-
+
+      # Offline and free: frozen pool, plans and labels; fails on a > 0.02 drop vs eval/rank/baseline.json.
+      - name: Ranking eval
+        run: npm run eval:rank -- --check
+
       - name: Cache Next.js build
         uses: actions/cache@v4
         with:

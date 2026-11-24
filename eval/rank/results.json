@@ -1,0 +1,951 @@
+{
+ "moods": 30,
+ "unscored": [],
+ "poolSize": 322,
+ "weights": {
+  "mood": 1,
+  "taste": 0.45,
+  "dislike": 0.35,
+  "recency": 0.08,
+  "seen": 0.3,
+  "diversity": 0.25,
+  "duplicateFloor": 0.5
+ },
+ "systems": {
+  "claude plan → rank": {
+   "p8": 0.4375,
+   "ndcg10": 0.5316395603554585,
+   "coverage10": 0.5638888888888888,
+   "recall": 0.31063173848851366,
+   "judged10": 1
+  },
+  "keyword fallback → rank": {
+   "p8": 0.36666666666666664,
+   "ndcg10": 0.4484374040745102,
+   "coverage10": 0.4894444444444444,
+   "recall": 0.2469402172456609,
+   "judged10": 1
+  },
+  "rank whole pool": {
+   "p8": 0.5666666666666667,
+   "ndcg10": 0.7457083936998765,
+   "coverage10": 0.7250793650793651,
+   "recall": 1,
+   "judged10": 1
+  }
+ },
+ "sweep": [
+  {
+   "recency": 0,
+   "diversity": 0,
+   "scores": {
+    "p8": 0.45,
+    "ndcg10": 0.5370693212563155,
+    "coverage10": 0.5677777777777777,
+    "recall": 0.31063173848851366,
+    "judged10": 1
+   }
+  },
+  {
+   "recency": 0.08,
+   "diversity": 0,
+   "scores": {
+    "p8": 0.44583333333333336,
+    "ndcg10": 0.5365334434150058,
+    "coverage10": 0.5483333333333332,
+    "recall": 0.31063173848851366,
+    "judged10": 1
+   }
+  },
+  {
+   "recency": 0.04,
+   "diversity": 0,
+   "scores": {
+    "p8": 0.44583333333333336,
+    "ndcg10": 0.5357190311932486,
+    "coverage10": 0.5483333333333332,
+    "recall": 0.31063173848851366,
+    "judged10": 1
+   }
+  },
+  {
+   "recency": 0.32,
+   "diversity": 0,
+   "scores": {
+    "p8": 0.44583333333333336,
+    "ndcg10": 0.5348830077415347,
+    "coverage10": 0.5313492063492063,
+    "recall": 0.31063173848851366,
+    "judged10": 0.9966666666666666
+   }
+  },
+  {
+   "recency": 0.16,
+   "diversity": 0,
+   "scores": {
+    "p8": 0.44583333333333336,
+    "ndcg10": 0.5348719036431114,
+    "coverage10": 0.5388888888888889,
+    "recall": 0.31063173848851366,
+    "judged10": 1
+   }
+  },
+  {
+   "recency": 0.04,
+   "diversity": 0.25,
+   "scores": {
+    "p8": 0.4375,
+    "ndcg10": 0.533976521973807,
+    "coverage10": 0.5705555555555556,
+    "recall": 0.31063173848851366,
+    "judged10": 1
+   }
+  },
+  {
+   "recency": 0,
+   "diversity": 0.25,
+   "scores": {
+    "p8": 0.44166666666666665,
+    "ndcg10": 0.5336780928723334,
+    "coverage10": 0.5705555555555556,
+    "recall": 0.31063173848851366,
+    "judged10": 1
+   }
+  },
+  {
+   "recency": 0.04,
+   "diversity": 0.125,
+   "scores": {
+    "p8": 0.44583333333333336,
+    "ndcg10": 0.5327766221617924,
+    "coverage10": 0.5649999999999998,
+    "recall": 0.31063173848851366,
+    "judged10": 1
+   }
+  },
+  {
+   "recency": 0,
+   "diversity": 0.125,
+   "scores": {
+    "p8": 0.44583333333333336,
+    "ndcg10": 0.5327261394342142,
+    "coverage10": 0.5649999999999998,
+    "recall": 0.31063173848851366,
+    "judged10": 1
+   }
+  },
+  {
+   "recency": 0.08,
+   "diversity": 0.125,
+   "scores": {
+    "p8": 0.44166666666666665,
+    "ndcg10": 0.5322473163310499,
+    "coverage10": 0.5649999999999998,
+    "recall": 0.31063173848851366,
+    "judged10": 1
+   }
+  },
+  {
+   "recency": 0.16,
+   "diversity": 0.125,
+   "scores": {
+    "p8": 0.4375,
+    "ndcg10": 0.5319273791355411,
+    "coverage10": 0.5583333333333333,
+    "recall": 0.31063173848851366,
+    "judged10": 1
+   }
+  },
+  {
+   "recency": 0.32,
+   "diversity": 0.125,
+   "scores": {
+    "p8": 0.43333333333333335,
+    "ndcg10": 0.531738751079986,
+    "coverage10": 0.5444444444444444,
+    "recall": 0.31063173848851366,
+    "judged10": 0.9966666666666666
+   }
+  },
+  {
+   "recency": 0.08,
+   "diversity": 0.25,
+   "scores": {
+    "p8": 0.4375,
+    "ndcg10": 0.5316395603554585,
+    "coverage10": 0.5638888888888888,
+    "recall": 0.31063173848851366,
+    "judged10": 1
+   }
+  },
+  {
+   "recency": 0.16,
+   "diversity": 0.25,
+   "scores": {
+    "p8": 0.4375,
+    "ndcg10": 0.5314647736815659,
+    "coverage10": 0.5611111111111111,
+    "recall": 0.31063173848851366,
+    "judged10": 1
+   }
+  },
+  {
+   "recency": 0.04,
+   "diversity": 0.5,
+   "scores": {
+    "p8": 0.42916666666666664,
+    "ndcg10": 0.5290236418133971,
+    "coverage10": 0.5816666666666667,
+    "recall": 0.31063173848851366,
+    "judged10": 1
+   }
+  },
+  {
+   "recency": 0,
+   "diversity": 0.5,
+   "scores": {
+    "p8": 0.43333333333333335,
+    "ndcg10": 0.5287042091009105,
+    "coverage10": 0.5816666666666667,
+    "recall": 0.31063173848851366,
+    "judged10": 1
+   }
+  },
+  {
+   "recency": 0.16,
+   "diversity": 0.5,
+   "scores": {
+    "p8": 0.425,
+    "ndcg10": 0.5261155004735083,
+    "coverage10": 0.5797619047619047,
+    "recall": 0.31063173848851366,
+    "judged10": 1
+   }
+  },
+  {
+   "recency": 0.08,
+   "diversity": 0.5,
+   "scores": {
+    "p8": 0.425,
+    "ndcg10": 0.5259636538462291,
+    "coverage10": 0.5749999999999998,
+    "recall": 0.31063173848851366,
+    "judged10": 1
+   }
+  },
+  {
+   "recency": 0.32,
+   "diversity": 0.25,
+   "scores": {
+    "p8": 0.4375,
+    "ndcg10": 0.5256493778343452,
+    "coverage10": 0.5555555555555555,
+    "recall": 0.31063173848851366,
+    "judged10": 0.9933333333333334
+   }
+  },
+  {
+   "recency": 0.32,
+   "diversity": 0.5,
+   "scores": {
+    "p8": 0.4166666666666667,
+    "ndcg10": 0.5213347170158543,
+    "coverage10": 0.5742063492063492,
+    "recall": 0.31063173848851366,
+    "judged10": 0.9933333333333334
+   }
+  }
+ ],
+ "perMood": {
+  "weird physics": {
+   "claude plan → rank": {
+    "p8": 0.875,
+    "ndcg10": 0.9537125187088151,
+    "coverage10": 0.5,
+    "recall": 0.660377358490566,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 0,
+    "ndcg10": 0,
+    "coverage10": 0,
+    "recall": 0,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 0.875,
+    "ndcg10": 0.8824665955977138,
+    "coverage10": 0.5,
+    "recall": 1,
+    "judged10": 1
+   }
+  },
+  "practical llm agents": {
+   "claude plan → rank": {
+    "p8": 0.5,
+    "ndcg10": 0.6447356365332964,
+    "coverage10": 1,
+    "recall": 0.7948717948717948,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 0.25,
+    "ndcg10": 0.3222722491219546,
+    "coverage10": 0.4,
+    "recall": 0.07692307692307693,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 0.5,
+    "ndcg10": 0.6023217777339952,
+    "coverage10": 1,
+    "recall": 1,
+    "judged10": 1
+   }
+  },
+  "black holes": {
+   "claude plan → rank": {
+    "p8": 1,
+    "ndcg10": 1,
+    "coverage10": 1,
+    "recall": 0.8888888888888888,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 1,
+    "ndcg10": 1,
+    "coverage10": 1,
+    "recall": 0.9444444444444444,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 1,
+    "ndcg10": 1,
+    "coverage10": 1,
+    "recall": 1,
+    "judged10": 1
+   }
+  },
+  "cars": {
+   "claude plan → rank": {
+    "p8": 1,
+    "ndcg10": 1,
+    "coverage10": 0.8333333333333334,
+    "recall": 0.9069767441860465,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 1,
+    "ndcg10": 1,
+    "coverage10": 0.6666666666666666,
+    "recall": 0.2558139534883721,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 1,
+    "ndcg10": 1,
+    "coverage10": 0.6666666666666666,
+    "recall": 1,
+    "judged10": 1
+   }
+  },
+  "self-driving perception": {
+   "claude plan → rank": {
+    "p8": 0.75,
+    "ndcg10": 0.7374943749026186,
+    "coverage10": 1,
+    "recall": 0.34285714285714286,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 0.125,
+    "ndcg10": 0.21222636597291455,
+    "coverage10": 1,
+    "recall": 0.05714285714285714,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 0.25,
+    "ndcg10": 0.4589627680851435,
+    "coverage10": 1,
+    "recall": 1,
+    "judged10": 1
+   }
+  },
+  "robot motion planning": {
+   "claude plan → rank": {
+    "p8": 0,
+    "ndcg10": 0,
+    "coverage10": 0,
+    "recall": 0,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 0,
+    "ndcg10": 0,
+    "coverage10": 0,
+    "recall": 0,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 0.25,
+    "ndcg10": 0.7455584006528521,
+    "coverage10": 1,
+    "recall": 1,
+    "judged10": 1
+   }
+  },
+  "gravitational waves": {
+   "claude plan → rank": {
+    "p8": 1,
+    "ndcg10": 1,
+    "coverage10": 1,
+    "recall": 0.6551724137931034,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 1,
+    "ndcg10": 1,
+    "coverage10": 1,
+    "recall": 0.7586206896551724,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 1,
+    "ndcg10": 0.9363792118010483,
+    "coverage10": 1,
+    "recall": 1,
+    "judged10": 1
+   }
+  },
+  "holography and quantum gravity": {
+   "claude plan → rank": {
+    "p8": 1,
+    "ndcg10": 0.8701249883466592,
+    "coverage10": 0.75,
+    "recall": 0.2857142857142857,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 1,
+    "ndcg10": 1,
+    "coverage10": 0.75,
+    "recall": 0.7857142857142857,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 1,
+    "ndcg10": 1,
+    "coverage10": 0.75,
+    "recall": 1,
+    "judged10": 1
+   }
+  },
+  "strange metals": {
+   "claude plan → rank": {
+    "p8": 0.625,
+    "ndcg10": 0.8062502433656067,
+    "coverage10": 0.6666666666666666,
+    "recall": 0.5555555555555556,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 0.75,
+    "ndcg10": 0.8698739994728925,
+    "coverage10": 0.3333333333333333,
+    "recall": 0.8518518518518519,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 0.75,
+    "ndcg10": 0.8698739994728925,
+    "coverage10": 0.3333333333333333,
+    "recall": 1,
+    "judged10": 1
+   }
+  },
+  "time crystals": {
+   "claude plan → rank": {
+    "p8": 1,
+    "ndcg10": 1,
+    "coverage10": 0.42857142857142855,
+    "recall": 0.6296296296296297,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 1,
+    "ndcg10": 1,
+    "coverage10": 0.7142857142857143,
+    "recall": 0.8888888888888888,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 1,
+    "ndcg10": 1,
+    "coverage10": 0.7142857142857143,
+    "recall": 1,
+    "judged10": 1
+   }
+  },
+  "topological phases of matter": {
+   "claude plan → rank": {
+    "p8": 0.5,
+    "ndcg10": 0.7430580004525728,
+    "coverage10": 0.3333333333333333,
+    "recall": 0.35294117647058826,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 0.625,
+    "ndcg10": 0.7118141052352056,
+    "coverage10": 0.5,
+    "recall": 0.3235294117647059,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 0.75,
+    "ndcg10": 0.8064934766869569,
+    "coverage10": 0.6666666666666666,
+    "recall": 1,
+    "judged10": 1
+   }
+  },
+  "language models using tools": {
+   "claude plan → rank": {
+    "p8": 0.625,
+    "ndcg10": 0.7142201691923521,
+    "coverage10": 0.42857142857142855,
+    "recall": 0.6176470588235294,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 0.625,
+    "ndcg10": 0.7364518058565852,
+    "coverage10": 0.42857142857142855,
+    "recall": 0.47058823529411764,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 0.625,
+    "ndcg10": 0.6447552160550108,
+    "coverage10": 0.42857142857142855,
+    "recall": 1,
+    "judged10": 1
+   }
+  },
+  "benchmarks for ai agents": {
+   "claude plan → rank": {
+    "p8": 0.875,
+    "ndcg10": 0.8532721558012798,
+    "coverage10": 0.5714285714285714,
+    "recall": 0.7692307692307693,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 0.25,
+    "ndcg10": 0.35895421017163465,
+    "coverage10": 0.2857142857142857,
+    "recall": 0.05128205128205128,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 0.625,
+    "ndcg10": 0.6173517736889357,
+    "coverage10": 0.42857142857142855,
+    "recall": 1,
+    "judged10": 1
+   }
+  },
+  "multi-agent systems": {
+   "claude plan → rank": {
+    "p8": 0.5,
+    "ndcg10": 0.5637884576902256,
+    "coverage10": 0.5714285714285714,
+    "recall": 0.1,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 0.625,
+    "ndcg10": 0.6489315753318465,
+    "coverage10": 0.5714285714285714,
+    "recall": 0.125,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 0.625,
+    "ndcg10": 0.7445530561574183,
+    "coverage10": 0.7142857142857143,
+    "recall": 1,
+    "judged10": 1
+   }
+  },
+  "3d vision": {
+   "claude plan → rank": {
+    "p8": 0,
+    "ndcg10": 0,
+    "coverage10": 0,
+    "recall": 0,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 0,
+    "ndcg10": 0.137985673277425,
+    "coverage10": 1,
+    "recall": 0.1,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 0.625,
+    "ndcg10": 0.7527014736697213,
+    "coverage10": 1,
+    "recall": 1,
+    "judged10": 1
+   }
+  },
+  "image and video generation": {
+   "claude plan → rank": {
+    "p8": 0.25,
+    "ndcg10": 0.5165270670366633,
+    "coverage10": 1,
+    "recall": 0.13636363636363635,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 0.125,
+    "ndcg10": 0.2873431773791806,
+    "coverage10": 1,
+    "recall": 0.045454545454545456,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 0.625,
+    "ndcg10": 0.964650060905035,
+    "coverage10": 1,
+    "recall": 1,
+    "judged10": 1
+   }
+  },
+  "quantum computing hardware": {
+   "claude plan → rank": {
+    "p8": 0,
+    "ndcg10": 0,
+    "coverage10": 0,
+    "recall": 0,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 0,
+    "ndcg10": 0,
+    "coverage10": 0,
+    "recall": 0,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 0.625,
+    "ndcg10": 0.7471748562658067,
+    "coverage10": 0.5,
+    "recall": 1,
+    "judged10": 1
+   }
+  },
+  "hawking radiation": {
+   "claude plan → rank": {
+    "p8": 0.125,
+    "ndcg10": 0.5548860438136117,
+    "coverage10": 1,
+    "recall": 0.11764705882352941,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 0.125,
+    "ndcg10": 0.45846608015576257,
+    "coverage10": 1,
+    "recall": 0.058823529411764705,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 0.125,
+    "ndcg10": 0.8206272012261059,
+    "coverage10": 1,
+    "recall": 1,
+    "judged10": 1
+   }
+  },
+  "neutron stars and high-energy astrophysics": {
+   "claude plan → rank": {
+    "p8": 0,
+    "ndcg10": 0.07336392209936005,
+    "coverage10": 0,
+    "recall": 0.038461538461538464,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 0,
+    "ndcg10": 0,
+    "coverage10": 0,
+    "recall": 0,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 0.375,
+    "ndcg10": 0.46710345479994453,
+    "coverage10": 0.5,
+    "recall": 1,
+    "judged10": 1
+   }
+  },
+  "ultracold atoms": {
+   "claude plan → rank": {
+    "p8": 0.125,
+    "ndcg10": 0.32555948446634864,
+    "coverage10": 0.5,
+    "recall": 0.1,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 0.125,
+    "ndcg10": 0.32555948446634864,
+    "coverage10": 0.5,
+    "recall": 0.1,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 0.25,
+    "ndcg10": 0.5446804360775039,
+    "coverage10": 0.5,
+    "recall": 1,
+    "judged10": 1
+   }
+  },
+  "traffic and vehicle control": {
+   "claude plan → rank": {
+    "p8": 0.25,
+    "ndcg10": 0.39563617122131467,
+    "coverage10": 0.6666666666666666,
+    "recall": 0.08333333333333333,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 0.375,
+    "ndcg10": 0.4690000933206747,
+    "coverage10": 0.3333333333333333,
+    "recall": 0.08333333333333333,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 0.875,
+    "ndcg10": 0.9266360779006398,
+    "coverage10": 0.6666666666666666,
+    "recall": 1,
+    "judged10": 1
+   }
+  },
+  "retrieval and search for llms": {
+   "claude plan → rank": {
+    "p8": 0.125,
+    "ndcg10": 0.31381995052683836,
+    "coverage10": 0.6666666666666666,
+    "recall": 0.07407407407407407,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 0,
+    "ndcg10": 0,
+    "coverage10": 0,
+    "recall": 0,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 0.25,
+    "ndcg10": 0.7155635621416297,
+    "coverage10": 0.6666666666666666,
+    "recall": 1,
+    "judged10": 1
+   }
+  },
+  "ai safety and security": {
+   "claude plan → rank": {
+    "p8": 0.125,
+    "ndcg10": 0.2689885290230043,
+    "coverage10": 0.25,
+    "recall": 0.05263157894736842,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 0,
+    "ndcg10": 0,
+    "coverage10": 0,
+    "recall": 0,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 0.125,
+    "ndcg10": 0.5318932969891421,
+    "coverage10": 0.75,
+    "recall": 1,
+    "judged10": 1
+   }
+  },
+  "reasoning in language models": {
+   "claude plan → rank": {
+    "p8": 0.625,
+    "ndcg10": 0.6252045707171096,
+    "coverage10": 0.8,
+    "recall": 0.41379310344827586,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 0.625,
+    "ndcg10": 0.6912068936114337,
+    "coverage10": 0.6,
+    "recall": 0.5172413793103449,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 0.375,
+    "ndcg10": 0.5837799102804881,
+    "coverage10": 0.6,
+    "recall": 1,
+    "judged10": 1
+   }
+  },
+  "galaxies": {
+   "claude plan → rank": {
+    "p8": 0,
+    "ndcg10": 0,
+    "coverage10": 0,
+    "recall": 0,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 0.5,
+    "ndcg10": 0.8821487471586762,
+    "coverage10": 1,
+    "recall": 0.41379310344827586,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 0.375,
+    "ndcg10": 0.7100675227065795,
+    "coverage10": 0.6666666666666666,
+    "recall": 1,
+    "judged10": 1
+   }
+  },
+  "superconductivity": {
+   "claude plan → rank": {
+    "p8": 0.5,
+    "ndcg10": 0.6757521309946626,
+    "coverage10": 1,
+    "recall": 0.375,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 0.5,
+    "ndcg10": 0.658118656026477,
+    "coverage10": 1,
+    "recall": 0.3333333333333333,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 0.375,
+    "ndcg10": 0.6186580430522067,
+    "coverage10": 1,
+    "recall": 1,
+    "judged10": 1
+   }
+  },
+  "something mind-bending": {
+   "claude plan → rank": {
+    "p8": 0.375,
+    "ndcg10": 0.6123081261630569,
+    "coverage10": 0.75,
+    "recall": 0.23076923076923078,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 0,
+    "ndcg10": 0,
+    "coverage10": 0,
+    "recall": 0,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 0,
+    "ndcg10": 0.10750448449290889,
+    "coverage10": 0,
+    "recall": 1,
+    "judged10": 1
+   }
+  },
+  "machine learning for physics": {
+   "claude plan → rank": {
+    "p8": 0.125,
+    "ndcg10": 0.266379247589265,
+    "coverage10": 0.2,
+    "recall": 0.04878048780487805,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 0.125,
+    "ndcg10": 0.21222636597291455,
+    "coverage10": 0.1,
+    "recall": 0.04878048780487805,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 0.625,
+    "ndcg10": 0.7812918015456903,
+    "coverage10": 0.7,
+    "recall": 1,
+    "judged10": 1
+   }
+  },
+  "spinning black holes": {
+   "claude plan → rank": {
+    "p8": 0.25,
+    "ndcg10": 0.43410502201909207,
+    "coverage10": 1,
+    "recall": 0.08823529411764706,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 0.25,
+    "ndcg10": 0.47054263970337656,
+    "coverage10": 0.5,
+    "recall": 0.11764705882352941,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 0.625,
+    "ndcg10": 0.8056106412479717,
+    "coverage10": 1,
+    "recall": 1,
+    "judged10": 1
+   }
+  },
+  "how robots see the world": {
+   "claude plan → rank": {
+    "p8": 0,
+    "ndcg10": 0,
+    "coverage10": 0,
+    "recall": 0,
+    "judged10": 1
+   },
+   "keyword fallback → rank": {
+    "p8": 0,
+    "ndcg10": 0,
+    "coverage10": 0,
+    "recall": 0,
+    "judged10": 1
+   },
+   "rank whole pool": {
+    "p8": 0.5,
+    "ndcg10": 0.9845927117629543,
+    "coverage10": 1,
+    "recall": 1,
+    "judged10": 1
+   }
+  }
+ }
+}
