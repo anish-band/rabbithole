@@ -59,7 +59,7 @@ export function MoodBar({ mood, onChange }: { mood: string; onChange: (mood: str
         aria-label="Mood"
         aria-keyshortcuts="/"
         placeholder="I’m in the mood for…"
-        className="h-9 w-full rounded-full bg-fill ps-9 pe-9 text-callout text-foreground transition-[background-color,box-shadow] duration-200 ease-spring outline-none placeholder:text-muted focus:bg-background focus:shadow-[0_0_0_1px_var(--hairline),0_0_0_4px_color-mix(in_srgb,var(--accent)_25%,transparent)]"
+        className="h-9 w-full rounded-full bg-fill ps-9 pe-9 text-callout text-foreground transition-[background-color,box-shadow] duration-200 ease-spring outline-none forced-colors:focus:outline-2 placeholder:text-muted focus:bg-background focus:shadow-[0_0_0_1px_var(--hairline),0_0_0_4px_color-mix(in_srgb,var(--accent)_25%,transparent)]"
       />
       {value ? (
         <button
