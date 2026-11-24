@@ -31,7 +31,7 @@ test("formulas are exposed to screen readers as MathML", async ({ page }) => {
 
 test("math uses the surrounding text colour", async ({ page }) => {
   const [formula, prose] = await slide(page, 0).evaluate((el) => {
-    const k = el.querySelector(".math-inline .katex") as HTMLElement;
+    const k = el.querySelector('[aria-label="Paper details"] .math-inline .katex') as HTMLElement;
     return [getComputedStyle(k).color, getComputedStyle(k.closest("p")!).color];
   });
   expect(formula).toBe(prose);
