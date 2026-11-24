@@ -56,6 +56,9 @@ export function updateTaste(update: (s: TasteState) => TasteState) {
   emit();
 }
 
+/** Current profile outside React (e.g. when building a feed request). */
+export const readTaste = (): TasteState => current();
+
 /** Read the current taste profile. The server render (and first client render) sees an empty one. */
 export function useTaste(): TasteState {
   return useSyncExternalStore(subscribe, current, () => SERVER_STATE);
