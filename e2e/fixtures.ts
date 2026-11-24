@@ -10,7 +10,7 @@ import papers from "../src/fixtures/papers.json";
  *
  * /api/explainer is faked too (never a real Claude call): papers listed in
  * `explainers` get that response, everything else the "offline" fallback.
- * Requested ids are recorded on `explainerRequests`.
+ * Requested ids are recorded on `explainerRequests`. /api/budget returns `budget`.
  */
 export const PAGE_SIZE = 6;
 
@@ -25,7 +25,17 @@ export const test = base.extend<{
   explainers: Record<string, ExplainerResponse>;
   explainerDelayMs: number;
   explainerRequests: string[];
+  budget: Record<string, unknown>;
+  budgetMock: void;
 }>({
+  budget: [{ budgetUsd: 10, spentUsd: 0.48, remainingUsd: 9.52, calls: 8, configured: true, rateLimitedMs: 0, apiFailing: false }, { option: true }],
+  budgetMock: [
+    async ({ page, budget }, use) => {
+      await page.route("**/api/budget", (route) => route.fulfill({ json: budget }));
+      await use();
+    },
+    { auto: true },
+  ],
   explainers: [{}, { option: true }],
   explainerDelayMs: [0, { option: true }],
   explainerRequests: [
