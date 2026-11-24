@@ -9,7 +9,8 @@
     "lint": "eslint",
     "smoke:arxiv": "node --conditions=react-server --import tsx scripts/arxiv-smoke.ts",
     "fixtures": "node --conditions=react-server --import tsx scripts/make-fixtures.ts",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "test": "node --import tsx --test \"src/**/*.test.ts\""
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.13.0",
