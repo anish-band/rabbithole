@@ -61,9 +61,17 @@
 - [x] **#12** Final check: fresh `npm run build`, click through the app in the browser, write `README.md` (setup, env vars, how the budget works)
 - [x] **#15** Render LaTeX math in titles and abstracts (KaTeX `<MathText>`, text-mode macros, unit + e2e tests)
 
-## v2 (milestone `v2`, not part of the autonomous loop)
-Production readiness. These need owner decisions (AWS cost, infra), so they're picked up only when asked:
-#21 CI in GitHub Actions · #22 ranking/mood relevance eval · #23 explainer faithfulness eval · #24 Postgres ledger + caches · #25 AWS deploy + monitoring/alarms · #26 async explainer worker queue · #27 load test (arXiv mocked) · #28 usage-limit outage postmortem
+## v2 tasks (milestone `v2`, in the loop)
+Evals and infra. Work them in this order. Each task's GitHub issue is the spec, so read it first.
+
+- [ ] **#21** CI in GitHub Actions: lint, unit, build and e2e on every PR and push to `main`, with caching, failure artifacts, one retry in CI only, and the check required by branch protection. To prove the check blocks merges, open a deliberately broken PR, then close it without merging. Don't delete its branch.
+- [ ] **#28** Postmortem for the 2026-11-24 API usage-limit outage (`docs/postmortems/`).
+- [ ] **#22** Offline relevance eval for mood expansion and ranking (`npm run eval:rank`), using a frozen candidate pool from cached arXiv data with no live arXiv calls. **Claude spend cap for this task: $0.25.** Use Haiku for query plans and any judge labels, and cache every call.
+- [ ] **#23** Explainer faithfulness eval (`npm run eval:faithfulness`), run on already-cached explainers. **Claude spend cap for this task: $1.00.** Use a cheap judge model through `callClaude()`. Measure the prompt change by regenerating only a few explainers (≤ 5).
+- [ ] **#27** Load test `POST /api/feed` with `RABBITHOLE_FIXTURES=1` (never send load to arXiv), fix the first bottleneck, and report before/after numbers.
+- [ ] **#26** Background worker queue for explainer generation. It runs locally: an in-process or file-backed queue under `data/`, with no SQS and no Postgres. Jobs are idempotent, retry with backoff, failures go to a dead-letter queue, and the worker is budget-aware. Add a test showing that killing the worker mid-job loses no work and causes no duplicate spend.
+
+Out of the loop (these need the owner's decision): #24 Postgres ledger + caches, #25 AWS deploy + monitoring. If a task above seems to need either of them, take the local alternative and note it in the PR.
 
 ## Blocked
 (none yet)
