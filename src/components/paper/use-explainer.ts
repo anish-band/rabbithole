@@ -15,9 +15,11 @@ function request(id: string): Promise<ExplainerResult> {
   if (!pending) {
     pending = fetch(`/api/explainer?id=${encodeURIComponent(id)}`)
       .then(async (res) => (res.ok ? ((await res.json()) as ExplainerResult) : { status: "fallback" as const, reason: "failed" as const }))
-      .catch(() => {
-        results.delete(id); // network hiccup: allow a retry next time the paper is wanted
-        return { status: "fallback" as const, reason: "unavailable" as const };
+      .catch(() => ({ status: "fallback" as const, reason: "unavailable" as const }))
+      .then((result) => {
+        // Transient problems are retried the next time the paper is wanted.
+        if (result.status === "fallback" && (result.reason === "unavailable" || result.reason === "rate-limited")) results.delete(id);
+        return result;
       });
     results.set(id, pending);
   }

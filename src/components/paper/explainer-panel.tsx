@@ -47,7 +47,8 @@ export function ExplainerPanel({ paper, state, active }: { paper: Paper; state: 
       )}
       {note ? (
         <p
-          role="status"
+          // Only the paper on screen announces; neighbours load quietly.
+          role={active ? "status" : undefined}
           data-explainer-note={state.status === "fallback" ? state.reason : "loading"}
           className="absolute top-3 left-3 flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-footnote text-white/70 min-[900px]:top-4 min-[900px]:left-4"
         >
