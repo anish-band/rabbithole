@@ -1,6 +1,5 @@
 import katex from "katex";
-import { Fragment } from "react";
-import { parseMathText, parseTextMacros, type Inline } from "@/lib/math/parse";
+import { parseRich, type RichNode } from "@/lib/math/parse";
 
 /** Small cache: the same titles/abstracts re-render as the feed scrolls. */
 const cache = new Map<string, string>();
@@ -12,7 +11,7 @@ function renderFormula(tex: string, display: boolean): string {
   if (html === undefined) {
     html = katex.renderToString(tex, {
       displayMode: display,
-      throwOnError: false, // bad TeX renders as red source instead of crashing
+      throwOnError: false, // bad TeX renders as its source instead of crashing
       strict: "ignore",
       trust: false, // no \href, \includegraphics, etc.
       output: "htmlAndMathml", // MathML for screen readers
@@ -23,45 +22,43 @@ function renderFormula(tex: string, display: boolean): string {
   return html;
 }
 
-function InlineRun({ run }: { run: Inline }) {
-  switch (run.type) {
-    case "em":
-      return <em>{run.value}</em>;
-    case "strong":
-      return <strong className="font-semibold">{run.value}</strong>;
-    case "smallcaps":
-      return <span className="[font-variant-caps:small-caps]">{run.value}</span>;
-    case "underline":
-      return <span className="underline underline-offset-2">{run.value}</span>;
-    default:
-      return <>{run.value}</>;
-  }
+const STYLE_CLASS: Record<string, string | undefined> = {
+  strong: "font-semibold",
+  smallcaps: "[font-variant-caps:small-caps]",
+  underline: "underline underline-offset-2",
+};
+
+function Nodes({ nodes, allowDisplay }: { nodes: RichNode[]; allowDisplay: boolean }) {
+  return nodes.map((node, i) => {
+    if (node.type === "text") return node.value;
+    if (node.type === "math") {
+      const display = node.display && allowDisplay;
+      return (
+        <span
+          key={i}
+          className={display ? "math-display block" : "math-inline"}
+          // Only KaTeX output is injected; KaTeX escapes its input and trust is off.
+          dangerouslySetInnerHTML={{ __html: renderFormula(node.value, display) }}
+        />
+      );
+    }
+    const children = <Nodes nodes={node.children} allowDisplay={allowDisplay} />;
+    if (node.style === "em") return <em key={i}>{children}</em>;
+    if (node.style === "strong") return <strong key={i} className={STYLE_CLASS.strong}>{children}</strong>;
+    return (
+      <span key={i} className={STYLE_CLASS[node.style]}>
+        {children}
+      </span>
+    );
+  });
 }
 
 /**
  * Renders arXiv text with LaTeX math (`$...$`, `$$...$$`, `\(...\)`, `\[...\]`)
- * via KaTeX and text-mode macros (`\emph{}`, `--`, ...) as typography.
- * Display math is shown inline in titles/abstracts to keep the text flowing.
+ * via KaTeX and text-mode formatting (`\emph{}`, `\textbf{}`, dashes, quotes)
+ * as typography; formatting and math can nest. Display math is shown inline in
+ * titles/abstracts unless `allowDisplay` is set, to keep the text flowing.
  */
 export function MathText({ text, allowDisplay = false }: { text: string; allowDisplay?: boolean }) {
-  return (
-    <>
-      {parseMathText(text).map((segment, i) =>
-        segment.type === "math" ? (
-          <span
-            key={i}
-            className={segment.display && allowDisplay ? "math-display block" : "math-inline"}
-            // KaTeX escapes its input and trust is off, so this HTML is safe.
-            dangerouslySetInnerHTML={{ __html: renderFormula(segment.value, segment.display && allowDisplay) }}
-          />
-        ) : (
-          <Fragment key={i}>
-            {parseTextMacros(segment.value).map((run, j) => (
-              <InlineRun key={j} run={run} />
-            ))}
-          </Fragment>
-        ),
-      )}
-    </>
-  );
+  return <Nodes nodes={parseRich(text)} allowDisplay={allowDisplay} />;
 }
