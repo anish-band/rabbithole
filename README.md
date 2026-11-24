@@ -2,6 +2,25 @@
 
 A full-screen feed of new arXiv papers, one per screen, like scrolling short videos but for research. Each paper gets an animated explainer on the left and the abstract with a plain-English summary on the right. Tell it what you're in the mood for and the feed bends around it.
 
+![A paper on learning-rate scaling: an animated plot of two curves with their formulas on the left, the summary and abstract on the right](docs/screenshots/feed.png)
+
+## Explainers
+
+Every explainer is drawn fresh from the paper's abstract: axes, curves, points and typeset formulas that build up one scene at a time.
+
+<table>
+  <tr>
+    <td width="33%"><img src="docs/screenshots/explainer-ising.png" alt="2D Ising model: a shrinking droplet inside a square boundary, with t ∼ n²"></td>
+    <td width="33%"><img src="docs/screenshots/explainer-privacy.png" alt="Matching under metric privacy: excess cost grows with dimension until d ≈ log n, then flattens"></td>
+    <td width="33%"><img src="docs/screenshots/explainer-confidence.png" alt="Language model confidence stays flat through an error, AUROC near chance"></td>
+  </tr>
+  <tr>
+    <td align="center"><sub>Polynomial mixing for 2D Ising</sub></td>
+    <td align="center"><sub>Matching under metric privacy</sub></td>
+    <td align="center"><sub>LLM self-monitoring</sub></td>
+  </tr>
+</table>
+
 ## What it can do
 
 - **Explain papers visually.** Each paper gets a short animated explainer in the spirit of 3Blue1Brown: shapes, curves, data points and formulas that build up the core idea one scene at a time, with captions. A one-line TL;DR and three key points appear next to the abstract.

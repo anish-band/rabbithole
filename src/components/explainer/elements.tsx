@@ -159,7 +159,8 @@ function shape(el: ExplainerElement, ids: string): ReactNode {
             </text>
           ) : null}
           {el.yLabel ? (
-            <text x={el.x - 2} y={el.y - el.h} fontSize={3} fill={muted} stroke="none" textAnchor="end" dominantBaseline="hanging">
+            // Above the arrow, reading rightwards: a label left of the axis ran off the canvas.
+            <text x={el.x + 2} y={Math.max(3, el.y - el.h - 2.5)} fontSize={3} fill={muted} stroke="none" textAnchor="start">
               {el.yLabel}
             </text>
           ) : null}
