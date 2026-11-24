@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FeedItem, FeedSource } from "@/lib/feed/types";
-import { PaperSlide } from "./paper-slide";
+import { PaperScreen } from "@/components/paper/paper-screen";
 import { useActiveIndex } from "./use-active-index";
 import { useFeedItems, usePrefetch } from "./use-feed-items";
 import { useFeedKeyboard } from "./use-feed-keyboard";
@@ -126,7 +126,7 @@ export function Feed({ source, initialItems }: FeedProps) {
           onBlur={(e) => delete e.currentTarget.dataset.programmaticFocus}
           className="h-full snap-start snap-always outline-none focus-visible:not-data-programmatic-focus:outline-2 focus-visible:not-data-programmatic-focus:-outline-offset-4 focus-visible:not-data-programmatic-focus:outline-foreground/40"
         >
-          {inWindow(i) ? <PaperSlide paper={item.paper} /> : null}
+          {inWindow(i) ? <PaperScreen paper={item.paper} /> : null}
         </article>
       ))}
 
