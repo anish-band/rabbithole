@@ -7,6 +7,8 @@ import { innerScrollerCanTake } from "./inner-scroller";
 const THRESHOLD = 30;
 /** A gesture ends after this long with no wheel events (covers trackpad momentum). */
 const GESTURE_GAP_MS = 180;
+/** Upper bound on waiting for the page scroll to settle (no `scrollend`, or nothing to scroll). */
+const SETTLE_CAP_MS = 700;
 
 /**
  * Turns mouse-wheel and trackpad scrolling into one-paper-per-gesture paging.
@@ -14,6 +16,11 @@ const GESTURE_GAP_MS = 180;
  * viewport), so we take over wheel input on the feed: the first ~30px of a
  * gesture pages once, and the rest of that gesture (including trackpad
  * momentum) is swallowed. Touch scrolling stays fully native.
+ *
+ * Gaps are measured with each event's own timestamp, not a timer: when the
+ * main thread stalls while the next paper renders, a timer would fire before
+ * the queued momentum events run and page again. The gesture also stays
+ * locked until the page scroll has settled.
  *
  * Elements marked `data-allow-wheel` that can still scroll in the wheel's
  * direction keep normal wheel behavior (e.g. a long abstract).
@@ -30,7 +37,14 @@ export function useWheelPaging(containerRef: RefObject<HTMLElement | null>, page
 
     let accumulated = 0;
     let locked = false;
-    let gapTimer: ReturnType<typeof setTimeout> | undefined;
+    let lastEventAt = Number.NEGATIVE_INFINITY;
+    let settling = false;
+    let settleTimer: ReturnType<typeof setTimeout> | undefined;
+
+    const settled = () => {
+      settling = false;
+      clearTimeout(settleTimer);
+    };
 
     const normalize = (e: WheelEvent) =>
       e.deltaMode === WheelEvent.DOM_DELTA_LINE ? e.deltaY * 16 : e.deltaMode === WheelEvent.DOM_DELTA_PAGE ? e.deltaY * root.clientHeight : e.deltaY;
@@ -42,12 +56,14 @@ export function useWheelPaging(containerRef: RefObject<HTMLElement | null>, page
 
       e.preventDefault();
 
-      // Every wheel event extends the current gesture.
-      clearTimeout(gapTimer);
-      gapTimer = setTimeout(() => {
+      // A pause in the input (by the events' own clock) starts a new gesture,
+      // but never while the previous page is still scrolling into place.
+      const gap = e.timeStamp - lastEventAt;
+      lastEventAt = e.timeStamp;
+      if (gap > GESTURE_GAP_MS && !settling) {
         locked = false;
         accumulated = 0;
-      }, GESTURE_GAP_MS);
+      }
 
       if (locked) return;
       accumulated += normalize(e);
@@ -55,13 +71,18 @@ export function useWheelPaging(containerRef: RefObject<HTMLElement | null>, page
         pageRef.current(accumulated > 0 ? 1 : -1);
         locked = true;
         accumulated = 0;
+        settling = true;
+        clearTimeout(settleTimer);
+        settleTimer = setTimeout(settled, SETTLE_CAP_MS);
       }
     }
 
     root.addEventListener("wheel", onWheel, { passive: false });
+    root.addEventListener("scrollend", settled);
     return () => {
       root.removeEventListener("wheel", onWheel);
-      clearTimeout(gapTimer);
+      root.removeEventListener("scrollend", settled);
+      clearTimeout(settleTimer);
     };
   }, [containerRef]);
 }
