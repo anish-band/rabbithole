@@ -1,4 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 const slide = (page: Page, i: number) => page.locator(`[role="feed"] > article[data-index="${i}"]`);
 const stored = (page: Page) => page.evaluate(() => JSON.parse(localStorage.getItem("rabbithole:taste") ?? "null"));

@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 const slide = (page: import("@playwright/test").Page, i: number) => page.locator(`[role="feed"] > article[data-index="${i}"]`);
 
