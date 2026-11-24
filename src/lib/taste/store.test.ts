@@ -72,6 +72,7 @@ test("tasteSignals reports skips but not for papers the user reacted to", () => 
   assert.deepEqual(sig.liked, ["quick-liked"]);
   assert.deepEqual(sig.hidden, ["nope"]);
   assert.deepEqual(sig.seen, ["quick-liked", "long", "quick"]);
+  assert.deepEqual(sig.categories, ["cs.LG"], "hidden papers don't count toward categories");
 });
 
 test("parseState tolerates missing, corrupt and foreign data", () => {

@@ -86,17 +86,31 @@ export function savedPapers(state: TasteState): PaperRef[] {
 }
 
 /** Compact summary for the feed API: which papers to lean toward and away from. */
-export type TasteSignals = { liked: string[]; saved: string[]; hidden: string[]; skipped: string[]; seen: string[] };
+export type TasteSignals = {
+  liked: string[];
+  saved: string[];
+  hidden: string[];
+  skipped: string[];
+  seen: string[];
+  /** Primary categories of liked/saved papers, most frequent first (for the no-mood feed). */
+  categories: string[];
+};
 
 export function tasteSignals(state: TasteState): TasteSignals {
   const ids = (r: Reaction) => Object.keys(state.reactions).filter((id) => state.reactions[id][r]);
   const reacted = new Set(Object.keys(state.reactions));
+  const counts = new Map<string, number>();
+  for (const [id, r] of Object.entries(state.reactions)) {
+    const category = state.papers[id]?.primaryCategory;
+    if ((r.liked || r.saved) && category) counts.set(category, (counts.get(category) ?? 0) + 1);
+  }
   return {
     liked: ids("liked"),
     saved: ids("saved"),
     hidden: ids("hidden"),
     skipped: state.history.filter((v) => v.dwellMs < SKIP_MS && !reacted.has(v.id)).map((v) => v.id),
     seen: state.history.map((v) => v.id),
+    categories: [...counts].sort((a, b) => b[1] - a[1]).map(([c]) => c).slice(0, 5),
   };
 }
 

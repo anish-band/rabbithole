@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
+import { useEffect, useMemo, useRef, useState, type ComponentType, type ReactNode } from "react";
 import type { FeedNav } from "@/components/chrome/top-bar";
 import type { FeedItem, FeedSource } from "@/lib/feed/types";
 import { PaperScreen } from "@/components/paper/paper-screen";
+import { FeedMessage, FeedSkeleton, pillButton } from "./feed-placeholder";
 import { useActiveIndex } from "./use-active-index";
 import { useFeedItems, usePrefetch } from "./use-feed-items";
 import { useFeedKeyboard } from "./use-feed-keyboard";
@@ -19,7 +20,13 @@ type FeedProps = {
   source: FeedSource;
   initialItems: FeedItem[];
   /** Floating chrome (top bar) that gets the feed's navigation. */
-  Header?: ComponentType<{ nav: FeedNav }>;
+  Header?: ComponentType<{ nav: FeedNav; children?: ReactNode }>;
+  /** Extra header content (e.g. the mood bar). */
+  headerContent?: ReactNode;
+  /** Shown while the first page loads. */
+  loadingLabel?: string;
+  /** Shown when the source has nothing at all. */
+  emptyMessage?: { title: string; detail: string };
 };
 
 /**
@@ -28,7 +35,7 @@ type FeedProps = {
  * paper per gesture; the keyboard drives the same scroll container.
  * Focus follows keyboard/wheel navigation so screen readers announce each paper.
  */
-export function Feed({ source, initialItems, Header }: FeedProps) {
+export function Feed({ source, initialItems, Header, headerContent, loadingLabel = "Finding papers…", emptyMessage = { title: "No papers here", detail: "Try a different mood." } }: FeedProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { items, status, loadMore } = useFeedItems(source, initialItems);
   const active = useActiveIndex(containerRef, items.length);
@@ -113,7 +120,7 @@ export function Feed({ source, initialItems, Header }: FeedProps) {
 
   return (
     <>
-      {Header ? <Header nav={{ next: handlers.next, prev: handlers.prev, active: target ?? active, count: items.length }} /> : null}
+      {Header ? <Header nav={{ next: handlers.next, prev: handlers.prev, active: target ?? active, count: items.length }}>{headerContent}</Header> : null}
       <div
         ref={containerRef}
         role="feed"
@@ -121,6 +128,23 @@ export function Feed({ source, initialItems, Header }: FeedProps) {
         aria-label="Papers"
         className="no-scrollbar h-full snap-y snap-mandatory overflow-y-auto overscroll-contain"
       >
+        {items.length === 0 ? (
+          <div className="h-full snap-start">
+            {status === "error" ? (
+              <FeedMessage
+                kind="error"
+                title="Couldn’t load papers"
+                detail="arXiv didn’t respond. Check your connection and try again."
+                action={<button type="button" onClick={loadMore} className={pillButton}>Try again</button>}
+              />
+            ) : status === "done" ? (
+              <FeedMessage kind="empty" {...emptyMessage} />
+            ) : (
+              <FeedSkeleton label={loadingLabel} />
+            )}
+          </div>
+        ) : null}
+
         {items.map((item, i) => (
           <article
             key={item.key}
@@ -137,7 +161,14 @@ export function Feed({ source, initialItems, Header }: FeedProps) {
           </article>
         ))}
 
-        {status === "error" ? (
+        {status === "done" && items.length > 0 ? (
+          <div className="flex h-40 snap-end flex-col items-center justify-center gap-1 text-center">
+            <p className="text-callout font-medium">You’ve reached the end</p>
+            <p className="text-footnote text-muted">Try a new mood for more papers.</p>
+          </div>
+        ) : null}
+
+        {status === "error" && items.length > 0 ? (
           <div className="flex h-32 snap-end items-center justify-center gap-3 text-muted">
             Couldn’t load more papers.
             <button type="button" onClick={loadMore} className="font-medium text-foreground underline underline-offset-4">

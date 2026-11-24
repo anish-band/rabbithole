@@ -3,13 +3,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { FeedItem, FeedSource } from "@/lib/feed/types";
 
+export type FeedStatus = "idle" | "loading" | "error" | "done";
+
 /** How close to the end (in slides) we start fetching the next page. */
 const PREFETCH_THRESHOLD = 3;
 
 /** Holds the feed's items and loads further pages from `source`, one request at a time. */
 export function useFeedItems(source: FeedSource, initial: FeedItem[]) {
   const [items, setItems] = useState(initial);
-  const [status, setStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [status, setStatus] = useState<FeedStatus>("idle");
   const loading = useRef(false);
 
   const loadMore = useCallback(async () => {
@@ -22,7 +24,8 @@ export function useFeedItems(source: FeedSource, initial: FeedItem[]) {
         const seen = new Set(prev.map((i) => i.key));
         return [...prev, ...page.filter((i) => !seen.has(i.key))];
       });
-      setStatus("idle");
+      // An empty page means the source has run dry; stop prefetching.
+      setStatus(page.length === 0 ? "done" : "idle");
     } catch {
       setStatus("error");
     } finally {

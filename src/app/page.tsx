@@ -1,9 +1,9 @@
-import { MockFeed } from "@/components/feed/mock-feed";
+import { LiveFeed } from "@/components/feed/live-feed";
 
 export default function Home() {
   return (
     <main className="h-full">
-      <MockFeed />
+      <LiveFeed />
     </main>
   );
 }

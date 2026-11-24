@@ -1,4 +1,5 @@
-import { expect, test, type Page } from "@playwright/test";
+import type { Page } from "@playwright/test";
+import { expect, test } from "./fixtures";
 
 const first = (page: Page) => page.locator('[role="feed"] > article[data-index="0"]');
 
