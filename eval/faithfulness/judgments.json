@@ -1,0 +1,1594 @@
+{
+ "0c83b653f6a770d7ff9d2e81a187295c75e09450": [
+  {
+   "kind": "tldr",
+   "text": "Tune the learning rate cheaply by training only the last transformer block, then use a simple scaling rule that depends on number precision to predict the best rate for full finetuning.",
+   "verdict": "supported",
+   "reason": "Cheap last-block tuning and precision-dependent rule predicting rate for k=L matches the abstract."
+  },
+  {
+   "kind": "key point",
+   "text": "TipSweep searches the learning rate while training only the last k0 blocks (typically one), which is far cheaper than a full-model grid search.",
+   "verdict": "supported",
+   "reason": "Trains only last k0 blocks (typically one); 'far cheaper' follows from grid search being costly."
+  },
+  {
+   "kind": "key point",
+   "text": "The optimal rate scales about as k^-1 with FP32 master weights, but as k^-1/2 when updates go straight into BF16 weights, which an update-rounding model explains.",
+   "verdict": "supported",
+   "reason": "k^-1 for FP32 and k^-1/2 for BF16, explained by update-rounding model."
+  },
+  {
+   "kind": "key point",
+   "text": "Prototypes for a 6.7B model fit the search on a 16 GiB GPU, or test all candidates in one data pass, at about half the GPU hours of one full run.",
+   "verdict": "supported",
+   "reason": "16 GiB fit, single-pass candidates, and about half GPU hours of a full run are all stated."
+  },
+  {
+   "kind": "caption",
+   "scene": 1,
+   "text": "Post-training (SFT, DPO, RLVR) is very sensitive to the learning rate, and grid-searching it on the full model is costly.",
+   "verdict": "supported",
+   "reason": "Abstract says post-training is sensitive to learning rate and grid search is costly."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 1,
+   "text": "L transformer blocks · Grid search over lr · costly compute + memory",
+   "verdict": "framing",
+   "reason": "Bare scene labels for blocks, grid search, and cost."
+  },
+  {
+   "kind": "caption",
+   "scene": 2,
+   "text": "TipSweep trains only the last $k_0$ blocks (typically one) to find the best learning rate cheaply.",
+   "verdict": "supported",
+   "reason": "Training only last k0 blocks (typically one) to find the rate cheaply is stated."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 2,
+   "text": "train · frozen · $k_0 = 1$",
+   "verdict": "framing",
+   "reason": "Diagram labels; k0=1 is the typical setting the abstract mentions."
+  },
+  {
+   "kind": "caption",
+   "scene": 3,
+   "text": "Scaling rules predict the optimal rate for any $k$ blocks, and they depend on weight precision.",
+   "verdict": "supported",
+   "reason": "Scaling rules predict optimal rate for any k and depend on precision."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 3,
+   "text": "axis: blocks k · axis: optimal lr · $\\text{FP32: } k^{-1}$ · $\\text{BF16: } k^{-1/2}$",
+   "verdict": "supported",
+   "reason": "Axis labels and exponents match the abstract's FP32 and BF16 rules."
+  },
+  {
+   "kind": "caption",
+   "scene": 4,
+   "text": "Why the difference? Updates applied directly to BF16 weights get rounded, and an analytical model of this rounding explains both rules.",
+   "verdict": "supported",
+   "reason": "Abstract attributes both rules to an analytical model of update rounding."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 4,
+   "text": "BF16 grid · small update · rounded away",
+   "verdict": "supported",
+   "reason": "'Rounded away' is a direct paraphrase of update rounding for BF16 without master weights."
+  },
+  {
+   "kind": "caption",
+   "scene": 5,
+   "text": "For a 6.7B model, the search fits on a 16 GiB consumer GPU, or runs all five candidates in one pass for about half the cost of one full run.",
+   "verdict": "supported",
+   "reason": "16 GiB consumer GPU fit, five candidates in one pass, about half cost of a full run."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 5,
+   "text": "16 GiB GPU · 5-lr search · 1 full-depth run · ~half the GPU hours",
+   "verdict": "supported",
+   "reason": "16 GiB GPU, five-lr search, one full-depth run, and about half GPU hours all match."
+  }
+ ],
+ "c58077df46e38215ce4a81ea702852fb5329b254": [
+  {
+   "kind": "tldr",
+   "text": "Instead of retraining a model for each brain-signal task, this method shows it a few labeled EEG examples and lets a frozen model predict new recordings straight away.",
+   "verdict": "supported",
+   "reason": "Abstract describes labeled EEG as context with frozen predictor, no parameter updates; simplified wording is safe."
+  },
+  {
+   "kind": "key point",
+   "text": "Today's EEG foundation models still need a task-specific decoder, gradient fine-tuning and validation-based model selection for each new task.",
+   "verdict": "supported",
+   "reason": "Abstract says downstream use typically requires task-specific decoder, gradient adaptation, validation-driven selection."
+  },
+  {
+   "kind": "key point",
+   "text": "In-context learning on raw EEG is unstable; building better context raises effective signal-to-noise and exposes temporal and spatial structure.",
+   "verdict": "supported",
+   "reason": "Abstract says raw-feature performance is limited and unstable, and suitable context improves SNR and exposes structure."
+  },
+  {
+   "kind": "key point",
+   "text": "A frozen predictor with metric-based context adaptation achieves the highest mean BAcc versus eleven baselines across ten datasets and seven paradigms.",
+   "verdict": "supported",
+   "reason": "Abstract states highest mean BAcc among eleven baselines across ten datasets and seven paradigms."
+  },
+  {
+   "kind": "caption",
+   "scene": 1,
+   "text": "EEG decoders usually need a new head, gradient fine-tuning, and validation-based model selection for every task.",
+   "verdict": "supported",
+   "reason": "Matches abstract's description of downstream requirements; framed as general background."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 1,
+   "text": "EEG signals · foundation · + task decoder · + gradient tuning · + validation selection",
+   "verdict": "framing",
+   "reason": "Diagram labels illustrating the conventional pipeline, not factual claims beyond abstract."
+  },
+  {
+   "kind": "caption",
+   "scene": 2,
+   "text": "In-context learning instead: labeled recordings act as context, and a frozen predictor labels new ones without updating parameters.",
+   "verdict": "supported",
+   "reason": "Paraphrase of labeled recordings as context with frozen predictor and no parameter updates."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 2,
+   "text": "labeled context · query ? · frozen · $\\hat y = f(x \\mid \\mathcal{C})$",
+   "verdict": "framing",
+   "reason": "Formula and labels are a schematic notation of in-context prediction."
+  },
+  {
+   "kind": "caption",
+   "scene": 3,
+   "text": "Feeding raw EEG features directly is a promising start, but results are limited, unstable, and don't transfer reliably across paradigms.",
+   "verdict": "supported",
+   "reason": "Abstract: raw-feature in-context performance is promising but limited, unstable, and not reliably generalizing across paradigms."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 3,
+   "text": "axis: paradigm · axis: accuracy · raw features · noisy, unstable",
+   "verdict": "framing",
+   "reason": "Axis labels and descriptive tags for a plot, not factual claims."
+  },
+  {
+   "kind": "caption",
+   "scene": 4,
+   "text": "The fix is EEG-specific context construction, which raises effective signal-to-noise and exposes temporal and spatial structure.",
+   "verdict": "supported",
+   "reason": "Abstract says suitable context construction improves effective SNR and exposes temporal and spatial structure."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 4,
+   "text": "higher SNR · time × channels · temporal + spatial",
+   "verdict": "framing",
+   "reason": "Visual labels summarizing the context construction idea; no new numbers."
+  },
+  {
+   "kind": "caption",
+   "scene": 5,
+   "text": "A metric-based adaptation step picks the best context representation for each task, with no validation data needed.",
+   "verdict": "supported",
+   "reason": "Abstract describes metric-based context adaptation matching tasks without validation data."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 5,
+   "text": "context options · frozen · metric chooses · no validation set",
+   "verdict": "framing",
+   "reason": "Diagram labels describing the selection mechanism, consistent with abstract."
+  },
+  {
+   "kind": "caption",
+   "scene": 6,
+   "text": "Across ten datasets and seven paradigms, it beats eleven specialized and fine-tuned baselines in mean BAcc, with no task-specific parameter updates.",
+   "verdict": "supported",
+   "reason": "Abstract reports highest mean BAcc among eleven baselines across ten datasets and seven paradigms without task-specific updates."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 6,
+   "text": "Highest mean BAcc · 10 datasets · 7 paradigms · vs 11 EEG baselines · adapt via context, not weights",
+   "verdict": "supported",
+   "reason": "Counts (10 datasets, 7 paradigms, 11 baselines), highest mean BAcc, and context-not-weights adaptation all match the abstract."
+  }
+ ],
+ "89a75df85587bee2d93d817bc410fb97c5639b25": [
+  {
+   "kind": "tldr",
+   "text": "A magnet model on a grid, started all 'down' but surrounded by 'up' boundary spins, is proven to settle into equilibrium in polynomial time, confirming a 1962 physics prediction.",
+   "verdict": "supported",
+   "reason": "Lifshitz 1962 prediction and polynomial mixing with plus boundary, all-minus start"
+  },
+  {
+   "kind": "key point",
+   "text": "Without boundary conditions, low-temperature 2D Ising Glauber dynamics mixes in time exponential in n because of a bottleneck between plus and minus phases.",
+   "verdict": "supported",
+   "reason": "Exponential in n due to metastable plus/minus bottleneck without boundary conditions"
+  },
+  {
+   "kind": "key point",
+   "text": "With all-plus boundaries, the authors prove polynomial mixing at all low temperatures, improving the previous quasi-polynomial bound of Lubetzky–Martinelli–Sly–Toninelli.",
+   "verdict": "supported",
+   "reason": "Polynomial bound at all low temperatures, improving quasi-polynomial LMST bound"
+  },
+  {
+   "kind": "key point",
+   "text": "Key tools: a multiscale method for disordered random-walk bridges that look Brownian at mesoscopic scales, plus censoring to reduce to a warm-start bound.",
+   "verdict": "supported",
+   "reason": "Multiscale method for disordered bridges and censoring to warm-start bound"
+  },
+  {
+   "kind": "caption",
+   "scene": 1,
+   "text": "Low-temperature 2D Ising on an $n\\times n$ box. With free boundary, flipping from all-minus to all-plus must cross a bottleneck, taking time exponential in $n$.",
+   "verdict": "supported",
+   "reason": "Bottleneck and exponential-in-n mixing without boundary conditions; the all-minus to all-plus framing is a simplification"
+  },
+  {
+   "kind": "on-screen",
+   "scene": 1,
+   "text": "minus phase · plus phase · bottleneck · $t_{\\text{mix}} = e^{\\Theta(n)}$",
+   "verdict": "supported",
+   "reason": "Exponential-in-n mixing time, written as e^{Θ(n)}"
+  },
+  {
+   "kind": "caption",
+   "scene": 2,
+   "text": "Add all-plus boundary and start from all-minus. Physics (Lifshitz 1962) predicts the minus droplet shrinks by mean-curvature flow in time about $n^2$.",
+   "verdict": "supported",
+   "reason": "Lifshitz 1962 prediction of quadratic-in-n shrinking by mean-curvature flow"
+  },
+  {
+   "kind": "on-screen",
+   "scene": 2,
+   "text": "droplet shrinks · $t \\sim n^2$",
+   "verdict": "supported",
+   "reason": "Quadratic-in-n timescale for droplet shrinking"
+  },
+  {
+   "kind": "caption",
+   "scene": 3,
+   "text": "Key step: with Dobrushin boundary (plus above, minus below), show the interface between phases mixes fast. It has microscopic defects, so exact harmonic tricks fail.",
+   "verdict": "supported",
+   "reason": "Dobrushin boundary is a standard definition; interface fast mixing, defects defeat exact harmonic methods"
+  },
+  {
+   "kind": "on-screen",
+   "scene": 3,
+   "text": "interface · defects & bubbles",
+   "verdict": "supported",
+   "reason": "Abstract names microscopic defects and bubbles"
+  },
+  {
+   "kind": "caption",
+   "scene": 4,
+   "text": "New multiscale method: disordered random-walk bridges that homogenize to a Brownian bridge at mesoscopic scales mix polynomially fast.",
+   "verdict": "supported",
+   "reason": "Multiscale bounds on mixing of disordered bridges homogenizing to Brownian bridge; polynomial claim is a loose paraphrase"
+  },
+  {
+   "kind": "on-screen",
+   "scene": 4,
+   "text": "disordered bridge · ≈ Brownian bridge",
+   "verdict": "supported",
+   "reason": "Disordered bridge homogenizing to Brownian bridge at mesoscopic scales"
+  },
+  {
+   "kind": "caption",
+   "scene": 5,
+   "text": "Censoring reduces the task to a weak Poincaré (warm-start) bound, letting regularity be assumed. Result: polynomial mixing at all low temperatures.",
+   "verdict": "supported",
+   "reason": "Censoring reduces to weak Poincaré/warm-start bound, allowing regularity assumptions; polynomial mixing result"
+  },
+  {
+   "kind": "on-screen",
+   "scene": 5,
+   "text": "censoring · warm-start bound · polynomial mixing · $t_{\\text{mix}} = n^{O(1)}$",
+   "verdict": "supported",
+   "reason": "Censoring, warm-start bound, and polynomial mixing; n^{O(1)} is the polynomial bound"
+  }
+ ],
+ "89775653a86c0756f17d823a23e8b455b0febbe0": [
+  {
+   "kind": "tldr",
+   "text": "Video generators slow down when fed many reference inputs; borrowing the trick video codecs use to skip repeated content, this method drops redundant input tokens and still generates video at nearly the same quality.",
+   "verdict": "supported",
+   "reason": "Slowdown from conditioning, codec-inspired pruning, near-same quality all stated or safely simplified."
+  },
+  {
+   "kind": "key point",
+   "text": "Every condition (identity, scribble, depth, motion) becomes tokens appended to the input, so conditioning dominates compute, though much of it is redundant.",
+   "verdict": "supported",
+   "reason": "Abstract lists identity, scribble, depth, motion tokens appended; conditioning dominates cost; redundancy noted."
+  },
+  {
+   "kind": "key point",
+   "text": "A codec-based pruning step keeps only genuinely new spatiotemporal tokens; on-policy self-distillation trains a DiT adapter to work with the pruned input.",
+   "verdict": "supported",
+   "reason": "Abstract describes codec pruning of redundant tokens and OPSD training a DiT adapter to learn the pruning pattern."
+  },
+  {
+   "kind": "key point",
+   "text": "Across 16 condition modalities it prunes 66% of condition tokens on average with almost no quality drop, making denoising 2x faster and cutting KV cache memory by up to 73%.",
+   "verdict": "supported",
+   "reason": "Abstract states 16 modalities, 66% token pruning, almost no quality drop, 2x faster denoising, up to 73% KV cache shrink."
+  },
+  {
+   "kind": "caption",
+   "scene": 1,
+   "text": "Every condition (identity, scribble, depth, motion) is tokenized and appended to the sequence. Conditioning quickly dominates the compute.",
+   "verdict": "supported",
+   "reason": "Tokenized and appended conditions; conditioning dominates compute, as in abstract."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 1,
+   "text": "video · conditions · Cost grows · with every condition",
+   "verdict": "framing",
+   "reason": "Scene label with generic statement; cost growth consistent with abstract."
+  },
+  {
+   "kind": "caption",
+   "scene": 2,
+   "text": "Most of these condition tokens repeat the same spatiotemporal content from frame to frame.",
+   "verdict": "unsupported",
+   "reason": "Abstract says conditions carry redundant spatiotemporal information but does not specify they repeat frame to frame."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 2,
+   "text": "grey = redundant · yellow = new",
+   "verdict": "framing",
+   "reason": "Color legend for visual labels."
+  },
+  {
+   "kind": "caption",
+   "scene": 3,
+   "text": "Key insight: video codecs already know how to identify what is genuinely new. Codec-based pruning keeps only those tokens.",
+   "verdict": "supported",
+   "reason": "Abstract says classical codecs solve identifying what is new; codec pruning keeps new tokens."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 3,
+   "text": "tokens · codec · $\\text{keep } \\Delta \\text{ only}$",
+   "verdict": "framing",
+   "reason": "Bare variable/axis-style labels for the pipeline."
+  },
+  {
+   "kind": "caption",
+   "scene": 4,
+   "text": "On-policy self-distillation trains a DiT adapter on pruned inputs so its outputs match those of the full-token model.",
+   "verdict": "supported",
+   "reason": "OPSD trains DiT adapter to learn pruned pattern without quality degradation; matching full-token outputs is a safe paraphrase."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 4,
+   "text": "full tokens · pruned + adapter · match · CodecOPSD",
+   "verdict": "framing",
+   "reason": "Diagram labels naming the components and comparison."
+  },
+  {
+   "kind": "caption",
+   "scene": 5,
+   "text": "Across 16 condition types, about 66% of condition tokens are pruned with almost no quality drop. Denoising runs 2x faster and KV cache memory shrinks by up to 73%.",
+   "verdict": "supported",
+   "reason": "Restates 16 modalities, 66% pruned, almost no quality drop, 2x faster, 73% KV cache shrink."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 5,
+   "text": "before · after: -66% tokens · 2x faster · KV cache up to -73% · gains grow with more inputs, frames, resolution",
+   "verdict": "supported",
+   "reason": "Restates -66% tokens, 2x faster, KV cache up to -73%, and gains growing with more inputs, frames, resolution from abstract."
+  }
+ ],
+ "4ae2283c3507a3795b2f153a6ffe52c484600347": [
+  {
+   "kind": "tldr",
+   "text": "RL makes LLM search agents much more accurate. CO-GRAFT swaps control of each step between the trained and untrained model to find which skills actually improved.",
+   "verdict": "supported",
+   "reason": "Up to 32 EM gain and swapping per-role control paraphrases the abstract's method."
+  },
+  {
+   "kind": "key point",
+   "text": "Trained and pre-RL policies co-generate one trajectory with live retrieval, each controlling a disjoint subset of four roles, with no retraining.",
+   "verdict": "supported",
+   "reason": "Abstract describes joint co-generation with live retrieval, disjoint roles, no retraining."
+  },
+  {
+   "kind": "key point",
+   "text": "All 16 role assignments form a cooperative game: Shapley values split the RL gain across roles, and Möbius terms reveal coupling between roles.",
+   "verdict": "supported",
+   "reason": "Abstract states 16 assignments, cooperative game, Shapley values, and Möbius interaction terms."
+  },
+  {
+   "kind": "key point",
+   "text": "Query generation never exceeds 15% of the gain. Credit shifts to answer extraction in larger or well-formatted models, and to reasoning–decision coupling in small base models.",
+   "verdict": "supported",
+   "reason": "Abstract states the 15% cap and the answer-extraction and reasoning–decision coupling findings."
+  },
+  {
+   "kind": "caption",
+   "scene": 1,
+   "text": "RL can lift search agents by up to 32 exact-match points. But a single accuracy number hides which capabilities actually improved.",
+   "verdict": "supported",
+   "reason": "Up to 32 EM points; overall accuracy does not identify which capabilities improved."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 1,
+   "text": "pre-RL · after RL · up to +32 EM · but which skill improved?",
+   "verdict": "supported",
+   "reason": "Restates the 32 EM gain and the question of which skill improved."
+  },
+  {
+   "kind": "caption",
+   "scene": 2,
+   "text": "An agent's behaviour splits into four roles: reasoning, deciding to search or answer, writing queries, and extracting the final answer.",
+   "verdict": "supported",
+   "reason": "The four roles are listed in the abstract."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 2,
+   "text": "Reason · Decide · Query · Answer · live retrieval · 4 functional roles",
+   "verdict": "supported",
+   "reason": "Lists the four roles and live retrieval, both from the abstract."
+  },
+  {
+   "kind": "caption",
+   "scene": 3,
+   "text": "In a grafted run, the RL policy and the pre-RL policy share one trajectory, and each controls a different set of roles. No weights are changed.",
+   "verdict": "supported",
+   "reason": "Shared trajectory, role split, and no weight changes are all in the abstract."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 3,
+   "text": "blue = RL policy · grey = pre-RL · $2^4 = 16$ · role assignments",
+   "verdict": "framing",
+   "reason": "Colour legend and role-assignment count are visual labels, not new factual claims."
+  },
+  {
+   "kind": "caption",
+   "scene": 4,
+   "text": "Scoring all 16 assignments defines a cooperative game. Shapley values split the total gain across roles, and Möbius terms isolate coupling between roles.",
+   "verdict": "supported",
+   "reason": "Cooperative game, Shapley split, and Möbius coupling match the abstract."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 4,
+   "text": "axis: role · axis: share of gain · $\\phi_i$ · Shapley credit · Möbius = coupling · illustrative",
+   "verdict": "framing",
+   "reason": "Axis labels and 'illustrative' tag are visual labels, not factual claims."
+  },
+  {
+   "kind": "caption",
+   "scene": 5,
+   "text": "Query generation never exceeds 15% of the gain. Larger or well-formatted models gain mostly through answer extraction, while small base models rely on reasoning–decision coupling.",
+   "verdict": "supported",
+   "reason": "Matches abstract's 15% cap and the model-dependent credit shifts."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 5,
+   "text": "Query · ≤ 15% of gain · larger models: · answer extraction · small base models: · reason + decide",
+   "verdict": "supported",
+   "reason": "Query ≤15%, answer extraction for larger models, reason+decide for small base models all match the abstract."
+  }
+ ],
+ "15c2dcf810f1e2cb4fa8df5e872e728ce4bc2160": [
+  {
+   "kind": "tldr",
+   "text": "A Text-to-SQL system that scores its own confidence with a second 'critic' AI and declines to answer when unsure, with statistical guarantees on how often accepted answers are wrong.",
+   "verdict": "supported",
+   "reason": "Paraphrase of critic-based confidence and abstention with guarantees on accepted-query error."
+  },
+  {
+   "kind": "key point",
+   "text": "SQL queries can run fine yet answer the wrong question; correctness is only known on labeled data, so it is treated as a hidden variable at deployment.",
+   "verdict": "supported",
+   "reason": "Abstract states queries execute but answer wrong question; correctness observable only via gold SQL in labeled data."
+  },
+  {
+   "kind": "key point",
+   "text": "A generator LLM writes the SQL, a separate critic LLM judges it, and a Random Forest fuses their signals into one confidence score.",
+   "verdict": "supported",
+   "reason": "Generator LLM, separate critic LLM, Random Forest fusion all stated."
+  },
+  {
+   "kind": "key point",
+   "text": "Learn-then-Test thresholds cap accepted-query error (15% budget held on all Spider splits, 9.1% observed); on BIRD scores stay informative but the guarantee doesn't transfer.",
+   "verdict": "supported",
+   "reason": "15% budget certified on all splits, 9.1% observed error, BIRD scores informative but guarantee does not transfer."
+  },
+  {
+   "kind": "caption",
+   "scene": 1,
+   "text": "Text-to-SQL queries often execute fine but answer the wrong question. Without abstention, 22.6% of Spider queries are wrong.",
+   "verdict": "supported",
+   "reason": "22.6% wrong without abstention on Spider stated."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 1,
+   "text": "Question · SQL · runs ✓ · but wrong answer · 22.6% wrong, no abstention",
+   "verdict": "supported",
+   "reason": "22.6% wrong without abstention is stated; other labels are generic illustrative text."
+  },
+  {
+   "kind": "caption",
+   "scene": 2,
+   "text": "Correctness is defined against a gold query: observable on calibration data, hidden at deployment.",
+   "verdict": "supported",
+   "reason": "Correctness defined against gold query, observable at calibration, latent at deployment."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 2,
+   "text": "Calibration · gold SQL → Z known · Deployment · Z latent ? · $\\hat p \\approx P(Z=1\\mid q, \\text{SQL})$",
+   "verdict": "supported",
+   "reason": "Latent variable observable at calibration via gold SQL, latent at deployment; formula is a paraphrase of the estimator's target."
+  },
+  {
+   "kind": "caption",
+   "scene": 3,
+   "text": "A generator LLM writes and runs the SQL; a different critic LLM judges query and result. A Random Forest fuses all signals.",
+   "verdict": "supported",
+   "reason": "Generator writes and executes query, different critic judges, Random Forest fuses signals."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 3,
+   "text": "Generator · Critic · verbal conf, tokens · SQL structure · validation, alignment · Random Forest",
+   "verdict": "supported",
+   "reason": "Lists generator, critic, verbalized confidence, token uncertainty, SQL structure, validation/alignment, and Random Forest as in abstract."
+  },
+  {
+   "kind": "caption",
+   "scene": 4,
+   "text": "Learn-then-Test picks a threshold so, with probability $1-\\delta$, error among accepted queries stays under the budget. A conformal p-value bounds false abstention.",
+   "verdict": "supported",
+   "reason": "Learn-then-Test threshold with probability 1-δ and conformal p-value for false abstention are stated."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 4,
+   "text": "axis: confidence · abstain · accept · $P(\\text{err}\\le\\alpha)\\ge 1-\\delta$ · + bounded false abstain",
+   "verdict": "supported",
+   "reason": "Axis labels and guarantee expression restate the abstract's stated guarantees."
+  },
+  {
+   "kind": "caption",
+   "scene": 5,
+   "text": "On Spider: AUARC 0.899; at a 15% budget ($\\delta=0.1$) a threshold is certified on all 10 splits, accepting 52.4% with 9.1% error. On BIRD, scores stay informative but the guarantee doesn't transfer.",
+   "verdict": "supported",
+   "reason": "AUARC 0.899, 15% budget, δ=0.1, 10 splits, 52.4% accepted, 9.1% error all stated."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 5,
+   "text": "22.6% · no abstain · 9.1% · 52.4% accepted · 15% budget · AUARC 89.5 vs 81.2 · (vs logit baseline) · BIRD AUROC 0.72 · guarantee not transferred",
+   "verdict": "unsupported",
+   "reason": "The abstract gives AUARC 89.5 vs 81.2 only for Spider with Olmo-3-32B as generator, not the 0.899 headline comparison line; the on-screen line mixes these with an unlabeled 'vs logit baseline' framing. The line juxtaposes figures from different settings without stating that, which misleads about the comparison."
+  }
+ ],
+ "7461bfa007e0fd9adf0a1f58f892907880bcbc18": [
+  {
+   "kind": "tldr",
+   "text": "When matching private points to public ones, how you represent and randomize the data, and who you trust, decides how much accuracy privacy costs.",
+   "verdict": "supported",
+   "reason": "abstract says representation/randomization and trust model determine utility"
+  },
+  {
+   "kind": "key point",
+   "text": "Projecting onto the public points' affine span gives a smaller representation that preserves every matching cost, so less noise is needed locally.",
+   "verdict": "supported",
+   "reason": "affine span projection preserves all matching costs, smaller representation; less noise is a mild inference"
+  },
+  {
+   "kind": "key point",
+   "text": "With a trusted server, Gumbel matching randomizes edge costs and releases only the assignment, achieving the tight Θ(n·min{d, log n}/ε) excess cost.",
+   "verdict": "supported",
+   "reason": "Gumbel matching and tight rate stated"
+  },
+  {
+   "kind": "key point",
+   "text": "Experiments suggest d ≈ log n as the switch point: randomize coordinates in low dimension, use Gumbel matching in high dimension.",
+   "verdict": "supported",
+   "reason": "abstract says benchmark experiments support d≈log n as practical guide; the local/high-dim mapping is a reasonable paraphrase of the trust-model result"
+  },
+  {
+   "kind": "caption",
+   "scene": 1,
+   "text": "We want to match $n$ private points to $n$ public points at minimum total distance, without revealing where the private points are.",
+   "verdict": "supported",
+   "reason": "matching private to public points with privacy; minimum total distance is the matching cost"
+  },
+  {
+   "kind": "on-screen",
+   "scene": 1,
+   "text": "private · public · metric privacy ε",
+   "verdict": "framing",
+   "reason": "on-screen labels only"
+  },
+  {
+   "kind": "caption",
+   "scene": 2,
+   "text": "Locally, each private point is randomized first. Projecting onto the public points' affine span shrinks the dimension but keeps all matching costs.",
+   "verdict": "supported",
+   "reason": "local randomization first and affine span projection preserving costs are in abstract"
+  },
+  {
+   "kind": "on-screen",
+   "scene": 2,
+   "text": "project to span · fewer dims, less noise",
+   "verdict": "supported",
+   "reason": "fewer dimensions from projection; less noise is a mild inference"
+  },
+  {
+   "kind": "caption",
+   "scene": 3,
+   "text": "With a trusted server, Gumbel matching adds noise to edge costs and releases only the assignment, never the points.",
+   "verdict": "supported",
+   "reason": "Gumbel matching randomizes edge costs and releases only assignment"
+  },
+  {
+   "kind": "on-screen",
+   "scene": 3,
+   "text": "edge costs + Gumbel · assignment only",
+   "verdict": "supported",
+   "reason": "edge costs with Gumbel, assignment only"
+  },
+  {
+   "kind": "caption",
+   "scene": 4,
+   "text": "Excess cost over the nonprivate optimum grows like $n\\min\\{d,\\log n\\}/\\varepsilon$, and this rate is tight.",
+   "verdict": "supported",
+   "reason": "rate stated and called tight; 'grows like' is a paraphrase"
+  },
+  {
+   "kind": "on-screen",
+   "scene": 4,
+   "text": "axis: dimension d · axis: excess cost · d ≈ log n · $\\Theta\\!\\left(\\frac{n\\min\\{d,\\log n\\}}{\\varepsilon}\\right)$",
+   "verdict": "framing",
+   "reason": "axis labels and formula restating the rate"
+  },
+  {
+   "kind": "caption",
+   "scene": 5,
+   "text": "Trust model guides design: locally, use low-dimensional points; centrally, distance-based Gumbel matching is optimal even in high dimension. It also enables private two-sample tests.",
+   "verdict": "supported",
+   "reason": "local low-dim, central distance-based Gumbel optimal in high dimension, and two-sample testing extension all in abstract"
+  },
+  {
+   "kind": "on-screen",
+   "scene": 5,
+   "text": "local privacy · low-dim points · central privacy · distances + Gumbel · → private two-sample tests",
+   "verdict": "framing",
+   "reason": "on-screen labels summarizing the trust model and extensions"
+  }
+ ],
+ "4850b4650d26c58065da24906faa0b3209ad0174": [
+  {
+   "kind": "tldr",
+   "text": "CTLink reads a sentence from a chest CT report and outlines the matching abnormality in the 3D scan, so readers can see what each finding refers to.",
+   "verdict": "supported",
+   "reason": "Text-prompted segmentation of described findings in 3D CT."
+  },
+  {
+   "kind": "key point",
+   "text": "Radiology reports describe findings only in text; CTLink is a text-prompted 3D model that segments each described finding in a chest CT.",
+   "verdict": "supported",
+   "reason": "Reports are text-only; CTLink is a text-prompted 3D segmenter."
+  },
+  {
+   "kind": "key point",
+   "text": "Trained on 4123 noncontrast CTs with 9547 segmented findings, including the new ReXGroundingCTv2 dataset in which every instance is segmented.",
+   "verdict": "supported",
+   "reason": "4123 noncontrast CTs, 9547 findings, ReXGroundingCTv2 with all instances."
+  },
+  {
+   "kind": "key point",
+   "text": "Beat VoxTell on hit rate (0.816 vs 0.533), instance F1 and Dice. A seven-model ensemble topped the 48-team MICCAI challenge. Diffuse findings remain hard.",
+   "verdict": "supported",
+   "reason": "Hit rate 0.816 vs 0.533 vs VoxTell; ensemble topped 48 teams; diffuse findings hard."
+  },
+  {
+   "kind": "caption",
+   "scene": 1,
+   "text": "A radiology report lists findings in words, but it never marks where they are in the 3D scan.",
+   "verdict": "supported",
+   "reason": "Paraphrase of the abstract's opening motivation."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 1,
+   "text": "3D chest CT · \"nodule in right lung\" · \"small effusion\" · Where is it?",
+   "verdict": "framing",
+   "reason": "Illustrative example prompts and a question, not factual claims about results."
+  },
+  {
+   "kind": "caption",
+   "scene": 2,
+   "text": "CTLink takes a report finding as a text prompt and outputs a 3D mask of every matching abnormality.",
+   "verdict": "supported",
+   "reason": "Text prompt in, 3D mask of every matching instance out."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 2,
+   "text": "\"nodule in right lung\" · CT volume · CTLink · every instance",
+   "verdict": "framing",
+   "reason": "Generic diagram labels illustrating the pipeline."
+  },
+  {
+   "kind": "caption",
+   "scene": 3,
+   "text": "It was trained on 4123 noncontrast CTs with 9547 segmented findings, including the new ReXGroundingCTv2 set.",
+   "verdict": "supported",
+   "reason": "Restates training data description from the abstract."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 3,
+   "text": "Training data · 4123 scans · 9547 findings · ReXGroundingCTv2: 1134 scans · 1895 findings, all instances",
+   "verdict": "supported",
+   "reason": "Dataset counts match the abstract: 1134 scans, 1895 findings, all instances segmented."
+  },
+  {
+   "kind": "caption",
+   "scene": 4,
+   "text": "On 200 validation scans, CTLink beat the public model VoxTell on all three metrics ($P<.001$).",
+   "verdict": "supported",
+   "reason": "200 validation scans, beat VoxTell on all three metrics, P<.001."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 4,
+   "text": "axis: metric · axis: score · Hit .816/.533 · F1 .456/.175 · Dice .400/.234 · CTLink · VoxTell",
+   "verdict": "supported",
+   "reason": "Hit, F1 and Dice values match the abstract for CTLink and VoxTell."
+  },
+  {
+   "kind": "caption",
+   "scene": 5,
+   "text": "A seven-model ensemble led all 48 teams in the MICCAI challenge and matched radiologist agreement. Diffuse findings remain hard.",
+   "verdict": "unsupported",
+   "reason": "Abstract does not say the seven-model ensemble matched radiologist agreement; the inter-rater comparison is for CTLink on 50 scans without specifying the ensemble."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 5,
+   "text": "#1 of 48 teams · hit 0.782, instance F1 0.386 · ≥ inter-radiologist agreement · Limit: diffuse findings",
+   "verdict": "unsupported",
+   "reason": "Abstract does not attribute the inter-radiologist agreement result to the seven-model ensemble; only the hit rate and F1 rank are tied to it."
+  }
+ ],
+ "7d871a330df4fa95917e1cdc4d1804cd17ba0a15": [
+  {
+   "kind": "tldr",
+   "text": "A team of three AI agents turns plain-language goals for a mobile network into fast, adaptive radio control decisions, closing the gap between what operators want and what the network does.",
+   "verdict": "supported",
+   "reason": "Simplified restatement of translating intents into control actions and the radio case study."
+  },
+  {
+   "kind": "key point",
+   "text": "Prior work handles intent management but rarely adapts the underlying network optimization and control functions; this framework co-designs both.",
+   "verdict": "supported",
+   "reason": "Abstract says existing work focuses on intent management and leaves control adaptation unaddressed."
+  },
+  {
+   "kind": "key point",
+   "text": "Three agents: a language-model interpreter builds optimization templates, a Bayesian-optimization optimizer tunes policies, and an RL controller acts fast.",
+   "verdict": "supported",
+   "reason": "Abstract names an LM interpreter, Bayesian optimization optimizer, and multi-objective RL controller."
+  },
+  {
+   "kind": "key point",
+   "text": "In a radio resource management case study for differentiated connectivity, the policies adapt to service requirements and changing network conditions.",
+   "verdict": "supported",
+   "reason": "Abstract says results show adaptability to service requirements and changing network conditions."
+  },
+  {
+   "kind": "caption",
+   "scene": 1,
+   "text": "Operators state high-level intents, but networks need concrete control actions. Existing work manages intents and leaves the control functions unadapted.",
+   "verdict": "supported",
+   "reason": "Matches the abstract's motivation about intents versus concrete control and existing gaps."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 1,
+   "text": "\"Prioritize video\" · radio control · gap",
+   "verdict": "unsupported",
+   "reason": "The example intent \"Prioritize video\" is not in the abstract, which only mentions differentiated connectivity."
+  },
+  {
+   "kind": "caption",
+   "scene": 2,
+   "text": "The framework uses three agents: an interpreter, an optimizer and a controller. Together they handle both intent management and intent fulfillment.",
+   "verdict": "supported",
+   "reason": "Abstract describes three agents co-designing intent management and fulfillment."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 2,
+   "text": "Interpreter · Optimizer · Controller",
+   "verdict": "supported",
+   "reason": "Names the three agents from the abstract."
+  },
+  {
+   "kind": "caption",
+   "scene": 3,
+   "text": "A language model translates and refines the intent into a machine-readable optimization template.",
+   "verdict": "supported",
+   "reason": "Abstract says the language-model interpreter translates and refines intents into machine-readable optimization templates."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 3,
+   "text": "\"Prioritize video\" · Language model · $\\max_{\\pi}\\; \\sum_k w_k\\, f_k(\\pi)$",
+   "verdict": "unsupported",
+   "reason": "The weighted multi-objective formula and the \"Prioritize video\" example are not in the abstract."
+  },
+  {
+   "kind": "caption",
+   "scene": 4,
+   "text": "Bayesian optimization tunes the controller policy to the intent specification. Multi-objective reinforcement learning then makes fast runtime decisions.",
+   "verdict": "supported",
+   "reason": "Abstract says Bayesian optimization is used for the optimizer and MORL for the controller's fast decisions."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 4,
+   "text": "axis: policy setting · axis: intent score · Bayesian opt · MORL controller",
+   "verdict": "framing",
+   "reason": "Bare axis labels; the method names it shows are supported."
+  },
+  {
+   "kind": "caption",
+   "scene": 5,
+   "text": "In a radio resource management case study, intents and control policies adapt to service requirements and changing network conditions.",
+   "verdict": "supported",
+   "reason": "Abstract reports adaptation to service requirements and changing network conditions in the case study."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 5,
+   "text": "adapts to network changes · Intent → runtime control",
+   "verdict": "supported",
+   "reason": "Consistent with the abstract's claim of connecting intents with runtime control and adapting to network changes."
+  }
+ ],
+ "c2145b41395310b7da33d94adfab6daf77c4f432": [
+  {
+   "kind": "tldr",
+   "text": "MIPA shrinks a big image dataset into a few synthetic images that still teach a network good self-supervised features, by keeping what stays the same when images are augmented.",
+   "verdict": "supported",
+   "reason": "Simplified restatement of the abstract's goal and augmentation-invariance idea."
+  },
+  {
+   "kind": "key point",
+   "text": "Synthetic images act as learnable prototypes; a frozen encoder assigns each real image to its most similar prototype.",
+   "verdict": "supported",
+   "reason": "Synthetic images as learnable prototypes with a frozen encoder assigning by similarity."
+  },
+  {
+   "kind": "key point",
+   "text": "Two augmented views of the same real image should land on the same prototype, so MIPA maximizes mutual information between cross-view assignments.",
+   "verdict": "supported",
+   "reason": "Cross-view assignment consistency and MI maximization are stated."
+  },
+  {
+   "kind": "key point",
+   "text": "The objective avoids collapse onto a few prototypes, and the abstract reports better representations than existing distillation methods with less time and storage.",
+   "verdict": "supported",
+   "reason": "Collapse avoidance, better representations, and reduced time and storage are all stated."
+  },
+  {
+   "kind": "caption",
+   "scene": 1,
+   "text": "Dataset distillation compresses a large dataset into a tiny synthetic one. Here we need it to work for self-supervised learning, where there are no labels.",
+   "verdict": "supported",
+   "reason": "Dataset distillation compresses data, and the need for SSL without labels is implied."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 1,
+   "text": "large real dataset · tiny synthetic set · no labels (SSL) · keep augmentation invariance",
+   "verdict": "supported",
+   "reason": "Labels restate the setting: large real data, small synthetic set, SSL, augmentation invariance."
+  },
+  {
+   "kind": "caption",
+   "scene": 2,
+   "text": "MIPA treats the synthetic images as prototypes. A frozen encoder assigns each real sample to the prototype it is most similar to.",
+   "verdict": "supported",
+   "reason": "Matches the prototype and frozen-encoder assignment description."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 2,
+   "text": "synthetic = prototypes · frozen encoder · assigns by similarity",
+   "verdict": "supported",
+   "reason": "Restates prototypes, frozen encoder, and similarity-based assignment."
+  },
+  {
+   "kind": "caption",
+   "scene": 3,
+   "text": "Two augmented views of one real image should land on the same prototype. Stable cross-view assignments mean the synthetic set captures invariant information.",
+   "verdict": "supported",
+   "reason": "Stable cross-view assignments as a sign of preserved invariant information are stated."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 3,
+   "text": "two augmented views · $\\max\\; I(a_1; a_2)$ · cross-view agreement",
+   "verdict": "supported",
+   "reason": "Cross-view MI objective and agreement are stated."
+  },
+  {
+   "kind": "caption",
+   "scene": 4,
+   "text": "Mutual information also rewards spreading samples across all prototypes, avoiding the trivial case where everything collapses onto a few.",
+   "verdict": "unsupported",
+   "reason": "The abstract says MIPA avoids trivial solutions via an explicit constraint; it does not say MI itself rewards spreading samples across prototypes."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 4,
+   "text": "collapse · balanced · use every prototype",
+   "verdict": "supported",
+   "reason": "Avoiding collapse onto a few prototypes is stated."
+  },
+  {
+   "kind": "caption",
+   "scene": 5,
+   "text": "Result: MIPA's synthetic data yields higher-quality representations than existing distillation methods, while cutting distillation time and storage.",
+   "verdict": "supported",
+   "reason": "Better representations than existing methods and reduced time and storage are stated."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 5,
+   "text": "better features · higher-quality reps · less time · less storage",
+   "verdict": "supported",
+   "reason": "Better features, higher-quality representations, less time, and less storage are stated."
+  }
+ ],
+ "600923611b3fa732b3dec4414f804ea3f1494987": [
+  {
+   "kind": "tldr",
+   "text": "When AI models solve math step by step and rate their own confidence, they stay confident even when wrong, but a planted low-confidence note can push them to fix mistakes.",
+   "verdict": "supported",
+   "reason": "Matches the tldr: confident when wrong, steered by injected low-confidence tag."
+  },
+  {
+   "kind": "key point",
+   "text": "Across four open models, verbalized step confidence barely separates mistakes from sound steps (AUROC 0.500–0.561) and stays at 95.1–99.9% at the first error.",
+   "verdict": "supported",
+   "reason": "AUROC 0.500–0.561 and 95.1–99.9% at first error both in abstract."
+  },
+  {
+   "kind": "key point",
+   "text": "Injecting a 10% confidence tag at the error step raises downstream correction by +3.7 to +22.5 points, up to 38.5% with active rethinking instructions.",
+   "verdict": "supported",
+   "reason": "+3.7 to +22.5 points and up to 38.5% with rethinking instructions stated."
+  },
+  {
+   "kind": "key point",
+   "text": "Injecting doubt on correct steps cuts solve rates by up to 22.8 points, so self-correction is limited by detecting errors, not by repairing them.",
+   "verdict": "supported",
+   "reason": "Up to 22.8-point drop on correct steps; bottleneck is error detection per abstract."
+  },
+  {
+   "kind": "caption",
+   "scene": 1,
+   "text": "A common trick asks models to state confidence at each reasoning step, hoping a drop will trigger backtracking. That assumes two abilities: monitoring and control.",
+   "verdict": "supported",
+   "reason": "Abstract describes confidence verbalization for backtracking and the two presupposed capabilities."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 1,
+   "text": "conf: 95% · 1. Monitoring · 2. Steering control",
+   "verdict": "framing",
+   "reason": "Illustrative example tag and section labels, not a factual claim."
+  },
+  {
+   "kind": "caption",
+   "scene": 2,
+   "text": "Four open models, 15,200 math attempts, 2,017 errors isolated, then 27,568 counterfactual continuations at those failure points.",
+   "verdict": "supported",
+   "reason": "Four open models, 15,200 attempts, 2,017 errors, 27,568 continuations all in abstract."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 2,
+   "text": "Qwen · Llama · Mistral · Phi-4 · 15,200 attempts · 2,017 errors · 27,568 continuations",
+   "verdict": "supported",
+   "reason": "Model names and counts match the abstract."
+  },
+  {
+   "kind": "caption",
+   "scene": 3,
+   "text": "Monitoring fails: at the first error, confidence stays at 95.1–99.9%. Confidence barely separates mistakes from sound steps.",
+   "verdict": "supported",
+   "reason": "Confidence stays 95.1–99.9% at first error and barely separates mistakes."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 3,
+   "text": "axis: step · axis: confidence · error here · $\\text{AUROC} \\approx 0.50\\text{–}0.56$ · near chance",
+   "verdict": "supported",
+   "reason": "AUROC ≈0.50–0.56 near chance matches abstract; axis labels are framing."
+  },
+  {
+   "kind": "caption",
+   "scene": 4,
+   "text": "Control works: injecting a 10% confidence tag at the error step raises correction by +3.7 to +22.5 points versus a 95% tag.",
+   "verdict": "supported",
+   "reason": "Gains measured versus format-matched 95% certainty tag, as stated in abstract."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 4,
+   "text": "[conf: 10%] · repaired · +3.7 to +22.5 pts · up to 38.5% w/ rethink",
+   "verdict": "supported",
+   "reason": "Gain range and 38.5% with rethink match abstract; 'repaired' is a label."
+  },
+  {
+   "kind": "caption",
+   "scene": 5,
+   "text": "But doubt on correct steps makes models discard valid reasoning, cutting solve rates by up to 22.8 points.",
+   "verdict": "supported",
+   "reason": "Doubt on correct steps reduces solve rates by up to 22.8 points."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 5,
+   "text": "[conf: 10%] · valid work dropped · up to −22.8 pts",
+   "verdict": "supported",
+   "reason": "Valid work discarded with up to −22.8 point drop, per abstract."
+  },
+  {
+   "kind": "caption",
+   "scene": 6,
+   "text": "The bottleneck is detecting errors, not fixing them: models steer on doubt but can't generate it themselves.",
+   "verdict": "supported",
+   "reason": "Abstract: models steer on injected doubt but fail to self-monitor in situ."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 6,
+   "text": "Monitoring ✗ · Control ✓ · bottleneck: detection",
+   "verdict": "supported",
+   "reason": "Monitoring fails, control works, detection is the bottleneck, per abstract."
+  }
+ ],
+ "e93db41217bb39c7ceaa2de8bd76bef1319612d9": [
+  {
+   "kind": "tldr",
+   "text": "Integral turns an existing vision-language model into an image generator by making it create images in the same visual 'language' it already uses to understand them.",
+   "verdict": "supported",
+   "reason": "Abstract says Integral converts a pretrained VLM into a unified model via a shared visual representation space; the 'language' phrasing is a simplification."
+  },
+  {
+   "kind": "key point",
+   "text": "The core difficulty: understanding and generation usually rely on different visual representations, which keeps the model's knowledge from helping generation.",
+   "verdict": "supported",
+   "reason": "Abstract states heterogeneous visual representations are a central challenge, making pretrained knowledge hard to access for generation."
+  },
+  {
+   "kind": "key point",
+   "text": "Abstraction Fusion builds shared visual tokens from multiple layers of the frozen vision encoder; Block-wise MoT adds a light generative stream linked at block boundaries.",
+   "verdict": "supported",
+   "reason": "Abstract describes aggregating hierarchical representations from frozen encoder and lightweight generative stream interacting at block boundaries."
+  },
+  {
+   "kind": "key point",
+   "text": "Sharing the representation improves generative learning over a separate space with similar reconstruction quality, while pretrained understanding is preserved.",
+   "verdict": "supported",
+   "reason": "Abstract says sharing improves generative learning despite comparable reconstruction fidelity and preserves understanding."
+  },
+  {
+   "kind": "caption",
+   "scene": 1,
+   "text": "Unified models try to both understand and generate images. Usually they use two different visual representations, one for each task.",
+   "verdict": "supported",
+   "reason": "Abstract frames the problem as heterogeneous representations for understanding and generation; the caption is a simplification."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 1,
+   "text": "VLM · understand · generate · Two visual spaces · = knowledge not shared",
+   "verdict": "framing",
+   "reason": "Diagram labels and a schematic restatement of the core problem, not a new factual claim."
+  },
+  {
+   "kind": "caption",
+   "scene": 2,
+   "text": "Integral's idea: give understanding and generation one shared visual representation space built from the pretrained model.",
+   "verdict": "supported",
+   "reason": "Shared visual representation space built from the pretrained model is in the abstract."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 2,
+   "text": "shared space · understand · generate · Integral",
+   "verdict": "framing",
+   "reason": "Diagram labels only."
+  },
+  {
+   "kind": "caption",
+   "scene": 3,
+   "text": "Abstraction Fusion aggregates hierarchical features from the frozen vision encoder into shared visual tokens.",
+   "verdict": "supported",
+   "reason": "Restates Abstraction Fusion's described function from the abstract."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 3,
+   "text": "frozen encoder layers · Abstraction Fusion · shared visual tokens",
+   "verdict": "framing",
+   "reason": "Component diagram labels only."
+  },
+  {
+   "kind": "caption",
+   "scene": 4,
+   "text": "Block-wise MoT adds a lightweight generative stream that talks to the VLM only at block boundaries, keeping understanding intact.",
+   "verdict": "supported",
+   "reason": "Block-wise MoT's boundary interaction and preserved understanding are stated in the abstract."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 4,
+   "text": "VLM (understanding) · generative stream · Block-wise MoT · interact at boundaries",
+   "verdict": "framing",
+   "reason": "Diagram labels only."
+  },
+  {
+   "kind": "caption",
+   "scene": 5,
+   "text": "In controlled comparisons, a shared space learns generation substantially better than a separate one, despite similar reconstruction fidelity.",
+   "verdict": "supported",
+   "reason": "Controlled comparison result with similar reconstruction fidelity is in the abstract; 'substantially' matches its wording."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 5,
+   "text": "axis: training · axis: generation · shared space · separate space · illustrative trend",
+   "verdict": "framing",
+   "reason": "Chart axis and series labels; 'illustrative trend' is a visual label, not a quantitative claim."
+  }
+ ],
+ "2243f5d88a384289b057195442cc18ef3cc5c151": [
+  {
+   "kind": "tldr",
+   "text": "A Text-to-SQL system that scores its own queries with a separate critic model and skips uncertain ones, with statistical guarantees on how many accepted answers are wrong.",
+   "verdict": "supported",
+   "reason": "Critic-scored queries, abstention, and statistical guarantees are all in the abstract."
+  },
+  {
+   "kind": "key point",
+   "text": "Generation and validation are split: a generator LLM writes and runs SQL, a different critic LLM judges it, and a Random Forest fuses their signals into a confidence score.",
+   "verdict": "supported",
+   "reason": "Generator/critic split and Random Forest fusion are stated."
+  },
+  {
+   "kind": "key point",
+   "text": "Learn-then-Test picks a threshold so that, with probability 1−δ, the error among accepted queries stays under a chosen budget; a conformal p-value bounds false abstentions.",
+   "verdict": "supported",
+   "reason": "Learn-then-Test and conformal p-value roles match the abstract."
+  },
+  {
+   "kind": "key point",
+   "text": "On Spider (GPT-OSS-120B generator, Gemma-4-31B critic): AUARC 0.899; with a 15% budget, 52.4% of queries are accepted on average at 9.1% observed error.",
+   "verdict": "supported",
+   "reason": "AUARC 0.899, 15% budget, 52.4% accepted, 9.1% error all appear."
+  },
+  {
+   "kind": "caption",
+   "scene": 1,
+   "text": "Text-to-SQL queries can run fine yet answer the wrong question. Correctness needs a gold query, which only exists in labeled data.",
+   "verdict": "supported",
+   "reason": "Abstract says execution correctness needs a gold query existing only in labeled data."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 1,
+   "text": "question · SQL runs ✓ · wrong answer? · no gold query · at deployment",
+   "verdict": "supported",
+   "reason": "Visible labels only; no invented numbers or claims."
+  },
+  {
+   "kind": "caption",
+   "scene": 2,
+   "text": "Correctness is treated as a latent variable: observed via gold-SQL execution during calibration, hidden at deployment.",
+   "verdict": "supported",
+   "reason": "Latent correctness observed via gold-SQL execution at calibration, latent at deployment."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 2,
+   "text": "calibration · correct: seen · deployment · correct: ? · latent correctness",
+   "verdict": "supported",
+   "reason": "Matches calibration-observed versus deployment-latent correctness in the abstract."
+  },
+  {
+   "kind": "caption",
+   "scene": 3,
+   "text": "A generator LLM writes and runs the query; a separate critic LLM judges it. Their signals feed a Random Forest.",
+   "verdict": "supported",
+   "reason": "Generator writes and executes, separate critic judges, Random Forest fuses signals."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 3,
+   "text": "generator · critic · Random Forest · confidence, tokens, · SQL structure · validation, alignment",
+   "verdict": "supported",
+   "reason": "Lists components named in the abstract; no new facts."
+  },
+  {
+   "kind": "caption",
+   "scene": 4,
+   "text": "Learn-then-Test picks a threshold: with probability $1-\\delta$, error among accepted queries stays under the budget. A conformal p-value bounds false abstention.",
+   "verdict": "supported",
+   "reason": "Restates the Learn-then-Test and conformal p-value guarantees."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 4,
+   "text": "axis: confidence · abstain · accept · $P(\\text{err}\\le\\alpha)\\ge 1-\\delta$",
+   "verdict": "framing",
+   "reason": "Bare axis labels and a formula, not a factual claim."
+  },
+  {
+   "kind": "caption",
+   "scene": 5,
+   "text": "On Spider (GPT-OSS-120B + Gemma-4-31B critic), 22.6% of queries are wrong without abstention. With a 15% budget, 52.4% are accepted at 9.1% observed error.",
+   "verdict": "supported",
+   "reason": "22.6% wrong without abstention, 15% budget, 52.4% accepted at 9.1% error all stated."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 5,
+   "text": "axis: error % · 22.6% · 9.1% · 15% · AUARC 0.899 · 52.4% accepted · certified 10/10 splits",
+   "verdict": "supported",
+   "reason": "All labels (22.6%, 9.1%, 15%, AUARC 0.899, 52.4%, certified 10/10 splits) appear in the abstract."
+  },
+  {
+   "kind": "caption",
+   "scene": 6,
+   "text": "With Olmo-3-32B as generator, AUARC is 89.5 vs 81.2 for the best logit baseline. On BIRD, scores stay informative but the guarantee doesn't transfer.",
+   "verdict": "supported",
+   "reason": "Olmo-3-32B 89.5 vs 81.2 logit baseline and BIRD transfer result are stated."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 6,
+   "text": "89.5 · 81.2 · ours · logit · BIRD AUROC 0.72 · (Spider 0.79) · guarantee: no transfer",
+   "verdict": "supported",
+   "reason": "89.5, 81.2, BIRD AUROC 0.72, Spider 0.79, and no guarantee transfer all appear."
+  }
+ ],
+ "589ba87aa512bf20f8b494c598cf05cb68842106": [
+  {
+   "kind": "tldr",
+   "text": "CTLink reads a sentence from a chest CT report and outlines the matching abnormality in the 3D scan, so readers can see which spot each finding refers to.",
+   "verdict": "supported",
+   "reason": "Paraphrase of the text-prompted segmentation of report findings."
+  },
+  {
+   "kind": "key point",
+   "text": "Trained on 4123 noncontrast chest CTs with 9547 segmented report findings, including the new ReXGroundingCTv2 dataset (1134 scans, 1895 findings).",
+   "verdict": "supported",
+   "reason": "Training numbers and ReXGroundingCTv2 counts match the abstract."
+  },
+  {
+   "kind": "key point",
+   "text": "On 200 ReXGroundingCT validation scans: hit rate 0.816, instance F1 0.456, Dice 0.400 vs VoxTell's 0.533, 0.175, 0.234.",
+   "verdict": "supported",
+   "reason": "Validation metrics and VoxTell comparison match the abstract."
+  },
+  {
+   "kind": "key point",
+   "text": "A 7-model CTLink ensemble had the top hit rate and instance F1 of 48 teams in the MICCAI 2026 ReXGrounding challenge; diffuse findings remain hard.",
+   "verdict": "supported",
+   "reason": "Seven-model ensemble, top of 48 teams, and diffuse findings limitation match."
+  },
+  {
+   "kind": "caption",
+   "scene": 1,
+   "text": "Radiology reports describe findings only in text. Nothing on the scan shows which abnormality each sentence refers to.",
+   "verdict": "supported",
+   "reason": "Paraphrase of the abstract's opening motivation."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 1,
+   "text": "3D chest CT · Report · finding 1 … · finding 2 … · ?",
+   "verdict": "framing",
+   "reason": "Scene diagram labels, no factual claim."
+  },
+  {
+   "kind": "caption",
+   "scene": 2,
+   "text": "CTLink is a text-prompted 3D segmentation model: give it a report finding and the scan, and it outlines that finding.",
+   "verdict": "supported",
+   "reason": "Generic description of the model's text-prompted segmentation."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 2,
+   "text": "a finding · CT volume · CTLink · 3D mask",
+   "verdict": "framing",
+   "reason": "Diagram labels only."
+  },
+  {
+   "kind": "caption",
+   "scene": 3,
+   "text": "It was trained on 4123 noncontrast chest CTs with 9547 segmented findings, including the new ReXGroundingCTv2 set.",
+   "verdict": "supported",
+   "reason": "Restates training data counts from the abstract."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 3,
+   "text": "4123 scans · 9547 findings · ReXGroundingCTv2 · 1134 scans · 1895 findings · every instance segmented",
+   "verdict": "supported",
+   "reason": "Dataset counts match the abstract; 'every instance segmented' matches the ReXGroundingCTv2 description."
+  },
+  {
+   "kind": "caption",
+   "scene": 4,
+   "text": "On 200 ReXGroundingCT validation scans, CTLink beat the public VoxTell model on all three metrics (P < .001).",
+   "verdict": "supported",
+   "reason": "Abstract reports CTLink outperforming VoxTell on all three metrics with P < .001."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 4,
+   "text": "axis: metric · axis: score · hit · inst F1 · Dice · CTLink · .816 / .456 / .400 · VoxTell · .533 / .175 / .234",
+   "verdict": "supported",
+   "reason": "Numbers match the abstract's validation results."
+  },
+  {
+   "kind": "caption",
+   "scene": 5,
+   "text": "A seven-model CTLink ensemble topped 48 teams on hit rate and instance F1 in the MICCAI 2026 ReXGrounding challenge.",
+   "verdict": "supported",
+   "reason": "Matches the challenge ranking claim in the abstract."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 5,
+   "text": "Challenge test set · ensemble of 7 CTLink models · hit rate 0.782 · inst F1 0.386 · #1 of 48 teams on both",
+   "verdict": "supported",
+   "reason": "Test hit rate 0.782 and inst F1 0.386 match; #1 of 48 on both matches the abstract's highest-of-all-teams claim."
+  },
+  {
+   "kind": "caption",
+   "scene": 6,
+   "text": "On 50 scans segmented by two radiologists, CTLink matched or exceeded their agreement. Diffuse findings remain hard, as even radiologists outline them inconsistently.",
+   "verdict": "unsupported",
+   "reason": "Abstract says radiologists' outlines of diffuse findings are inconsistent, not that radiologists were shown as 'outlining them inconsistently' as a reason beyond partly; the 'partly because' qualifier is dropped, making the causal framing stronger than stated."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 6,
+   "text": "≥ inter-rater agreement · diffuse findings · main limitation",
+   "verdict": "supported",
+   "reason": "Matches inter-rater agreement comparison and diffuse findings as main limitation."
+  }
+ ],
+ "3b2eafe359078b5158eadfad84f72fc5c0d90bfd": [
+  {
+   "kind": "tldr",
+   "text": "A three-agent AI system turns high-level goals for mobile networks into fast, adaptive control actions, linking what operators want to what the network actually does.",
+   "verdict": "supported",
+   "reason": "Paraphrase of the three-agent framework linking intents to runtime control and adaptability."
+  },
+  {
+   "kind": "key point",
+   "text": "Existing work focuses on intent management, leaving the adaptation of the underlying network control functions largely unaddressed.",
+   "verdict": "supported",
+   "reason": "Abstract says existing approaches leave adaptation of control functions largely unaddressed."
+  },
+  {
+   "kind": "key point",
+   "text": "Three agents: a language-model interpreter builds optimization templates, an optimizer adapts controller policies, and a controller decides fast.",
+   "verdict": "supported",
+   "reason": "Matches the interpreter, optimizer, and controller roles described."
+  },
+  {
+   "kind": "key point",
+   "text": "A realization with Bayesian optimization and multi-objective RL is evaluated in a radio resource management case study for differentiated connectivity.",
+   "verdict": "supported",
+   "reason": "Abstract states the Bayesian optimization and multi-objective RL realization and RRM case study for differentiated connectivity."
+  },
+  {
+   "kind": "caption",
+   "scene": 1,
+   "text": "Operators state high-level intents, but networks need concrete control actions. Existing work rarely adapts the control functions themselves.",
+   "verdict": "supported",
+   "reason": "Paraphrases the motivation that intents need translation to control and existing work leaves control adaptation unaddressed."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 1,
+   "text": "an intent · control actions · gap?",
+   "verdict": "framing",
+   "reason": "Bare visual labels for the scene's gap concept."
+  },
+  {
+   "kind": "caption",
+   "scene": 2,
+   "text": "The framework co-designs intent management and fulfillment with three agents: interpreter, optimizer and controller.",
+   "verdict": "supported",
+   "reason": "Abstract says the framework co-designs intent management and fulfillment through three agents."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 2,
+   "text": "Interpreter · Optimizer · Controller · triadic agentic AI",
+   "verdict": "framing",
+   "reason": "Bare labels naming the agents and framework."
+  },
+  {
+   "kind": "caption",
+   "scene": 3,
+   "text": "A language model translates and refines intents into machine-readable optimization templates.",
+   "verdict": "supported",
+   "reason": "Matches the interpreter's described role of translating and refining intents into optimization templates."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 3,
+   "text": "an intent · language model · opt. template",
+   "verdict": "framing",
+   "reason": "Bare diagram labels for the interpreter's inputs and outputs."
+  },
+  {
+   "kind": "caption",
+   "scene": 4,
+   "text": "Bayesian optimization adapts the controller policy to the intent; multi-objective RL makes fast runtime decisions.",
+   "verdict": "supported",
+   "reason": "Abstract describes Bayesian optimization for the optimizer and multi-objective RL for fast controller decisions; adapting policy to intent is a direct paraphrase."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 4,
+   "text": "Optimizer · Bayesian opt. · policy · Controller · multi-objective RL",
+   "verdict": "framing",
+   "reason": "Bare component labels for the architecture."
+  },
+  {
+   "kind": "caption",
+   "scene": 5,
+   "text": "In a radio resource management case study, the framework connected intents to runtime control, adapting to service needs and changing conditions.",
+   "verdict": "supported",
+   "reason": "Abstract reports the RRM case study showing adaptability to service requirements and changing network conditions; no specific numbers claimed."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 5,
+   "text": "Radio resource management · service requirements · network conditions · adaptive control",
+   "verdict": "framing",
+   "reason": "Bare visual labels summarizing the case study concepts."
+  }
+ ],
+ "2fa848078efb89e344342ec8562144710131d4fd": [
+  {
+   "kind": "tldr",
+   "text": "MIPA shrinks a big image dataset into a few synthetic images that still teach a network good self-supervised features, by making real images map to them consistently under augmentation.",
+   "verdict": "supported",
+   "reason": "Matches abstract's core approach and goal."
+  },
+  {
+   "kind": "key point",
+   "text": "Dataset distillation is well studied for supervised learning but underexplored for self-supervised learning, where augmentation invariance matters.",
+   "verdict": "supported",
+   "reason": "Abstract says DD is underexplored in SSL despite success in supervised learning."
+  },
+  {
+   "kind": "key point",
+   "text": "MIPA treats synthetic images as learnable prototypes; a frozen encoder assigns real samples to them by feature similarity.",
+   "verdict": "supported",
+   "reason": "Abstract states synthetic images as learnable prototypes and a frozen encoder assigning real samples."
+  },
+  {
+   "kind": "key point",
+   "text": "It maximizes mutual information between assignments of two augmented views, avoiding collapse onto few prototypes, and beats prior methods while using less time and storage.",
+   "verdict": "supported",
+   "reason": "Abstract covers MI between cross-view assignments, avoiding trivial solutions, and better results with less time and storage."
+  },
+  {
+   "kind": "caption",
+   "scene": 1,
+   "text": "Dataset distillation compresses a large dataset into a small synthetic one. In self-supervised learning, that small set must keep augmentation-invariant information.",
+   "verdict": "supported",
+   "reason": "Abstract defines DD and the SSL requirement to preserve augmentation-invariant information."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 1,
+   "text": "large real dataset · few synthetic images · keep SSL information?",
+   "verdict": "framing",
+   "reason": "Question-style on-screen label, not a factual claim."
+  },
+  {
+   "kind": "caption",
+   "scene": 2,
+   "text": "MIPA treats synthetic images as learnable prototypes. A frozen encoder assigns each real sample to prototypes by feature similarity.",
+   "verdict": "supported",
+   "reason": "Restates prototype and frozen-encoder assignment from abstract."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 2,
+   "text": "frozen encoder · prototypes · assign by similarity",
+   "verdict": "supported",
+   "reason": "Labels restate frozen encoder, prototypes, and similarity assignment."
+  },
+  {
+   "kind": "caption",
+   "scene": 3,
+   "text": "If the synthetic set preserves augmentation invariance, two augmented views of the same real image should get the same prototype assignment.",
+   "verdict": "supported",
+   "reason": "Abstract says stable prototype assignments across augmented views indicate augmentation-invariant preservation."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 3,
+   "text": "view 1 · view 2 · stable assignment",
+   "verdict": "supported",
+   "reason": "Labels restate the stable cross-view assignment idea."
+  },
+  {
+   "kind": "caption",
+   "scene": 4,
+   "text": "MIPA maximizes mutual information between cross-view assignments, while avoiding collapse where all real samples land on only a few prototypes.",
+   "verdict": "supported",
+   "reason": "Abstract describes maximizing MI between cross-view assignments while avoiding collapse to few prototypes."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 4,
+   "text": "$\\max\\; I(A_1; A_2)$ · cross-view assignments · collapse · balanced · avoid trivial solutions",
+   "verdict": "supported",
+   "reason": "Formula and labels paraphrase the MI objective and collapse avoidance; 'balanced' is a reasonable simplification."
+  },
+  {
+   "kind": "caption",
+   "scene": 5,
+   "text": "On image classification benchmarks, MIPA's synthetic data yields higher-quality representations than existing distillation methods, with less time and storage.",
+   "verdict": "supported",
+   "reason": "Abstract reports higher-quality representations on image classification benchmarks with reduced time and storage."
+  },
+  {
+   "kind": "on-screen",
+   "scene": 5,
+   "text": "MIPA synthetic set · better representations · less distillation time · less storage",
+   "verdict": "supported",
+   "reason": "Labels restate better representations, less time, and less storage from abstract."
+  }
+ ]
+}

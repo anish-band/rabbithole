@@ -73,3 +73,5 @@ An offline eval (`npm run eval:rank`) scores the first page for 30 moods against
 | Ranking every paper in the pool | 57% | 0.75 |
 
 Claude's plans beat plain keyword search, but they're strict: on this small pool their searches find only about a third of the relevant papers, and that limits the feed more than ranking does. The labels come from an LLM judge, and the pool is small and skewed, so treat these as directional. See [eval/rank](eval/rank/README.md) for the method and caveats.
+
+Explainers are checked too (`npm run eval:faithfulness`): an LLM judge traces every TL;DR, key point, caption and on-screen label back to the abstract. 4.8% of claims were unsupported at first, almost all of them in the animations. A prompt change cut that from 11.3% to 2.0% on the explainers that had problems. See [eval/faithfulness](eval/faithfulness/README.md).
