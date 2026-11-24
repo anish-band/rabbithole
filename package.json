@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "smoke:arxiv": "node --conditions=react-server --import tsx scripts/arxiv-smoke.ts"
+    "smoke:arxiv": "node --conditions=react-server --import tsx scripts/arxiv-smoke.ts",
+    "fixtures": "node --conditions=react-server --import tsx scripts/make-fixtures.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.13.0",
