@@ -5,7 +5,7 @@ import Anthropic from "@anthropic-ai/sdk";
 import type { Paper } from "@/lib/arxiv/types";
 import { BudgetExceededError, RateLimitedError } from "@/lib/budget";
 import { CLAUDE_MODEL, ClaudeUnavailableError, callClaude, textOf } from "@/lib/claude";
-import { GenerationSchema, MODEL_SCHEMA } from "./generation-schema";
+import { parseReply, validateReply, type Generation } from "./generation-schema";
 import { sampleExplainer } from "./samples";
 import type { Explainer } from "./schema";
 
@@ -28,7 +28,8 @@ export type ExplainerResult =
   | { status: "fallback"; reason: FallbackReason };
 
 type CacheEntry = { id: string; model: string; promptVersion: number; createdAt: string; explainer: Explainer; summary: Summary };
-type FailureEntry = { id: string; at: number; reason: string };
+/** `reply` keeps the raw text so a later, more forgiving parser can salvage it for free. */
+type FailureEntry = { id: string; at: number; reason: string; reply?: string; model?: string };
 
 const safe = (id: string) => id.replace(/[^\w.-]/g, "_");
 const okFile = (id: string) => path.join(DIR, `${safe(id)}.json`);
@@ -63,13 +64,32 @@ Elements (pick what fits, ≤ 14 per scene):
 - highlight {x, y, w, h} — call attention to a region.
 Colours: blue, teal, green, yellow, red, white, muted. Use colour to carry meaning, consistently across scenes.
 
-Animation: every element has enter {at ms from scene start, effect fade|draw|grow|rise, duration ms}. Use draw for lines/paths/outlines, rise for text, grow for points of focus. Stagger entrances so the eye follows the argument. Optional move {at, dx, dy, duration} and exitAt.
+Animation: every element has enter {at ms from scene start, effect fade|draw|grow|rise, duration ms}. Use draw for lines/paths/outlines, rise for text, grow for points of focus. Stagger entrances so the eye follows the argument.
 
 Script: 4–6 scenes, each 5000–9000 ms, caption 1–2 plain sentences (≤ 200 chars, may use $inline math$). Scene 1 sets up the problem, the middle scenes show the key mechanism or insight, the last shows the result. Repeat persistent elements (e.g. the same axes) in later scenes with a quick fade (at 0, duration 300).
 
 Be faithful to the abstract: no invented numbers, datasets or claims. If the abstract is abstract, visualise the structure of the idea (inputs → mechanism → outcome) rather than fake data.
 
-Also return a TL;DR (one plain-English sentence for a curious non-expert, ≤ 200 chars) and exactly 3 key points (each ≤ 160 chars).`;
+Also write a TL;DR (one plain-English sentence for a curious non-expert, ≤ 200 chars) and exactly 3 key points (each ≤ 160 chars).
+
+Reply with one JSON object and nothing else, matching these TypeScript types exactly (numbers are plain numbers; points are [x, y]):
+
+type Reply = { tldr: string; keyPoints: [string, string, string]; explainer: { type: "scenes"; version: 1; scenes: Scene[] } };
+type Scene = { caption: string; duration: number; elements: Element[] };
+type Color = "blue" | "teal" | "green" | "yellow" | "red" | "white" | "muted";
+type Enter = { at: number; effect: "fade" | "draw" | "grow" | "rise"; duration: number };
+type Common = { color: Color; enter: Enter };
+type Element = Common & (
+  | { kind: "text"; x: number; y: number; text: string; size: "sm" | "md" | "lg"; align: "start" | "middle" | "end" }
+  | { kind: "math"; x: number; y: number; tex: string; size: "sm" | "md" | "lg" }
+  | { kind: "circle"; x: number; y: number; r: number; fill: boolean }
+  | { kind: "rect"; x: number; y: number; w: number; h: number; fill: boolean }
+  | { kind: "line"; from: [number, number]; to: [number, number]; arrow: boolean; dashed: boolean }
+  | { kind: "path"; points: [number, number][]; smooth: boolean; closed: boolean }
+  | { kind: "dots"; points: [number, number][]; r: number }
+  | { kind: "axes"; x: number; y: number; w: number; h: number; xLabel: string; yLabel: string }
+  | { kind: "highlight"; x: number; y: number; w: number; h: number }
+);`;
 
 function userPrompt(paper: Paper) {
   return `Title: ${paper.title}\nCategory: ${paper.primaryCategory}\nAuthors: ${paper.authors.slice(0, 6).join(", ")}\n\nAbstract:\n${paper.abstract}`;
@@ -89,7 +109,7 @@ async function generate(paper: Paper): Promise<ExplainerResult> {
       max_tokens: MAX_TOKENS,
       system: SYSTEM,
       messages: [{ role: "user", content: userPrompt(paper) }],
-      output_config: { effort: "medium", format: { type: "json_schema", schema: MODEL_SCHEMA } },
+      output_config: { effort: "low" },
     });
   } catch (err) {
     const reason = fallbackReason(err);
@@ -97,33 +117,40 @@ async function generate(paper: Paper): Promise<ExplainerResult> {
     return { status: "fallback", reason };
   }
 
-  type Parsed = { data: ReturnType<typeof GenerationSchema.parse>; error?: undefined } | { error: string; data?: undefined };
-  const parsed: Parsed = (() => {
-    if (message.stop_reason !== "end_turn") return { error: `stop_reason ${message.stop_reason}` };
-    try {
-      const result = GenerationSchema.safeParse(JSON.parse(textOf(message)));
-      return result.success ? { data: result.data } : { error: result.error.issues.slice(0, 3).map((i) => `${i.path.join(".")}: ${i.message}`).join("; ") };
-    } catch (err) {
-      return { error: `invalid JSON: ${err instanceof Error ? err.message : err}` };
-    }
-  })();
-
-  if (parsed.error !== undefined) {
+  const text = textOf(message);
+  const parsed = message.stop_reason === "end_turn" ? interpret(text) : { error: `stop_reason ${message.stop_reason}` };
+  if ("error" in parsed) {
     console.warn(`[explainer] ${paper.id}: rejected output: ${parsed.error}`);
-    await writeJson(failFile(paper.id), { id: paper.id, at: Date.now(), reason: parsed.error } satisfies FailureEntry).catch(() => {});
+    const failure: FailureEntry = { id: paper.id, at: Date.now(), reason: parsed.error, reply: text, model: message.model };
+    await writeJson(failFile(paper.id), failure).catch(() => {});
     return { status: "fallback", reason: "failed" };
   }
+  return save(paper.id, parsed.data, message.model ?? CLAUDE_MODEL);
+}
 
-  const { explainer, tldr, keyPoints } = parsed.data;
+function interpret(text: string): { data: Generation } | { error: string } {
+  let reply: unknown;
+  try {
+    reply = parseReply(text);
+  } catch (err) {
+    return { error: `invalid JSON: ${err instanceof Error ? err.message : err}` };
+  }
+  const result = validateReply(reply);
+  if ("data" in result && result.dropped) console.warn(`[explainer] dropped ${result.dropped} invalid element(s)`);
+  return result;
+}
+
+async function save(id: string, data: Generation, model: string): Promise<ExplainerResult> {
+  const { explainer, tldr, keyPoints } = data;
   const entry: CacheEntry = {
-    id: paper.id,
-    model: message.model ?? CLAUDE_MODEL,
+    id,
+    model,
     promptVersion: PROMPT_VERSION,
     createdAt: new Date().toISOString(),
     explainer,
     summary: { tldr, keyPoints },
   };
-  await writeJson(okFile(paper.id), entry).catch((err) => console.warn("[explainer] cache write failed:", err));
+  await writeJson(okFile(id), entry).catch((err) => console.warn("[explainer] cache write failed:", err));
   return { status: "ready", explainer, summary: entry.summary, source: "claude" };
 }
 
@@ -140,6 +167,11 @@ export async function getExplainer(paper: Paper): Promise<ExplainerResult> {
   if (process.env.RABBITHOLE_FIXTURES === "1") return { status: "fallback", reason: "unavailable" };
 
   const failed = await readJson<FailureEntry>(failFile(paper.id));
+  if (failed?.reply) {
+    // A reply we couldn't use before may be salvageable now; costs nothing to try.
+    const salvaged = interpret(failed.reply);
+    if ("data" in salvaged) return save(paper.id, salvaged.data, failed.model ?? CLAUDE_MODEL);
+  }
   if (failed && Date.now() - failed.at < RETRY_FAILED_AFTER_MS) return { status: "fallback", reason: "failed" };
 
   const pending = inFlight.get(paper.id);
