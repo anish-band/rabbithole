@@ -1,39 +1,26 @@
 "use client";
 
-import { useState } from "react";
 import type { Paper } from "@/lib/arxiv/types";
+import { reactionsFor, toggle as toggleReaction, type Reaction } from "@/lib/taste/store";
+import { updateTaste, useTaste } from "@/lib/taste/use-taste";
 import { ExplainerPanel } from "./explainer-panel";
 import { InfoPanel, type PaperSummary } from "./info-panel";
-import type { PaperAction, PaperActionState } from "./paper-actions";
-
-const NO_ACTIONS: PaperActionState = { liked: false, saved: false, hidden: false };
 
 type PaperScreenProps = {
   paper: Paper;
   summary?: PaperSummary;
-  /** Persisted state comes from the taste store in #5; local until then. */
-  initialActions?: PaperActionState;
-  onAction?: (paper: Paper, action: PaperAction, active: boolean) => void;
 };
 
 /**
  * One full-screen paper: explainer on the left (55%), info on the right (45%).
  * Below 900px wide the panels stack, explainer on top. The info column scrolls
  * on its own when it is taller than the screen (wheel stays inside it until it
- * hits an edge, then pages the feed).
+ * hits an edge, then pages the feed). Like/save/not-interested live in the
+ * on-device taste store, so they survive scrolling away and reloads.
  */
-export function PaperScreen({ paper, summary, initialActions = NO_ACTIONS, onAction }: PaperScreenProps) {
-  const [actions, setActions] = useState(initialActions);
-
-  const toggle = (action: PaperAction) => {
-    const active = !actions[action];
-    const next = { ...actions, [action]: active };
-    // Liking and "not interested" contradict each other; turning one on clears the other.
-    if (active && action === "liked") next.hidden = false;
-    if (active && action === "hidden") next.liked = false;
-    setActions(next);
-    onAction?.(paper, action, active);
-  };
+export function PaperScreen({ paper, summary }: PaperScreenProps) {
+  const actions = reactionsFor(useTaste(), paper.id);
+  const toggle = (reaction: Reaction) => updateTaste((s) => toggleReaction(s, paper, reaction));
 
   return (
     <div className="mx-auto flex h-full max-w-[1600px] flex-col gap-5 px-4 pt-[72px] pb-6 min-[900px]:grid min-[900px]:grid-cols-[55fr_45fr] min-[900px]:gap-12 min-[900px]:px-10 min-[900px]:pt-[88px] min-[900px]:pb-10">
