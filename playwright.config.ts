@@ -5,6 +5,9 @@ const PORT = 3100;
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
+  // System Chrome occasionally hangs in browser.newContext when many workers
+  // start at once; 4 workers is fast and stable locally.
+  workers: 4,
   reporter: [["list"]],
   use: {
     baseURL: `http://localhost:${PORT}`,
@@ -22,7 +25,7 @@ export default defineConfig({
   webServer: {
     command: `npm run build && npx next start -p ${PORT}`,
     url: `http://localhost:${PORT}`,
-    reuseExistingServer: true,
+    reuseExistingServer: !process.env.CI,
     timeout: 180_000,
   },
 });
