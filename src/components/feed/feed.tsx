@@ -7,6 +7,7 @@ import { PaperScreen } from "@/components/paper/paper-screen";
 import { useActiveIndex } from "./use-active-index";
 import { useFeedItems, usePrefetch } from "./use-feed-items";
 import { useFeedKeyboard } from "./use-feed-keyboard";
+import { useViewHistory } from "./use-view-history";
 import { useWheelPaging } from "./use-wheel-paging";
 
 /** Slides further than this from the active (or target) one render as empty placeholders. */
@@ -32,6 +33,7 @@ export function Feed({ source, initialItems, Header }: FeedProps) {
   const { items, status, loadMore } = useFeedItems(source, initialItems);
   const active = useActiveIndex(containerRef, items.length);
   usePrefetch(active, items.length, status, loadMore);
+  useViewHistory(items[active]?.paper.id);
 
   // Index we are scrolling toward, so rapid key presses accumulate instead of
   // all resolving relative to the slide that is still on screen. Mirrored in

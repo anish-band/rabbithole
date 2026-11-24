@@ -1,9 +1,10 @@
 "use client";
 
 import { Bookmark, EyeOff, Heart, type LucideIcon } from "lucide-react";
+import type { Reaction, Reactions } from "@/lib/taste/store";
 
-export type PaperActionState = { liked: boolean; saved: boolean; hidden: boolean };
-export type PaperAction = keyof PaperActionState;
+export type PaperActionState = Reactions;
+export type PaperAction = Reaction;
 
 type ActionDef = { key: PaperAction; label: string; activeLabel: string; Icon: LucideIcon };
 
