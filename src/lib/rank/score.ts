@@ -4,7 +4,7 @@
  *
  * score = mood·w + taste·w − dislike·w + recency·w + jitter, minus a penalty
  * for papers already seen; then a greedy MMR pass keeps the top of the feed
- * from being five near-duplicates.
+ * from being five near-duplicates (only very similar papers are penalised).
  */
 export type Vector = Float32Array | number[];
 
@@ -36,8 +36,10 @@ export const WEIGHTS = {
   dislike: 0.35,
   recency: 0.08,
   seen: 0.3,
-  /** MMR: how much similarity to papers already placed costs. */
+  /** MMR: max cost of being a near-duplicate of a paper already placed. */
   diversity: 0.25,
+  /** Similarity below this is "different enough" and costs nothing. */
+  duplicateFloor: 0.5,
 };
 /** Recency decays with this half-life. */
 const RECENCY_HALF_LIFE_DAYS = 30;
@@ -100,7 +102,8 @@ export function rank<T>({
     let bestScore = -Infinity;
     // Only the head of the pool can win; keeps this O(n·k) in practice.
     for (let i = 0; i < Math.min(pool.length, 40); i++) {
-      const penalty = placed.length ? WEIGHTS.diversity * Math.max(...placed.map((p) => dot(pool[i].c.vec, p))) : 0;
+      const closest = placed.length ? Math.max(...placed.map((p) => dot(pool[i].c.vec, p))) : 0;
+      const penalty = (WEIGHTS.diversity * Math.max(0, closest - WEIGHTS.duplicateFloor)) / (1 - WEIGHTS.duplicateFloor);
       const s = pool[i].score - penalty;
       if (s > bestScore) [best, bestScore] = [i, s];
     }
