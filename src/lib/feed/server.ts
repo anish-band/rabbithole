@@ -17,7 +17,7 @@ import type { TasteSignals } from "@/lib/taste/store";
 export const DEFAULT_CATEGORIES = ["cs.AI", "cs.LG", "cs.CL", "cs.CV", "quant-ph", "hep-th", "astro-ph.GA", "cond-mat.stat-mech", "math.PR", "math.CO", "q-bio.NC"];
 const PER_QUERY = 25;
 const DEFAULT_POOL = 50;
-const MAX_ROUNDS = 6;
+const MAX_ROUNDS = 8;
 
 export type FeedRequest = {
   mood?: string;
@@ -35,16 +35,31 @@ export type FeedResponse = {
   ranked: boolean;
 };
 
+/** arXiv searches per round; each costs a 3 s throttle slot on a cold cache. */
+const QUERIES_PER_ROUND = 2;
+const PAGES_PER_QUERY = 3;
+
+/**
+ * A mood's searches, spread over rounds so the first page only waits for two
+ * of them: round 0 = first page of queries 1–2, round 1 = queries 3–4, then the
+ * second page of each query, and so on.
+ */
+export function moodSearches(plan: MoodPlan, round: number) {
+  const all = Array.from({ length: PAGES_PER_QUERY }, (_, page) => plan.keywords.map((keywords) => ({ keywords, start: page * PER_QUERY }))).flat();
+  return all.slice(round * QUERIES_PER_ROUND, (round + 1) * QUERIES_PER_ROUND);
+}
+
 async function candidates(round: number, plan: MoodPlan | undefined, categories: string[]): Promise<Paper[]> {
   if (process.env.RABBITHOLE_FIXTURES === "1") return round === 0 ? (fixtures as Paper[]) : [];
 
   if (plan && plan.keywords.length) {
-    const results = [];
+    const papers: Paper[] = [];
     // Sequential on purpose: the arXiv client throttles to 1 request / 3 s anyway.
-    for (const keywords of plan.keywords) {
-      results.push(await searchPapers({ query: arxivQuery(keywords, plan.categories), start: round * PER_QUERY, maxResults: PER_QUERY }));
+    for (const { keywords, start } of moodSearches(plan, round)) {
+      const result = await searchPapers({ query: arxivQuery(keywords, plan.categories), start, maxResults: PER_QUERY });
+      papers.push(...result.papers);
     }
-    return results.flatMap((r) => r.papers);
+    return papers;
   }
   const query = (categories.length ? categories : DEFAULT_CATEGORIES).map((c) => `cat:${c}`).join(" OR ");
   const { papers } = await searchPapers({ query, start: round * DEFAULT_POOL, maxResults: DEFAULT_POOL, sortBy: "submittedDate" });
