@@ -68,7 +68,7 @@ Evals and infra. Work them in this order. Each task's GitHub issue is the spec, 
 - [x] **#28** Postmortem for the 2026-11-24 API usage-limit outage (`docs/postmortems/`).
 - [x] **#22** Offline relevance eval for mood expansion and ranking (`npm run eval:rank`), using a frozen candidate pool from cached arXiv data with no live arXiv calls. **Claude spend cap for this task: $0.25.** Use Haiku for query plans and any judge labels, and cache every call.
 - [ ] **#23** Explainer faithfulness eval (`npm run eval:faithfulness`), run on already-cached explainers. **Claude spend cap for this task: $1.00.** Use a cheap judge model through `callClaude()`. Measure the prompt change by regenerating only a few explainers (≤ 5).
-- [ ] **#27** Load test `POST /api/feed` with `RABBITHOLE_FIXTURES=1` (never send load to arXiv), fix the first bottleneck, and report before/after numbers.
+- [x] **#27** Load test `POST /api/feed` with `RABBITHOLE_FIXTURES=1` (never send load to arXiv), fix the first bottleneck, and report before/after numbers.
 - [ ] **#26** Background worker queue for explainer generation. It runs locally: an in-process or file-backed queue under `data/`, with no SQS and no Postgres. Jobs are idempotent, retry with backoff, failures go to a dead-letter queue, and the worker is budget-aware. Add a test showing that killing the worker mid-job loses no work and causes no duplicate spend.
 
 Out of the loop (these need the owner's decision): #24 Postgres ledger + caches, #25 AWS deploy + monitoring. If a task above seems to need either of them, take the local alternative and note it in the PR.
