@@ -1,0 +1,280 @@
+{
+ "label": "v2",
+ "promptVersion": 2,
+ "createdAt": "2026-11-24T21:40:18.164Z",
+ "explainers": [
+  {
+   "id": "2611.31190",
+   "title": "Know When to Abstain: Conformal Confidence Estimation for Text-to-SQL",
+   "abstract": "Text-to-SQL systems often return queries that execute successfully but answer the wrong question. Detecting these errors at deployment is hard because execution correctness is defined against a gold query, which exists only in labeled data. We formulate confidence estimation for Text-to-SQL as probabilistic query validation under a latent correctness variable that is observable at calibration time through gold-SQL execution and latent at deployment. Our estimator separates generation from validation. A generator LLM writes and executes the query, and a different critic LLM judges the query and its execution result. The critic's validation and execution-grounded alignment scores are fused with the generator's verbalized confidence, token-level uncertainty, and SQL-structural features in a Random Forest, using two sequential LLM calls. Two calibration steps give finite-sample guarantees. A Learn-then-Test threshold ensures, with probability $1-δ$, that the error rate among accepted queries stays below a user-chosen budget. A conformal p-value bounds the false abstention rate. On Spider we use GPT-OSS-120B as generator and Gemma-4-31B as critic. The estimator obtains an AUARC of 0.899. Without abstention, 22.6% of queries are wrong. With a 15% risk budget ($δ=0.1$), a threshold is certified on all 10 resampled splits, and the system accepts 52.4% of queries on average with 9.1% observed error. Five different critic models give similar results. In a controlled comparison on Spider with Olmo-3-32B as generator, the estimator obtains an AUARC of 89.5, compared with 81.2 for the strongest logit-based baseline. Applied to BIRD without retraining, the confidence scores remain informative (AUROC 0.72, against 0.79 on Spider), but the risk guarantee does not transfer, as expected without exchangeability.",
+   "summary": {
+    "tldr": "A Text-to-SQL system that scores its own queries with a separate critic model and skips uncertain ones, with statistical guarantees on how many accepted answers are wrong.",
+    "keyPoints": [
+     "Generation and validation are split: a generator LLM writes and runs SQL, a different critic LLM judges it, and a Random Forest fuses their signals into a confidence score.",
+     "Learn-then-Test picks a threshold so that, with probability 1−δ, the error among accepted queries stays under a chosen budget; a conformal p-value bounds false abstentions.",
+     "On Spider (GPT-OSS-120B generator, Gemma-4-31B critic): AUARC 0.899; with a 15% budget, 52.4% of queries are accepted on average at 9.1% observed error."
+    ]
+   },
+   "scenes": [
+    {
+     "caption": "Text-to-SQL queries can run fine yet answer the wrong question. Correctness needs a gold query, which only exists in labeled data.",
+     "labels": [
+      "question",
+      "SQL runs ✓",
+      "wrong answer?",
+      "no gold query",
+      "at deployment"
+     ]
+    },
+    {
+     "caption": "Correctness is treated as a latent variable: observed via gold-SQL execution during calibration, hidden at deployment.",
+     "labels": [
+      "calibration",
+      "correct: seen",
+      "deployment",
+      "correct: ?",
+      "latent correctness"
+     ]
+    },
+    {
+     "caption": "A generator LLM writes and runs the query; a separate critic LLM judges it. Their signals feed a Random Forest.",
+     "labels": [
+      "generator",
+      "critic",
+      "Random Forest",
+      "confidence, tokens,",
+      "SQL structure",
+      "validation, alignment"
+     ]
+    },
+    {
+     "caption": "Learn-then-Test picks a threshold: with probability $1-\\delta$, error among accepted queries stays under the budget. A conformal p-value bounds false abstention.",
+     "labels": [
+      "axis: confidence",
+      "abstain",
+      "accept",
+      "$P(\\text{err}\\le\\alpha)\\ge 1-\\delta$"
+     ]
+    },
+    {
+     "caption": "On Spider (GPT-OSS-120B + Gemma-4-31B critic), 22.6% of queries are wrong without abstention. With a 15% budget, 52.4% are accepted at 9.1% observed error.",
+     "labels": [
+      "axis: error %",
+      "22.6%",
+      "9.1%",
+      "15%",
+      "AUARC 0.899",
+      "52.4% accepted",
+      "certified 10/10 splits"
+     ]
+    },
+    {
+     "caption": "With Olmo-3-32B as generator, AUARC is 89.5 vs 81.2 for the best logit baseline. On BIRD, scores stay informative but the guarantee doesn't transfer.",
+     "labels": [
+      "89.5",
+      "81.2",
+      "ours",
+      "logit",
+      "BIRD AUROC 0.72",
+      "(Spider 0.79)",
+      "guarantee: no transfer"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2611.31222",
+   "title": "CTLink: A Text-Prompted Segmentation Model for Linking Radiology Report Findings to 3D Chest CT Scans",
+   "abstract": "Radiology reports describe findings in text only, without visually marking them on the scan, so readers cannot directly see which abnormality each reported finding refers to. We introduce CTLink, a text-prompted 3D segmentation model that segments findings described in a chest CT report. CTLink was trained on 4123 noncontrast chest CT scans with 9547 segmented report findings, including ReXGroundingCTv2, a newly annotated dataset of 1134 scans and 1895 findings with every instance of each finding segmented. On the 200 ReXGroundingCT validation scans, CTLink achieved a hit rate of 0.816, an instance F1 score of 0.456, and a mean Dice score of 0.400, compared with 0.533, 0.175, and 0.234 for VoxTell, a publicly available text-prompted segmentation model (P < .001 for all). On the test set of the MICCAI 2026 ReXGrounding challenge, an ensemble of seven CTLink models achieved the highest hit rate (0.782) and instance F1 score (0.386) of all 48 participating teams. On 50 test scans segmented twice by independent radiologists, CTLink matched or exceeded inter-rater agreement. Diffuse non-focal findings remained the main limitation, partly because their extent is outlined inconsistently even between radiologists. The CTLink model weights are available at https://huggingface.co/rajpurkarlab/CTLink, and the dataset at https://huggingface.co/datasets/rajpurkarlab/ReXGroundingCT.",
+   "summary": {
+    "tldr": "CTLink reads a sentence from a chest CT report and outlines the matching abnormality in the 3D scan, so readers can see which spot each finding refers to.",
+    "keyPoints": [
+     "Trained on 4123 noncontrast chest CTs with 9547 segmented report findings, including the new ReXGroundingCTv2 dataset (1134 scans, 1895 findings).",
+     "On 200 ReXGroundingCT validation scans: hit rate 0.816, instance F1 0.456, Dice 0.400 vs VoxTell's 0.533, 0.175, 0.234.",
+     "A 7-model CTLink ensemble had the top hit rate and instance F1 of 48 teams in the MICCAI 2026 ReXGrounding challenge; diffuse findings remain hard."
+    ]
+   },
+   "scenes": [
+    {
+     "caption": "Radiology reports describe findings only in text. Nothing on the scan shows which abnormality each sentence refers to.",
+     "labels": [
+      "3D chest CT",
+      "Report",
+      "finding 1 …",
+      "finding 2 …",
+      "?"
+     ]
+    },
+    {
+     "caption": "CTLink is a text-prompted 3D segmentation model: give it a report finding and the scan, and it outlines that finding.",
+     "labels": [
+      "a finding",
+      "CT volume",
+      "CTLink",
+      "3D mask"
+     ]
+    },
+    {
+     "caption": "It was trained on 4123 noncontrast chest CTs with 9547 segmented findings, including the new ReXGroundingCTv2 set.",
+     "labels": [
+      "4123 scans",
+      "9547 findings",
+      "ReXGroundingCTv2",
+      "1134 scans",
+      "1895 findings",
+      "every instance segmented"
+     ]
+    },
+    {
+     "caption": "On 200 ReXGroundingCT validation scans, CTLink beat the public VoxTell model on all three metrics (P < .001).",
+     "labels": [
+      "axis: metric",
+      "axis: score",
+      "hit",
+      "inst F1",
+      "Dice",
+      "CTLink",
+      ".816 / .456 / .400",
+      "VoxTell",
+      ".533 / .175 / .234"
+     ]
+    },
+    {
+     "caption": "A seven-model CTLink ensemble topped 48 teams on hit rate and instance F1 in the MICCAI 2026 ReXGrounding challenge.",
+     "labels": [
+      "Challenge test set",
+      "ensemble of 7 CTLink models",
+      "hit rate 0.782",
+      "inst F1 0.386",
+      "#1 of 48 teams on both"
+     ]
+    },
+    {
+     "caption": "On 50 scans segmented by two radiologists, CTLink matched or exceeded their agreement. Diffuse findings remain hard, as even radiologists outline them inconsistently.",
+     "labels": [
+      "≥ inter-rater agreement",
+      "diffuse findings",
+      "main limitation"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2611.31223",
+   "title": "Agentic AI for Intent Management and Control in Autonomous Communication Networks",
+   "abstract": "Artificial intelligence (AI)-driven automation will help future mobile networks translate high-level network intents into concrete network optimization or control actions. However, existing approaches often focus on intent management and orchestration, leaving the adaptation of underlying network optimization and control functions largely unaddressed. This article proposes a triadic agentic AI framework that co-designs intent management and intent fulfillment through three agents: an interpreter, powered by a language model, that translates and refines intents into machine-readable optimization templates; an optimizer that adapts controller policies to intent specifications; and a controller that performs fast decision-making. We discuss the design space of each agent and how the workflow can be embedded across network architectural domains. Finally, we develop a concrete realization combining a language-model interpreter with Bayesian optimization for the optimizer and multi-objective reinforcement learning for the controller, and evaluate it in a radio resource management case study for differentiated connectivity. Results demonstrate how the agentic AI framework can connect high-level intents with runtime network control, showing adaptability of intent specifications and control policies to service requirements and changing network conditions.",
+   "summary": {
+    "tldr": "A three-agent AI system turns high-level goals for mobile networks into fast, adaptive control actions, linking what operators want to what the network actually does.",
+    "keyPoints": [
+     "Existing work focuses on intent management, leaving the adaptation of the underlying network control functions largely unaddressed.",
+     "Three agents: a language-model interpreter builds optimization templates, an optimizer adapts controller policies, and a controller decides fast.",
+     "A realization with Bayesian optimization and multi-objective RL is evaluated in a radio resource management case study for differentiated connectivity."
+    ]
+   },
+   "scenes": [
+    {
+     "caption": "Operators state high-level intents, but networks need concrete control actions. Existing work rarely adapts the control functions themselves.",
+     "labels": [
+      "an intent",
+      "control actions",
+      "gap?"
+     ]
+    },
+    {
+     "caption": "The framework co-designs intent management and fulfillment with three agents: interpreter, optimizer and controller.",
+     "labels": [
+      "Interpreter",
+      "Optimizer",
+      "Controller",
+      "triadic agentic AI"
+     ]
+    },
+    {
+     "caption": "A language model translates and refines intents into machine-readable optimization templates.",
+     "labels": [
+      "an intent",
+      "language model",
+      "opt. template"
+     ]
+    },
+    {
+     "caption": "Bayesian optimization adapts the controller policy to the intent; multi-objective RL makes fast runtime decisions.",
+     "labels": [
+      "Optimizer",
+      "Bayesian opt.",
+      "policy",
+      "Controller",
+      "multi-objective RL"
+     ]
+    },
+    {
+     "caption": "In a radio resource management case study, the framework connected intents to runtime control, adapting to service needs and changing conditions.",
+     "labels": [
+      "Radio resource management",
+      "service requirements",
+      "network conditions",
+      "adaptive control"
+     ]
+    }
+   ]
+  },
+  {
+   "id": "2611.31225",
+   "title": "Self-Supervised Dataset Distillation via Mutual Information Maximization",
+   "abstract": "Dataset distillation (DD) aims to compress a large dataset into a small synthetic one that remains effective for training neural networks. Despite its success in supervised learning, DD remains underexplored in self-supervised learning (SSL), where distilled data must preserve the information needed to learn representations that remain consistent across augmentations. To bridge this gap, we introduce Mutual Information Prototype Alignment (MIPA), an efficient SSL dataset distillation approach that optimizes synthetic images to preserve augmentation-invariant information. Specifically, MIPA treats synthetic images as learnable prototypes and uses a frozen encoder to assign real samples to them based on feature similarity. A synthetic dataset that preserves such augmentation invariance should yield stable prototype assignments across multiple augmented views of the same real image. MIPA encourages this by maximizing mutual information between cross-view assignments while avoiding trivial solutions in which all real samples are assigned to only a few synthetic prototypes. Evaluations on image classification benchmarks show that synthetic data generated by MIPA yield higher-quality representations than existing distillation approaches while reducing time and storage demands during distillation.",
+   "summary": {
+    "tldr": "MIPA shrinks a big image dataset into a few synthetic images that still teach a network good self-supervised features, by making real images map to them consistently under augmentation.",
+    "keyPoints": [
+     "Dataset distillation is well studied for supervised learning but underexplored for self-supervised learning, where augmentation invariance matters.",
+     "MIPA treats synthetic images as learnable prototypes; a frozen encoder assigns real samples to them by feature similarity.",
+     "It maximizes mutual information between assignments of two augmented views, avoiding collapse onto few prototypes, and beats prior methods while using less time and storage."
+    ]
+   },
+   "scenes": [
+    {
+     "caption": "Dataset distillation compresses a large dataset into a small synthetic one. In self-supervised learning, that small set must keep augmentation-invariant information.",
+     "labels": [
+      "large real dataset",
+      "few synthetic images",
+      "keep SSL information?"
+     ]
+    },
+    {
+     "caption": "MIPA treats synthetic images as learnable prototypes. A frozen encoder assigns each real sample to prototypes by feature similarity.",
+     "labels": [
+      "frozen encoder",
+      "prototypes",
+      "assign by similarity"
+     ]
+    },
+    {
+     "caption": "If the synthetic set preserves augmentation invariance, two augmented views of the same real image should get the same prototype assignment.",
+     "labels": [
+      "view 1",
+      "view 2",
+      "stable assignment"
+     ]
+    },
+    {
+     "caption": "MIPA maximizes mutual information between cross-view assignments, while avoiding collapse where all real samples land on only a few prototypes.",
+     "labels": [
+      "$\\max\\; I(A_1; A_2)$",
+      "cross-view assignments",
+      "collapse",
+      "balanced",
+      "avoid trivial solutions"
+     ]
+    },
+    {
+     "caption": "On image classification benchmarks, MIPA's synthetic data yields higher-quality representations than existing distillation methods, with less time and storage.",
+     "labels": [
+      "MIPA synthetic set",
+      "better representations",
+      "less distillation time",
+      "less storage"
+     ]
+    }
+   ]
+  }
+ ]
+}
