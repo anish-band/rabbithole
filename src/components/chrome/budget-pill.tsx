@@ -30,7 +30,7 @@ function Ring({ fraction, className }: { fraction: number; className: string }) 
         strokeLinecap="round"
         strokeDasharray={c}
         strokeDashoffset={c * (1 - fraction)}
-        className="transition-[stroke-dashoffset] duration-500 ease-spring"
+        className="transition-[stroke-dashoffset] duration-300 ease-spring"
       />
     </svg>
   );

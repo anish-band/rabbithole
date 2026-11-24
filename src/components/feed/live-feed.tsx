@@ -7,6 +7,7 @@ import { createApiSource, type FeedMeta } from "@/lib/feed/api-source";
 import { tasteSignals } from "@/lib/taste/store";
 import { readTaste } from "@/lib/taste/use-taste";
 import { Feed } from "./feed";
+import { pillButton } from "./feed-placeholder";
 
 /**
  * The real feed: /api/feed pages ranked for the current mood and the on-device
@@ -32,7 +33,15 @@ export function LiveFeed() {
         Header={TopBar}
         headerContent={<MoodBar key={mood} mood={mood} onChange={changeMood} />}
         loadingLabel={mood ? `Finding papers for “${mood}”…` : "Finding fresh papers…"}
-        emptyMessage={{ title: "Nothing matched that mood", detail: "Try different words, or clear the mood for a mixed feed." }}
+        emptyMessage={{
+          title: "Nothing matched that mood",
+          detail: "Try different words, or clear the mood for a mixed feed.",
+          action: (
+            <button type="button" onClick={() => changeMood("")} className={pillButton}>
+              Clear mood
+            </button>
+          ),
+        }}
       />
       <p aria-live="polite" className="sr-only">
         {meta ? `Showing papers for ${meta.label}` : ""}

@@ -32,7 +32,9 @@ export function ExplainerPanel({ paper, state, active }: { paper: Paper; state: 
     >
       {explainer.type === "scenes" ? (
         // Remount when the real script replaces the title card so it starts from scene 1.
-        <ExplainerPlayer key={state.status === "ready" ? "ready" : "card"} script={explainer} active={active} />
+        <div key={state.status === "ready" ? "ready" : "card"} className={`flex size-full ${state.status === "ready" && state.source === "claude" ? "ex-swap" : ""}`}>
+          <ExplainerPlayer script={explainer} active={active} />
+        </div>
       ) : (
         <video
           src={explainer.url}

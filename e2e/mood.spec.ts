@@ -23,7 +23,7 @@ test("clearing the mood returns to the default feed", async ({ page, feedRequest
   await mood(page).fill("driving");
   await mood(page).press("Enter");
   await expect(slide(page, 0)).toHaveAttribute("aria-label", /Driving/i);
-  await page.getByRole("button", { name: "Clear mood" }).click();
+  await page.getByRole("banner").getByRole("button", { name: "Clear mood" }).click();
   await expect(mood(page)).toHaveValue("");
   await expect(slide(page, 0)).not.toHaveAttribute("aria-label", /Driving/i);
   expect(feedRequests.at(-1)?.mood).toBeUndefined();
@@ -44,6 +44,9 @@ test("a mood with no matches shows an empty state", async ({ page }) => {
   await mood(page).fill("zzzqqq");
   await mood(page).press("Enter");
   await expect(page.getByText("Nothing matched that mood")).toBeVisible();
+  await page.locator('[role="feed"]').getByRole("button", { name: "Clear mood" }).click();
+  await expect(mood(page)).toHaveValue("");
+  await expect(slide(page, 0).getByRole("heading", { level: 2 })).toBeVisible();
 });
 
 test("shows a skeleton while the first page loads", async ({ page }) => {

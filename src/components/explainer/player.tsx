@@ -91,7 +91,7 @@ export function ExplainerPlayer({ script, active }: { script: ScenesExplainer; a
                 aria-current={i === scene ? "step" : undefined}
                 className="group flex h-6 w-full items-center rounded-full focus-visible:outline-2 focus-visible:outline-white/70"
               >
-                <span className="relative h-1 w-full overflow-hidden rounded-full bg-white/20 transition-[height] duration-200 ease-spring group-hover:h-1.5">
+                <span className="relative h-1 w-full overflow-hidden rounded-full bg-white/20 transition-transform duration-200 ease-spring group-hover:scale-y-150">
                   {i < scene || (i === scene && ended) ? (
                     <span className="absolute inset-0 bg-white/85" />
                   ) : i === scene ? (

@@ -8,7 +8,13 @@ type Handlers = {
   prev: () => void;
   first: () => void;
   last: () => void;
+  /** L / S / X: like, save, not interested on the paper on screen. */
+  react?: (reaction: "liked" | "saved" | "hidden") => void;
+  /** ?: show the shortcuts overlay. */
+  help?: () => void;
 };
+
+const REACTION_KEYS = { l: "liked", s: "saved", x: "hidden" } as const;
 
 /** Held-down keys repeat; page at most this often while held. */
 const REPEAT_INTERVAL_MS = 250;
@@ -27,11 +33,12 @@ function ownsSpace(target: EventTarget | null) {
 /**
  * Feed keyboard shortcuts:
  * ↓ / j / PageDown / Space → next paper, ↑ / k / PageUp / Shift+Space → previous,
- * Home → first, End → last. Ignored while typing or with Cmd/Ctrl/Alt held;
+ * Home → first, End → last, L/S/X → like/save/not interested, ? → shortcuts.
+ * Ignored while typing or with Cmd/Ctrl/Alt held;
  * Space is left alone on buttons and links; held keys page at most 4×/second.
  * Inside a scrollable info column, arrows/Page/Space scroll it first.
  */
-export function useFeedKeyboard({ next, prev, first, last }: Handlers) {
+export function useFeedKeyboard({ next, prev, first, last, react, help }: Handlers) {
   useEffect(() => {
     let lastRepeatAt = 0;
 
@@ -40,6 +47,18 @@ export function useFeedKeyboard({ next, prev, first, last }: Handlers) {
       if (e.key === " " && ownsSpace(e.target)) return;
       // Open dialogs (e.g. the saved drawer) own the keyboard.
       if (e.target instanceof Element && e.target.closest("dialog")) return;
+
+      if (e.key === "?" && help) {
+        e.preventDefault();
+        help();
+        return;
+      }
+      const reaction = REACTION_KEYS[e.key.toLowerCase() as keyof typeof REACTION_KEYS];
+      if (reaction && react && !e.shiftKey && !e.repeat) {
+        e.preventDefault();
+        react(reaction);
+        return;
+      }
 
       const action =
         e.key === "ArrowDown" || e.key === "j" || e.key === "PageDown" || (e.key === " " && !e.shiftKey)
@@ -67,5 +86,5 @@ export function useFeedKeyboard({ next, prev, first, last }: Handlers) {
 
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [next, prev, first, last]);
+  }, [next, prev, first, last, react, help]);
 }

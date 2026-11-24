@@ -1,4 +1,4 @@
-import { ChevronDown, ChevronUp, Rabbit } from "lucide-react";
+import { ChevronDown, ChevronUp, Keyboard, Rabbit } from "lucide-react";
 import type { ReactNode } from "react";
 import { BudgetPill } from "./budget-pill";
 import { SavedDrawer } from "./saved-drawer";
@@ -6,6 +6,8 @@ import { SavedDrawer } from "./saved-drawer";
 export type FeedNav = {
   next: () => void;
   prev: () => void;
+  /** Open the keyboard shortcuts overlay. */
+  help?: () => void;
   /** Index of the paper on screen. */
   active: number;
   count: number;
@@ -32,6 +34,12 @@ export function TopBar({ nav, children }: { nav: FeedNav; children?: ReactNode }
         <div className="flex min-w-0 flex-1 items-center justify-center">{children}</div>
         <BudgetPill />
         <SavedDrawer />
+        {nav.help ? (
+          // Keyboard users get here with ?; pointer users on devices with a keyboard see the button.
+          <button type="button" onClick={nav.help} aria-label="Keyboard shortcuts" aria-keyshortcuts="?" aria-haspopup="dialog" className={`${iconButton} pointer-coarse:hidden max-sm:hidden`}>
+            <Keyboard aria-hidden className="size-[18px]" />
+          </button>
+        ) : null}
         <span aria-hidden className="h-5 w-px bg-hairline" />
         <nav aria-label="Feed" className="flex items-center gap-1">
           <button type="button" onClick={nav.prev} disabled={nav.active <= 0} aria-label="Previous paper" className={iconButton}>
