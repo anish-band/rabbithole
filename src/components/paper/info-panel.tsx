@@ -25,22 +25,22 @@ export function InfoPanel({ paper, summary, actions, onAction }: InfoPanelProps)
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="rounded-full bg-accent/10 px-2.5 py-1 text-[13px] font-medium text-accent-ink" title={paper.primaryCategory}>
+        <span className="rounded-full bg-accent/10 px-2.5 py-1 text-footnote font-medium text-accent-ink" title={paper.primaryCategory}>
           {categoryName(paper.primaryCategory)}
         </span>
         {others.map((c) => (
-          <span key={c} className="rounded-full bg-fill px-2.5 py-1 text-[13px] text-foreground/70" title={categoryName(c)}>
+          <span key={c} className="rounded-full bg-fill px-2.5 py-1 text-footnote text-foreground/70" title={categoryName(c)}>
             {c}
           </span>
         ))}
       </div>
 
       <div className="flex flex-col gap-2">
-        <h2 className="text-[clamp(1.5rem,1rem+1.1vw,2.25rem)] leading-[1.12] font-semibold tracking-[-0.022em] text-balance">
+        <h2 className="text-headline font-semibold text-balance">
           <MathText text={paper.title} />
         </h2>
         <AuthorList authors={paper.authors} />
-        <p className="text-[13px] text-muted">
+        <p className="text-footnote text-muted">
           <time dateTime={paper.published}>{formatDate(paper.published)}</time>
           {updated ? (
             <>
@@ -54,11 +54,11 @@ export function InfoPanel({ paper, summary, actions, onAction }: InfoPanelProps)
 
       {summary ? (
         <section aria-label="Summary" className="flex flex-col gap-3 rounded-2xl bg-surface p-4">
-          <p className="text-[17px] leading-snug font-medium">
+          <p className="text-body leading-snug font-medium">
             <MathText text={summary.tldr} />
           </p>
           {summary.keyPoints.length > 0 ? (
-            <ul className="flex list-disc flex-col gap-1.5 ps-5 text-[15px] leading-snug text-foreground/80 marker:text-muted">
+            <ul className="flex list-disc flex-col gap-1.5 ps-5 text-callout leading-snug text-foreground/80 marker:text-muted">
               {summary.keyPoints.map((point, i) => (
                 <li key={i}>
                   <MathText text={point} />
@@ -71,7 +71,7 @@ export function InfoPanel({ paper, summary, actions, onAction }: InfoPanelProps)
 
       <Abstract text={paper.abstract} id={`abstract-${paper.id}`} />
 
-      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-[15px] font-medium">
+      <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-callout font-medium">
         <a
           href={paper.absUrl}
           target="_blank"
