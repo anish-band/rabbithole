@@ -39,10 +39,21 @@ test("a lock held by a dead process is stale even before it expires", async () =
   const dir = freshDir();
   const q = new FileQueue<null>(dir, { leaseMs: 60_000 });
   await q.enqueue("k", null, T0);
-  fs.mkdirSync(path.join(dir, "locks"), { recursive: true });
+  await q.claim("w1", T0);
+  // Pretend attempt 1's owner was another process that has since died:
   // pid 2^22 + 1 is above macOS/Linux pid limits, so no such process exists.
-  fs.writeFileSync(path.join(dir, "locks", "k.lock"), JSON.stringify({ owner: "ghost", pid: 4_194_305, until: T0 + 60_000 }));
-  assert.equal((await q.claim("w2", T0 + 1))?.key, "k");
+  fs.writeFileSync(path.join(dir, "locks", `k.${T0}.1.lock`), JSON.stringify({ owner: "ghost", pid: 4_194_305, until: T0 + 60_000 }));
+  assert.equal((await q.claim("w2", T0 + 1))?.attempts, 2);
+});
+
+test("concurrent claims: exactly one worker wins, for a fresh job and for a stale one", async () => {
+  const q = new FileQueue<null>(freshDir(), { leaseMs: 1_000 });
+  await q.enqueue("k", null, T0);
+  const fresh = await Promise.all(["a", "b", "c", "d"].map((w) => q.claim(w, T0)));
+  assert.equal(fresh.filter(Boolean).length, 1);
+  const stale = await Promise.all(["e", "f", "g", "h"].map((w) => q.claim(w, T0 + 5_000)));
+  assert.equal(stale.filter(Boolean).length, 1);
+  assert.equal((await q.get("k"))?.attempts, 2);
 });
 
 test("retries back off, then dead-letter when attempts run out", async () => {

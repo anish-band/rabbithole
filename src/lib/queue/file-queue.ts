@@ -3,14 +3,15 @@
  * deployed). Crash-safe by construction:
  *
  * - every file write is atomic (unique temp file + rename);
- * - a job is claimed by creating its lock file exclusively (`wx`); the lock is
- *   the lease, and it goes stale when it expires or its owner process is gone,
- *   so a killed worker's job is picked up again instead of being lost;
+ * - a job is claimed by creating the lock file for its next attempt
+ *   exclusively (`wx`), so two workers can never both win; the lock is the
+ *   lease, and it goes stale when it expires or its owner process is gone, so
+ *   a killed worker's job is picked up again instead of being lost;
  * - a job's reply journal (see `writeJournal`) is written before the reply is
  *   used, so work that was paid for survives a crash.
  *
  * Layout: <dir>/jobs/<key>.json (live), <dir>/dead/<key>.json (dead letters),
- * <dir>/locks/<key>.lock, <dir>/journal/<key>.json.
+ * <dir>/locks/<key>.<createdAt>.<attempt>.lock, <dir>/journal/<key>.json.
  * No server-only imports, so it is unit-testable and usable from scripts.
  */
 import fs from "node:fs/promises";
@@ -77,8 +78,8 @@ export class FileQueue<P> {
     this.exhaustedRetryAfterMs = exhaustedRetryAfterMs;
   }
 
-  private file(kind: "jobs" | "dead" | "locks" | "journal", key: string) {
-    return path.join(this.dir, kind, `${safe(key)}.${kind === "locks" ? "lock" : "json"}`);
+  private file(kind: "jobs" | "dead" | "journal", key: string) {
+    return path.join(this.dir, kind, `${safe(key)}.json`);
   }
 
   private async write(file: string, data: unknown, flag?: "wx") {
@@ -119,26 +120,34 @@ export class FileQueue<P> {
     return job;
   }
 
-  /** Take the lock if it is free or stale. */
-  private async lock(key: string, owner: string, now: number): Promise<boolean> {
-    const file = this.file("locks", key);
-    const mine: Lock = { owner, pid: process.pid, until: now + this.leaseMs };
-    try {
-      await this.write(file, mine, "wx");
-      return true;
-    } catch (err) {
-      if ((err as NodeJS.ErrnoException).code !== "EEXIST") throw err;
-    }
-    const held = await this.read<Lock>(file);
-    if (held && held.until > now && alive(held.pid)) return false;
-    // Stale (expired, or its process is gone): replace it, then confirm we won.
-    await this.write(file, mine);
-    return (await this.read<Lock>(file))?.owner === owner;
+  /**
+   * One lock file per attempt (`<key>.<createdAt>.<attempt>.lock`), created
+   * exclusively. Contenders for the same attempt race on the same name, so
+   * exactly one wins; there is no read-then-overwrite window.
+   */
+  private lockFile(job: Job<P>, attempt: number) {
+    return path.join(this.dir, "locks", `${safe(job.key)}.${job.createdAt}.${attempt}.lock`);
   }
 
-  private async unlock(key: string, owner: string) {
-    const file = this.file("locks", key);
-    if ((await this.read<Lock>(file))?.owner === owner) await fs.unlink(file).catch(() => {});
+  /** Is the lease on a running job's current attempt still held? */
+  private async leaseHeld(job: Job<P>, now: number) {
+    const held = await this.read<Lock>(this.lockFile(job, job.attempts));
+    return !!held && held.until > now && alive(held.pid);
+  }
+
+  private async lock(job: Job<P>, owner: string, now: number): Promise<boolean> {
+    const mine: Lock = { owner, pid: process.pid, until: now + this.leaseMs };
+    try {
+      await this.write(this.lockFile(job, job.attempts + 1), mine, "wx");
+      return true;
+    } catch (err) {
+      if ((err as NodeJS.ErrnoException).code === "EEXIST") return false;
+      throw err;
+    }
+  }
+
+  private async unlock(job: Job<P>) {
+    await fs.unlink(this.lockFile(job, job.attempts)).catch(() => {});
   }
 
   /** Jobs not yet finished or dead (queued, backing off, or running), oldest first. */
@@ -158,7 +167,10 @@ export class FileQueue<P> {
   /** Claim the oldest runnable job: queued and past its backoff, or running under a stale lease. */
   async claim(owner: string, now = Date.now()): Promise<Job<P> | null> {
     for (const job of (await this.live()).filter((j) => j.runAfter <= now)) {
-      if (!(await this.lock(job.key, owner, now))) continue;
+      if (job.status === "running" && (await this.leaseHeld(job, now))) continue;
+      if (!(await this.lock(job, owner, now))) continue;
+      // Won: the previous attempt's lock (if its worker died) is now just litter.
+      if (job.status === "running") await this.unlock(job);
       const claimed: Job<P> = { ...job, status: "running", attempts: job.attempts + 1, updatedAt: now };
       await this.write(this.file("jobs", job.key), claimed);
       return claimed;
@@ -166,9 +178,9 @@ export class FileQueue<P> {
     return null;
   }
 
-  async complete(job: Job<P>, owner: string, now = Date.now()) {
+  async complete(job: Job<P>, _owner: string, now = Date.now()) {
     await this.write(this.file("jobs", job.key), { ...job, status: "done", updatedAt: now, lastError: undefined } satisfies Job<P>);
-    await this.unlock(job.key, owner);
+    await this.unlock(job);
   }
 
   /** A transient failure: back off and try again, or dead-letter once attempts run out. */
@@ -176,7 +188,7 @@ export class FileQueue<P> {
     if (job.attempts >= this.maxAttempts) return this.deadLetter(job, owner, "exhausted", this.exhaustedRetryAfterMs, error, now);
     const next: Job<P> = { ...job, status: "queued", runAfter: now + this.backoffMs(job.attempts), lastError: error, updatedAt: now };
     await this.write(this.file("jobs", job.key), next);
-    await this.unlock(job.key, owner);
+    await this.unlock(job);
     return next;
   }
 
@@ -185,7 +197,7 @@ export class FileQueue<P> {
     const dead: Job<P> = { ...job, status: "dead", deadReason: reason, lastError: error ?? job.lastError, retryAfter: now + retryAfterMs, updatedAt: now };
     await this.write(this.file("dead", job.key), dead);
     await fs.unlink(this.file("jobs", job.key)).catch(() => {});
-    await this.unlock(job.key, owner);
+    await this.unlock(job);
     return dead;
   }
 
