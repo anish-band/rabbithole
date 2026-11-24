@@ -11,11 +11,11 @@ export type PoolPaper = { id: string; title: string; abstract: string; primaryCa
 
 const grade = (grades: Grades, id: string) => grades[id] ?? 0;
 
-/** Share of the top k that is at least related (grade ≥ 1). */
-export function precisionAt(k: number, ranked: string[], grades: Grades): number {
+/** Share of the top k with at least `minGrade` (1 = related, 2 = clearly relevant). */
+export function precisionAt(k: number, ranked: string[], grades: Grades, minGrade: 1 | 2 = 1): number {
   const top = ranked.slice(0, k);
   if (top.length === 0) return 0;
-  return top.filter((id) => grade(grades, id) >= 1).length / k;
+  return top.filter((id) => grade(grades, id) >= minGrade).length / k;
 }
 
 const gain = (g: number) => 2 ** g - 1;

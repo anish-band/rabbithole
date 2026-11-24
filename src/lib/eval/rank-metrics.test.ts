@@ -10,6 +10,8 @@ test("precision@k counts related papers in the top k", () => {
   close(precisionAt(2, ["b", "d"], grades), 0);
   // A short list still divides by k: missing slots are misses.
   close(precisionAt(4, ["a"], grades), 0.25);
+  // Strict precision only counts clearly relevant papers.
+  close(precisionAt(4, ["a", "b", "c", "d"], grades, 2), 0.25);
 });
 
 test("nDCG@k is 1 for the ideal order and lower otherwise", () => {
