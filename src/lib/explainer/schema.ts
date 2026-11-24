@@ -51,7 +51,7 @@ export const ElementSchema = z.discriminatedUnion("kind", [
 ]);
 
 export const SceneSchema = z.object({
-  /** One or two sentences shown under the animation. */
+  /** One or two sentences shown under the animation. Inline `$…$` math is rendered. */
   caption: z.string().min(1).max(220),
   duration: z.number().min(2000).max(20_000),
   elements: z.array(ElementSchema).max(40),

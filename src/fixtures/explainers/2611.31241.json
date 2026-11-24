@@ -162,7 +162,7 @@
    ]
   },
   {
-   "caption": "The traveling-salesman tour is the shortest loop through every point. Its length L_n is a random number.",
+   "caption": "The traveling-salesman tour is the shortest loop through every point. Its length $L_n$ is a random number.",
    "duration": 7000,
    "elements": [
     {
