@@ -9,21 +9,33 @@ type Handlers = {
   last: () => void;
 };
 
+/** Held-down keys repeat; page at most this often while held. */
+const REPEAT_INTERVAL_MS = 250;
+
 /** True when the key press belongs to a text field or other editable element. */
 function isTyping(target: EventTarget | null) {
   if (!(target instanceof HTMLElement)) return false;
   return target.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(target.tagName);
 }
 
+/** Space activates buttons and links; don't steal it from them. */
+function ownsSpace(target: EventTarget | null) {
+  return target instanceof HTMLElement && target.closest("button, a[href], [role='button'], summary") !== null;
+}
+
 /**
  * Feed keyboard shortcuts:
  * ↓ / j / PageDown / Space → next paper, ↑ / k / PageUp / Shift+Space → previous,
- * Home → first, End → last. Ignored while typing or with Cmd/Ctrl/Alt held.
+ * Home → first, End → last. Ignored while typing or with Cmd/Ctrl/Alt held;
+ * Space is left alone on buttons and links; held keys page at most 4×/second.
  */
 export function useFeedKeyboard({ next, prev, first, last }: Handlers) {
   useEffect(() => {
+    let lastRepeatAt = 0;
+
     function onKeyDown(e: KeyboardEvent) {
       if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey || isTyping(e.target)) return;
+      if (e.key === " " && ownsSpace(e.target)) return;
 
       const action =
         e.key === "ArrowDown" || e.key === "j" || e.key === "PageDown" || (e.key === " " && !e.shiftKey)
@@ -36,10 +48,14 @@ export function useFeedKeyboard({ next, prev, first, last }: Handlers) {
                 ? last
                 : null;
 
-      if (action) {
-        e.preventDefault();
-        action();
+      if (!action) return;
+      e.preventDefault();
+      if (e.repeat) {
+        const now = performance.now();
+        if (now - lastRepeatAt < REPEAT_INTERVAL_MS) return;
+        lastRepeatAt = now;
       }
+      action();
     }
 
     window.addEventListener("keydown", onKeyDown);
