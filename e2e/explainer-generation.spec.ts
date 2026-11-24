@@ -48,19 +48,34 @@ test.describe("generated explainers", () => {
   });
 });
 
-test("only the paper on screen and the next one are requested", async ({ page, explainerRequests }) => {
-  await page.goto("/");
-  await expect(slide(page, 0).getByRole("heading", { level: 2 })).toBeVisible();
-  // Paper 0 uses its sample, so only paper 1 (next) is fetched.
-  await expect.poll(() => explainerRequests).toEqual(["2611.31240"]);
+test.describe("lazy loading", () => {
+  test.use({ explainers: { "2611.31240": GENERATED, "2611.31239": GENERATED, "2611.31236": GENERATED } });
+
+  test("only the paper on screen and the next one are requested", async ({ page, explainerRequests }) => {
+    await open(page);
+    // Paper 0 uses its sample, so only paper 1 (next) is fetched.
+    await expect.poll(() => explainerRequests).toEqual(["2611.31240"]);
+    await next(page, 1);
+    await expect.poll(() => explainerRequests).toEqual(["2611.31240", "2611.31239"]);
+    await next(page, 2);
+    await expect.poll(() => explainerRequests).toEqual(["2611.31240", "2611.31239", "2611.31236"]);
+    // Scrolling back reuses what we already have.
+    await page.keyboard.press("ArrowUp");
+    await expect(slide(page, 1)).toHaveAttribute("data-active", "");
+    await page.waitForTimeout(300);
+    expect(explainerRequests).toEqual(["2611.31240", "2611.31239", "2611.31236"]);
+  });
+});
+
+test("retries an offline explainer the next time the paper is wanted", async ({ page, explainerRequests }) => {
+  await open(page);
   await next(page, 1);
-  await expect.poll(() => explainerRequests).toEqual(["2611.31240", "2611.31239"]);
   await next(page, 2);
-  await expect.poll(() => [...new Set(explainerRequests)]).toEqual(["2611.31240", "2611.31239", "2611.31236"]);
-  // Scrolling back reuses what we already have.
+  await next(page, 3); // paper 1 is no longer current or next
+  await page.keyboard.press("ArrowUp");
   await page.keyboard.press("ArrowUp");
   await expect(slide(page, 1)).toHaveAttribute("data-active", "");
-  expect(explainerRequests.filter((id) => id === "2611.31240")).toHaveLength(1);
+  await expect.poll(() => explainerRequests.filter((id) => id === "2611.31240").length).toBe(2);
 });
 
 test("falls back to an animated title card when explainers are offline", async ({ page }) => {
