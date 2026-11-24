@@ -118,19 +118,19 @@ body {
    becomes the active one its info rises into place in a short stagger. These
    are transitions, not keyframes, so they reverse cleanly mid-scroll. */
 .reveal-group > * {
+  /* Seen on every paper, so short: opacity lands in 250ms, the spring settles by ~400ms. */
   transition:
-    opacity 400ms var(--ease-spring),
-    transform 600ms var(--ease-spring);
+    opacity 250ms var(--ease-spring),
+    transform 400ms var(--ease-spring);
 }
-.reveal-group > :nth-child(2) { transition-delay: 40ms; }
-.reveal-group > :nth-child(3) { transition-delay: 80ms; }
-.reveal-group > :nth-child(4) { transition-delay: 120ms; }
-.reveal-group > :nth-child(5) { transition-delay: 160ms; }
-.reveal-group > :nth-child(n + 6) { transition-delay: 200ms; }
+.reveal-group > :nth-child(2) { transition-delay: 30ms; }
+.reveal-group > :nth-child(3) { transition-delay: 60ms; }
+.reveal-group > :nth-child(4) { transition-delay: 90ms; }
+.reveal-group > :nth-child(n + 5) { transition-delay: 120ms; }
 
 article:not([data-active]) .reveal-group > * {
   opacity: 0.4;
-  transform: translateY(16px);
+  transform: translateY(10px);
   transition-delay: 0ms;
   transition-duration: 200ms;
 }
@@ -272,6 +272,7 @@ article:not([data-active]) .reveal-group > * {
 
 /* Small anchored card (budget popover): fades and settles in from the bar. */
 .popover-card {
+  transform-origin: top right; /* grows from the pill it hangs off */
   transition:
     opacity 200ms ease,
     transform 300ms var(--ease-spring),
@@ -297,5 +298,26 @@ article:not([data-active]) .reveal-group > * {
     .popover-card:popover-open {
       transform: none;
     }
+  }
+}
+
+/* Generated script replacing the title card: a quick blur-fade bridges the two
+   stages instead of a hard cut. Runs once per paper. */
+@keyframes ex-swap {
+  from {
+    opacity: 0;
+    filter: blur(6px);
+    transform: scale(0.99);
+  }
+}
+.ex-swap {
+  animation: ex-swap 260ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  @keyframes ex-swap-reduced {
+    from { opacity: 0; }
+  }
+  .ex-swap {
+    animation: ex-swap-reduced 200ms ease-out;
   }
 }
