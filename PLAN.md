@@ -50,7 +50,7 @@
 - [x] **#1** arXiv client: search + fetch by ID, Atom XML parsing, 3 s throttle, disk cache (`src/lib/arxiv.ts`) + a small script to smoke test it
 - [x] **#2** Feed shell: full-screen scroll-snap feed with mock papers; arrow keys / j,k / wheel / swipe navigation; prefetching
 - [x] **#3** Paper screen layout: split view, info panel (title, authors, chips, abstract, links, like/save/not-interested), responsive stack
-- [ ] **#4** Design pass 1: Apple/YouTube look — top bar with frosted glass, typography, light/dark, transitions
+- [x] **#4** Design pass 1: Apple/YouTube look — top bar with frosted glass, typography, light/dark, transitions
 - [ ] **#5** On-device taste store (localStorage): likes, saves, skips, history; saved-papers drawer
 - [ ] **#6** Local embeddings + ranking (`src/lib/rank.ts`) with disk cache
 - [ ] **#7** Mood bar → Claude query expansion (structured output, cached) → `/api/feed` returns ranked real papers; default feed without mood
