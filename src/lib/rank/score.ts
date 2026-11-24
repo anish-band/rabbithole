@@ -95,25 +95,30 @@ export function rank<T>({
     if (seen.has(c.id)) parts.seen = -W.seen;
     if (jitter) parts.jitter = jitter * (random() * 2 - 1);
     const score = Object.values(parts).reduce((a, b) => a + b, 0);
-    return { c, score, parts };
+    // Similarity to the closest paper placed so far (none yet: 0, which costs nothing below the floor).
+    return { c, score, parts, closest: 0 };
   });
 
-  // Greedy maximal-marginal-relevance ordering.
+  // Greedy maximal-marginal-relevance ordering. Each candidate's `closest` is
+  // updated once per placement (n² dot products in total) instead of being
+  // recomputed against every placed paper on every pass, which was the feed's
+  // main CPU cost under load (#27). Same result, since max is order-independent.
   const out: Ranked<T>[] = [];
-  const placed: Vector[] = [];
   const pool = scored.sort((a, b) => b.score - a.score);
   while (pool.length) {
     let best = 0;
     let bestScore = -Infinity;
-    // Only the head of the pool can win; keeps this O(n·k) in practice.
+    // Only the head of the pool can win.
     for (let i = 0; i < Math.min(pool.length, 40); i++) {
-      const closest = placed.length ? Math.max(...placed.map((p) => dot(pool[i].c.vec, p))) : 0;
-      const penalty = (W.diversity * Math.max(0, closest - W.duplicateFloor)) / (1 - W.duplicateFloor);
+      const penalty = (W.diversity * Math.max(0, pool[i].closest - W.duplicateFloor)) / (1 - W.duplicateFloor);
       const s = pool[i].score - penalty;
       if (s > bestScore) [best, bestScore] = [i, s];
     }
     const [pick] = pool.splice(best, 1);
-    placed.push(pick.c.vec);
+    for (const rest of pool) {
+      const sim = dot(rest.c.vec, pick.c.vec);
+      if (sim > rest.closest) rest.closest = sim;
+    }
     out.push({ item: pick.c.item, id: pick.c.id, score: pick.score, parts: pick.parts });
   }
   return out;

@@ -61,3 +61,36 @@ test("weight overrides change the ordering without touching the defaults", () =>
   assert.deepEqual(ids(rank({ candidates, mood, now, weights: { recency: 0 } })), ["old", "new"]);
   assert.deepEqual(ids(rank({ candidates, mood, now, weights: { recency: 1 } })), ["new", "old"]);
 });
+
+test("incremental MMR orders exactly like the reference algorithm", () => {
+  // Reference: recompute each candidate's closest placed paper on every pass (the pre-#27 loop).
+  const reference = (items: { id: string; vec: number[]; score: number }[], diversity = 0.25, floor = 0.5) => {
+    const pool = [...items].sort((a, b) => b.score - a.score);
+    const placed: number[][] = [];
+    const order: string[] = [];
+    while (pool.length) {
+      let best = 0;
+      let bestScore = -Infinity;
+      for (let i = 0; i < Math.min(pool.length, 40); i++) {
+        const closest = placed.length ? Math.max(...placed.map((p) => dot(pool[i].vec, p))) : 0;
+        const s = pool[i].score - (diversity * Math.max(0, closest - floor)) / (1 - floor);
+        if (s > bestScore) [best, bestScore] = [i, s];
+      }
+      const [pick] = pool.splice(best, 1);
+      placed.push(pick.vec);
+      order.push(pick.id);
+    }
+    return order;
+  };
+  let seed = 7;
+  const rnd = () => ((seed = (seed * 16807) % 2147483647) / 2147483647) * 2 - 1;
+  for (let trial = 0; trial < 20; trial++) {
+    const mood = unit(...Array.from({ length: 8 }, rnd));
+    // Clustered vectors so near-duplicates (similarity > 0.5) actually occur.
+    const centres = Array.from({ length: 4 }, () => Array.from({ length: 8 }, rnd));
+    const candidates = Array.from({ length: 60 }, (_, i) => c(`p${i}`, centres[i % 4].map((x) => x + 0.3 * rnd())));
+    const got = ids(rank({ candidates, mood }));
+    const expected = reference(candidates.map((x) => ({ id: x.id, vec: x.vec as number[], score: dot(x.vec, mood) })));
+    assert.deepEqual(got, expected);
+  }
+});
