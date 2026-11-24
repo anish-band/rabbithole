@@ -6,6 +6,7 @@ import { PaperSlide } from "./paper-slide";
 import { useActiveIndex } from "./use-active-index";
 import { useFeedItems, usePrefetch } from "./use-feed-items";
 import { useFeedKeyboard } from "./use-feed-keyboard";
+import { useWheelPaging } from "./use-wheel-paging";
 
 /** Slides further than this from the active one render as empty placeholders. */
 const RENDER_WINDOW = 2;
@@ -16,9 +17,9 @@ type FeedProps = {
 };
 
 /**
- * Full-screen vertical feed. Native scroll-snap handles trackpad, wheel and
- * touch (momentum and mid-scroll interruption come for free); the keyboard
- * drives the same scroll container.
+ * Full-screen vertical feed. Native scroll-snap handles touch (momentum and
+ * mid-scroll interruption come for free); mouse wheel / trackpad page one
+ * paper per gesture; the keyboard drives the same scroll container.
  */
 export function Feed({ source, initialItems }: FeedProps) {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -66,6 +67,7 @@ export function Feed({ source, initialItems }: FeedProps) {
     };
   }, []);
   useFeedKeyboard(handlers);
+  useWheelPaging(containerRef, (direction) => (direction > 0 ? handlers.next() : handlers.prev()));
 
   return (
     <div
