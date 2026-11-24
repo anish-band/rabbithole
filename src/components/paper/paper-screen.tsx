@@ -27,7 +27,11 @@ export function PaperScreen({ paper, summary, initialActions = NO_ACTIONS, onAct
 
   const toggle = (action: PaperAction) => {
     const active = !actions[action];
-    setActions((prev) => ({ ...prev, [action]: active }));
+    const next = { ...actions, [action]: active };
+    // Liking and "not interested" contradict each other; turning one on clears the other.
+    if (active && action === "liked") next.hidden = false;
+    if (active && action === "hidden") next.liked = false;
+    setActions(next);
     onAction?.(paper, action, active);
   };
 
@@ -36,7 +40,12 @@ export function PaperScreen({ paper, summary, initialActions = NO_ACTIONS, onAct
       <div className="h-[38%] shrink-0 min-[900px]:h-full">
         <ExplainerPanel paper={paper} />
       </div>
-      <div data-allow-wheel className="min-h-0 flex-1 overflow-y-auto overscroll-contain min-[900px]:flex min-[900px]:flex-col min-[900px]:py-4">
+      <div
+        data-allow-wheel
+        tabIndex={0}
+        role="region"
+        aria-label="Paper details"
+        className="min-h-0 flex-1 overflow-y-auto overscroll-contain rounded-2xl outline-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent min-[900px]:flex min-[900px]:flex-col min-[900px]:py-4">
         <div className="min-[900px]:my-auto min-[900px]:max-w-[560px]">
           <InfoPanel paper={paper} summary={summary} actions={actions} onAction={toggle} />
         </div>
