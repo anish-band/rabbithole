@@ -1,0 +1,370 @@
+[
+  {
+    "id": "2611.31241",
+    "version": "v1",
+    "title": "A Boundary Comparison Method for Gaussian Fluctuations in Planar Euclidean Optimization",
+    "abstract": "We develop a boundary comparison method for Gaussian fluctuations of optimization costs on planar random points, including traveling-salesman length, minimum perfect-matching length, and the Held--Karp relaxation. A local change can alter an optimal solution far from the modified points, making a direct decomposition into local contributions difficult. Our criterion requires the difference between the changes in the full and local costs caused by the same replacement to be controlled at the boundary scale, allowing a smaller-order $L^2$ excess. Under this condition, the centered difference between the total cost and the sum of independent cell costs vanishes in $L^2$. The multiscale argument shows that a nonvanishing variance of the cutting error would produce Gaussian tails incompatible with the boundary control. We obtain joint Gaussian limits for the three centered costs, using a conditional version for matching, and prove that the limiting covariance is positive definite in the Euclidean case. Convergence holds in quadratic Wasserstein distance for Poisson and fixed sample sizes. The results extend jointly to finitely many planar norms and to fixed sampling laws whose absolutely continuous component has a density positive almost everywhere on the square, with an arbitrary singular component.",
+    "authors": [
+      "Zi-Yao Su"
+    ],
+    "published": "2026-11-23T18:59:55Z",
+    "updated": "2026-11-23T18:59:55Z",
+    "primaryCategory": "math.PR",
+    "categories": [
+      "math.PR"
+    ],
+    "absUrl": "https://arxiv.org/abs/2611.31241",
+    "pdfUrl": "https://arxiv.org/pdf/2611.31241v1",
+    "comment": "53 pages"
+  },
+  {
+    "id": "2611.31240",
+    "version": "v1",
+    "title": "Pruning Autonomous Driving VLAs: What to Preserve for Reasoning and Action",
+    "abstract": "Reasoning vision-language-action (VLA) models for autonomous driving use chain-of-thought (CoT) reasoning to guide action generation, but incur substantial memory and computational costs. We study structured pruning for these models, focusing on preserving both scene understanding and trajectory prediction. Our analysis of Taylor importance in Alpamayo-1.5-10B shows that reasoning and trajectory objectives assign different importance to the same vision-language model (VLM) structures. In the action expert, MLP channels exhibit more stable importance rankings across denoising steps than query heads, and a small fraction of channels accounts for most of the measured importance. Based on these findings, we propose MoOP, which combines importance ranks from both objectives for VLM pruning and aggregates stepwise importance to select a fixed subset of expert MLP channels. At 24.0% total parameter reduction, VLM-only pruning with MoOP performs comparably to or slightly better than the strongest baselines in driving, while retaining 94.0% of the dense model's LingoQA score, far above all other methods. At a higher reduction of 30.0%, MoOP degrades much less than every other method, as it is the only one whose reasoning does not collapse. Removing 93.75% of expert MLP channels increases total parameter reduction to 39.4%, with nearly unchanged open-loop errors relative to VLM-only pruning and competitive closed-loop performance. The resulting model achieves a 1.37x end-to-end inference speedup and 36.6% lower peak memory than the dense model, without post-pruning fine-tuning.",
+    "authors": [
+      "Seongchan Kim",
+      "Soowon Son",
+      "Sangoh Kim",
+      "Hyunah Ko",
+      "Eunbeen Hong",
+      "Hyunkoo Lee",
+      "Sanghyun Lee",
+      "WonJun Moon",
+      "Kihong Kim",
+      "Dongyeon Son",
+      "Woongchan Nam",
+      "Seungryong Kim"
+    ],
+    "published": "2026-11-23T18:59:52Z",
+    "updated": "2026-11-23T18:59:52Z",
+    "primaryCategory": "cs.CV",
+    "categories": [
+      "cs.CV",
+      "cs.LG",
+      "cs.RO"
+    ],
+    "absUrl": "https://arxiv.org/abs/2611.31240",
+    "pdfUrl": "https://arxiv.org/pdf/2611.31240v1",
+    "comment": "45 pages. Project page: https://cvlab-kaist.github.io/MoOP"
+  },
+  {
+    "id": "2611.31239",
+    "version": "v1",
+    "title": "Lyris: Layout-Guided Long Video Generation with Persistent 3D Memory",
+    "abstract": "Exploring a scene from as little as a single photo requires generating a long, camera-controlled walkthrough that extends far beyond what was captured, yet remains consistent upon return. Memory-based video generation methods preserve what they have already seen, but have no anchor beyond it, where the camera drifts from its path and a text prompt can name objects but not place them. Layout-conditioned methods provide such an anchor and precise control over what appears where, but rely on layouts that are typically authored by hand. Both limitations arise because, beyond what was captured, nothing anchors the video model unless a human authors one. To overcome both, we propose Lyris, a long video generation framework that never leaves the video model without an anchor: a persistent point-cloud memory where the scene has been observed or generated, and a 3D layout that a vision-language model authors where it has not. Our key insight is that the interface between the two models can be surprisingly coarse. A layout of one labeled 3D box per object is simple enough for a vision-language model to author (and for a user to edit), yet expressive enough for a video model to follow once rendered along the camera path. We demonstrate walkthroughs of over three minutes and 50 meters from a single photo, passing through doorways into rooms it never shows. When evaluated on minute-long round trips across four datasets, Lyris outperforms state-of-the-art methods by a wide margin, reducing camera error by 3.8x and improving consistency upon return by 22% on average.",
+    "authors": [
+      "Chen Wang",
+      "Jiahui Huang",
+      "Riccardo de Lutio",
+      "Alex Trevithick",
+      "Bryan Chu",
+      "Jiawei Ren",
+      "Laura Leal-Taixé",
+      "Shengyu Huang",
+      "Lingjie Liu",
+      "Haithem Turki"
+    ],
+    "published": "2026-11-23T18:59:46Z",
+    "updated": "2026-11-23T18:59:46Z",
+    "primaryCategory": "cs.CV",
+    "categories": [
+      "cs.CV"
+    ],
+    "absUrl": "https://arxiv.org/abs/2611.31239",
+    "pdfUrl": "https://arxiv.org/pdf/2611.31239v1",
+    "comment": "Project page: http://research.nvidia.com/labs/sil/projects/lyris"
+  },
+  {
+    "id": "2611.31236",
+    "version": "v1",
+    "title": "Two messages suffice for quantum interactive proof systems",
+    "abstract": "Quantum interactive proof systems can be parallelized to three messages, as shown by Kitaev and Watrous (STOC 2000), perhaps their most striking distinction from classical counterparts. In this work, we establish that any quantum interactive proof system can further be parallelized to two messages, with the verifier sending halves of EPR pairs (``quantum public coins'') and, after the prover's response, using only stoquastic verification. Technically, we strengthen ${\\sf QIP}(3) = {\\sf QIP} = {\\sf PSPACE}$ of Jain, Ji, Upadhyay, and Watrous (JACM, 2011) and fully characterize two-message quantum interactive proof systems by proving \\[ {\\rm qq}\\text{-}{\\sf StoqAM} = {\\rm qq}\\text{-}{\\sf QAM} = {\\sf QIP}(2) = {\\sf QIP} = {\\sf PSPACE}. \\] Our main technical contributions show that Close Image to Uniform (CIUniform), which is naturally in the stoquastic version of ${\\rm qq}\\text{-}{\\sf QAM}$, is $\\sf PSPACE$-hard via transforming the sum-check protocol of Shamir (JACM, 1992) and Shen (JACM, 1992) into a CIUniform instance consisting of an efficient sampler whose image distribution is exactly uniform for some input distribution when the underlying quantified Boolean formula is true.",
+    "authors": [
+      "Yupan Liu"
+    ],
+    "published": "2026-11-23T18:59:31Z",
+    "updated": "2026-11-23T18:59:31Z",
+    "primaryCategory": "quant-ph",
+    "categories": [
+      "quant-ph",
+      "cs.CC"
+    ],
+    "absUrl": "https://arxiv.org/abs/2611.31236",
+    "pdfUrl": "https://arxiv.org/pdf/2611.31236v1",
+    "comment": "17 pages, 2 protocols"
+  },
+  {
+    "id": "2611.31235",
+    "version": "v1",
+    "title": "The Simons Observatory: Analysis of methods for polarization calibration of multiple instruments",
+    "abstract": "Cosmic birefringence, the rotation of the CMB linear polarization plane across the Universe, is a powerful test of parity-violating physics beyond the Standard Model. Static isotropic rotation, however, is limited by an instrument's absolute polarization-angle calibration. We present a method for transferring absolute calibration between Simons Observatory (SO) instruments, validated on map-level simulations of the Large Aperture Telescope (LAT) and Small Aperture Telescopes (SATs) with lensed CMB polarization, polarized Galactic foregrounds, correlated instrumental noise, and polarization-angle miscalibration. We develop two pipelines: a joint LAT+SAT likelihood transferring calibration through their overlap, and the Minami-Komatsu foreground-based method, which separates cosmic birefringence from instrumental miscalibration using Galactic dust polarization without an external angle prior. We derive a general variance budget showing that calibration transfer improves sensitivity only when the combined reference and overlap transfer uncertainties remain below the receiving instrument's calibration uncertainty. While transfer does not lower the absolute-angle floor for isotropic $β$, it anchors the receiving instrument's multipole range. The relative-angle uncertainty is $\\sim 0.1^\\circ$ for $\\ell_{\\max}^{\\mathrm{SAT}}=300$, improving to $\\sim 0.04^\\circ$ at $\\ell_{\\max}^{\\mathrm{SAT}}=600$, subject to SAT beam and transfer-function control. Finally, for $β=0.3^\\circ$, we show how the LAT's $\\ell$-range distinguishes scale-independent dark-energy rotation from scale-dependent axion dark-matter models via $C_\\ell^{EB}$.",
+    "authors": [
+      "The Simons Observatory Collaboration",
+      "Anto I. Lonappan",
+      "Patricia Diego-Palazuelos",
+      "Carlos Hervías-Caimapo",
+      "Kam Arnold",
+      "Susanna Azzoni",
+      "Carlo Baccigalupi",
+      "Matteo Billi",
+      "Erminia Calabrese",
+      "Yuji Chinone",
+      "Matthew Chu",
+      "Mark Devlin",
+      "Josquin Errard",
+      "Nicholas Galitzki",
+      "Bradley R. Johnson",
+      "Brian Keating",
+      "Andréa Landais",
+      "Toshiya Namikawa",
+      "Federico Nati",
+      "Giuseppe Puglisi",
+      "Christian L. Reichardt",
+      "Kevin Wolz"
+    ],
+    "published": "2026-11-23T18:59:30Z",
+    "updated": "2026-11-23T18:59:30Z",
+    "primaryCategory": "astro-ph.CO",
+    "categories": [
+      "astro-ph.CO",
+      "astro-ph.IM"
+    ],
+    "absUrl": "https://arxiv.org/abs/2611.31235",
+    "pdfUrl": "https://arxiv.org/pdf/2611.31235v1",
+    "comment": "32 Pages, 9 Figures, 4 Tables"
+  },
+  {
+    "id": "2611.31232",
+    "version": "v1",
+    "title": "Nonabelianization map for the $W_{3,c=2}$ conformal blocks. Part I",
+    "abstract": "This work is inspired by the nonabelianization construction of Virasoro conformal blocks. We start the process of defining the nonabelianization map which expresses $c=2$ $W_3$-algebra conformal blocks on a Riemann surface $C$ from Heisenberg blocks on a branched triple cover $\\tilde{C}$ of $C$. This generalized nonabelianization map uses the datum of a $\\mathfrak{gl}_3$ spectral network on $C$ and we find that this map also depends on the soliton degeneracies corresponding to the spectral network even though the soliton data didn't show up explicitly in the Virasoro case. This nonabelianization construction defines new formulas for $W_3$-algebra conformal blocks on $C$ in terms of fermion correlation functions determined by the Heisenberg blocks on $\\tilde{C}$. We provide a check of the proposed construction associated to the more challenging $(123)$ type branch points which start to show up in three-fold covers. To be more precise, the simplest example that we focus on has only two of the $(123)$ type branch points and we show that in this example, our nonabelianization construction gives the desired two-point correlator and $τ$-function.",
+    "authors": [
+      "Qianyu Hao"
+    ],
+    "published": "2026-11-23T18:59:06Z",
+    "updated": "2026-11-23T18:59:06Z",
+    "primaryCategory": "hep-th",
+    "categories": [
+      "hep-th"
+    ],
+    "absUrl": "https://arxiv.org/abs/2611.31232",
+    "pdfUrl": "https://arxiv.org/pdf/2611.31232v1",
+    "comment": "37 pages"
+  },
+  {
+    "id": "2611.31229",
+    "version": "v1",
+    "title": "Central limit theorem for energies of determinantal point processes on complex manifolds I",
+    "abstract": "We study the Bergman determinantal point process associated with a positive line bundle on a compact Riemann surface. Consider the U-statistic given by the Green function, called the Green energy. For a configuration of $N$ points, the expectation of Green energy is $\\frac12 N\\log N+O(N)$, and the variance is $(\\log 2-π^2/24)N+O(\\log^2 N)$. We prove a central limit theorem for the Green energy by combining local Bergman kernel asymptotics with an expansion for the cumulants. A central limit theorem also holds for the logarithmic energy of Bergman determinantal point process on complex manifolds.",
+    "authors": [
+      "Hao Wu"
+    ],
+    "published": "2026-11-23T18:59:05Z",
+    "updated": "2026-11-23T18:59:05Z",
+    "primaryCategory": "math.CV",
+    "categories": [
+      "math.CV",
+      "math.AG",
+      "math.PR"
+    ],
+    "absUrl": "https://arxiv.org/abs/2611.31229",
+    "pdfUrl": "https://arxiv.org/pdf/2611.31229v1"
+  },
+  {
+    "id": "2611.31230",
+    "version": "v1",
+    "title": "Simple design of adaptive protocols for quantum metrology with limited data",
+    "abstract": "Recent sensing experiments have used a Bayesian notion of precision gain to adapt control parameters for fixed measurements. Here, we advocate a simple design principle based on Personick's minimum mean square loss formalism to extend this procedure in order to include measurement optimisation, determining the optimal measurement for each probe and providing a prior-dependent precision gain to optimise the probe itself. This offers a Bayesian counterpart to protocol design based on the Fisher information, with a similar algebraic structure but incorporating the full prior. We apply this principle to adaptive phase estimation with single-mode Gaussian probes, showing that joint optimisation outperforms both adaptive homodyne detection and a fixed-probe strategy optimised for the initial prior, with a maximum reduction of 32% in mean posterior variance relative to homodyne detection. Our results illustrate the potential of simple Bayesian design for quantum metrology with limited data when measurement bases can be controlled.",
+    "authors": [
+      "Ricard Ravell Rodríguez",
+      "Jesús Rubio"
+    ],
+    "published": "2026-11-23T18:59:05Z",
+    "updated": "2026-11-23T18:59:05Z",
+    "primaryCategory": "quant-ph",
+    "categories": [
+      "quant-ph",
+      "physics.data-an"
+    ],
+    "absUrl": "https://arxiv.org/abs/2611.31230",
+    "pdfUrl": "https://arxiv.org/pdf/2611.31230v1",
+    "comment": "8 pages, 1 figure"
+  },
+  {
+    "id": "2611.31227",
+    "version": "v1",
+    "title": "How Far Can Linear Go? BiPert, a Unified Framework for Single-Cell Perturbation Modelling",
+    "abstract": "Understanding how genetic perturbations affect cellular behaviour is essential for studying gene function and regulatory mechanisms. Large-scale CRISPR screens measure these effects across thousands of genes, but cover relatively few cellular contexts. Predicting perturbation responses in unseen cell types and identifying perturbed genes from their transcriptional effects therefore remain challenging. Here, we show that both tasks can be addressed through a common linear decomposition of transcriptional responses into shared and perturbation-specific components. Building on this principle, we introduce BiPert, a simple linear framework for both forward perturbation prediction and inverse identification. For forward prediction, BiPert outperforms existing methods that use no external biological knowledge when predicting gene expression changes in unseen cell lines. Its few-shot extension, BiPert-FS, adapts to new cell lines using as few as ten measured perturbations. For inverse identification, BiPert-ID identifies perturbed genes from single-cell expression profiles, outperforming deep-learning methods in unseen cell lines and donors. We further show that perturbations whose effects transfer more consistently across cellular contexts are also easier to identify, even after controlling for perturbation effect size. Together, these results establish a connection between perturbation transfer and identification, and demonstrate that simple linear models provide strong, interpretable baselines for both tasks.",
+    "authors": [
+      "Abhishek Sharma",
+      "Aleksej Zelezniak"
+    ],
+    "published": "2026-11-23T18:58:32Z",
+    "updated": "2026-11-23T18:58:32Z",
+    "primaryCategory": "cs.LG",
+    "categories": [
+      "cs.LG",
+      "q-bio.CB",
+      "q-bio.GN",
+      "q-bio.QM"
+    ],
+    "absUrl": "https://arxiv.org/abs/2611.31227",
+    "pdfUrl": "https://arxiv.org/pdf/2611.31227v1"
+  },
+  {
+    "id": "2611.31223",
+    "version": "v1",
+    "title": "Agentic AI for Intent Management and Control in Autonomous Communication Networks",
+    "abstract": "Artificial intelligence (AI)-driven automation will help future mobile networks translate high-level network intents into concrete network optimization or control actions. However, existing approaches often focus on intent management and orchestration, leaving the adaptation of underlying network optimization and control functions largely unaddressed. This article proposes a triadic agentic AI framework that co-designs intent management and intent fulfillment through three agents: an interpreter, powered by a language model, that translates and refines intents into machine-readable optimization templates; an optimizer that adapts controller policies to intent specifications; and a controller that performs fast decision-making. We discuss the design space of each agent and how the workflow can be embedded across network architectural domains. Finally, we develop a concrete realization combining a language-model interpreter with Bayesian optimization for the optimizer and multi-objective reinforcement learning for the controller, and evaluate it in a radio resource management case study for differentiated connectivity. Results demonstrate how the agentic AI framework can connect high-level intents with runtime network control, showing adaptability of intent specifications and control policies to service requirements and changing network conditions.",
+    "authors": [
+      "Burak Demirel",
+      "Yu Wang",
+      "Pablo Soldati"
+    ],
+    "published": "2026-11-23T18:57:32Z",
+    "updated": "2026-11-23T18:57:32Z",
+    "primaryCategory": "cs.LG",
+    "categories": [
+      "cs.LG"
+    ],
+    "absUrl": "https://arxiv.org/abs/2611.31223",
+    "pdfUrl": "https://arxiv.org/pdf/2611.31223v1",
+    "comment": "Accepted for publication in IEEE Communications Magazine"
+  },
+  {
+    "id": "2611.31221",
+    "version": "v1",
+    "title": "A proof of the chemical recurrence conjecture in two dimensions",
+    "abstract": "At the microscopic level, the dynamics of a network of chemical reactions can be modeled, in the well-mixed case, as a continuous-time Markov chain. This process counts the number of particles in each of the $d$ species as a function of time, and its state-dependent, polynomial jump rates are determined by the structure of the underlying reaction graph. Networks of chemical reactions whose reaction graphs are the union of strongly connected components are called \\emph{weakly reversible}. The long-standing \\emph{chemical recurrence conjecture} states that if a network is weakly reversible, then the associated Markov chain is positive recurrent. We prove this conjecture for $d=2$.",
+    "authors": [
+      "Andrea Agazzi",
+      "David F. Anderson",
+      "Daniele Cappelletti",
+      "Lucie Laurence",
+      "Jonathan C. Mattingly"
+    ],
+    "published": "2026-11-23T18:56:52Z",
+    "updated": "2026-11-23T18:56:52Z",
+    "primaryCategory": "math.PR",
+    "categories": [
+      "math.PR"
+    ],
+    "absUrl": "https://arxiv.org/abs/2611.31221",
+    "pdfUrl": "https://arxiv.org/pdf/2611.31221v1",
+    "comment": "43 pages"
+  },
+  {
+    "id": "2611.31214",
+    "version": "v1",
+    "title": "Massive de Sitter correlators at one loop",
+    "abstract": "Fermions and massive fields charged under an unbroken symmetry couple to the inflaton only in pairs, so their signals in primordial correlators begin at one loop. Templates for these signals are mostly late-time estimates. Starting from a representation of massive de Sitter correlators as finite Mellin-Barnes integrals, we compute the exact squeezed coefficients of these signals and their corrections away from the squeezed limit. The leading coefficient factorizes into a hard part and a soft vertex. Late-time estimates treat the hard part exactly but approximate the soft vertex by its late-time limit, whereas we compute both exactly. Without a chemical potential, the exact coefficient differs from the late-time one by a universal factor that depends only on the masses in the loop and the coupling at the soft vertex. For the heavy Standard Model loops, the exact signals are ten to thirty times larger than their late-time estimates. With a chemical potential, the ratio depends on the model, and at our benchmarks it reaches a factor of thirty for helical vectors and about a hundred for the fermion triangle, where we agree with recent exact results. Away from the squeezed limit the leading term soon fails, mainly through a drift in the phase of the oscillation, which we derive for scalar and fermion loops.",
+    "authors": [
+      "Amara McCune"
+    ],
+    "published": "2026-11-23T18:55:40Z",
+    "updated": "2026-11-23T18:55:40Z",
+    "primaryCategory": "hep-th",
+    "categories": [
+      "hep-th",
+      "hep-ph"
+    ],
+    "absUrl": "https://arxiv.org/abs/2611.31214",
+    "pdfUrl": "https://arxiv.org/pdf/2611.31214v1"
+  },
+  {
+    "id": "2611.31212",
+    "version": "v1",
+    "title": "Flood forecasting using a physics-guided conditional denoising diffusion probabilistic model",
+    "abstract": "High-resolution flood forecasting with full two-dimensional shallow water equation (SWE) solvers remains computationally expensive, even on GPUs. We develop a conditional denoising diffusion probabilistic model (DDPM) that forecasts the evolution of 30 m water-depth fields over a four-day horizon for the Des Plaines River watershed, Illinois. The model is trained on SynxFlow SWE simulations of 113 historical storms observed across twelve Midwestern states (2003-2024), each under three antecedent-wetness scenarios, and can optionally be conditioned on coarse 100 m or 150 m hydrodynamic simulations. Because reverse diffusion is stochastic, every forecast is a 20-member ensemble drawn from the same trained model. Coarse conditioning reduces the four-day mean water-depth RMSE of the ensemble mean from 0.170 m to 0.054 m (100 m) and 0.048 m (150 m). The coarser 150 m conditioning also gives the best critical success index (0.839), false alarm ratio, CRPS and Brier score at lower cost, so finer conditioning does not guarantee better skill. Averaging members reduces error by 5-11% relative to a single realization, and the ensemble provides spatially explicit exceedance probabilities, although the ensembles are under-dispersive (spread-to-error ratios 0.35-0.73). On a single GPU, a four-day forecast over 26 non-overlapping patches is 7.8x, 11.0x and 16.3x faster than the 30 m simulation for the 100 m, 150 m and unconditioned configurations, and projected speedups for a 14-day forecast reach 12-49x for one member and 48-58x for 20 members. Physics-guided diffusion models are thus promising probabilistic surrogates for regional-scale flood forecasting.",
+    "authors": [
+      "Omar Sallam",
+      "David Coe",
+      "Jeremy Feinstein",
+      "Hugo Torres",
+      "Sofia Sahagun Covarrubias",
+      "Eugene Yan"
+    ],
+    "published": "2026-11-23T18:55:29Z",
+    "updated": "2026-11-23T18:55:29Z",
+    "primaryCategory": "physics.flu-dyn",
+    "categories": [
+      "physics.flu-dyn",
+      "cs.LG",
+      "physics.geo-ph"
+    ],
+    "absUrl": "https://arxiv.org/abs/2611.31212",
+    "pdfUrl": "https://arxiv.org/pdf/2611.31212v1",
+    "comment": "47 pages, 25 figures, 9 tables. Submitted to Journal of Hydrology"
+  },
+  {
+    "id": "2611.31211",
+    "version": "v1",
+    "title": "Verifying the Outputs of PDE Solvers: From Finite Elements to Neural Surrogates",
+    "abstract": "Physics simulation outputs increasingly come from solvers that no expert inspects, such as third-party packages in automated pipelines, programs written by large language models (LLMs), and learned surrogates. In earlier work on cardiac pulsed field ablation, we proposed that solvers return a certificate with their answers. The certificate consists of an admissible potential and an exactly charge-conserving current, and a small independent checker turns it into guaranteed error bounds against a written specification of the physics. Here, the same checker verifies the outputs of other solvers on the same problem. Specifically, FEniCSx computes both fields and receives the same bounds as our own solver. Five plausible bugs in a correct solver, one of them about 0.2% from the true impedance, all converge and pass a grid convergence study, yet the certificate rejects or refutes all five. Of three solvers written by LLMs, one is correct and certified to 0.1%, and one never solves the equation but converges. Neural networks that predict the coefficients of a reduced basis emit admissible fields and receive valid per-prediction bounds, at most 0.0021% wide inside their training range and 0.3-25% wide outside it, where 90% conformal intervals cover none of 14 tests. Untuned Fourier neural operators with free nodal outputs receive valid but uninformative bounds. On a uniform grid, interpolation onto the certificate grid limits them, and on the certificate grid, thin cells turn small nodal errors into large energy errors. Energy-norm training narrows the certified interval tenfold, and projecting the nodal-loss outputs onto the reduced basis narrows it by two to four orders of magnitude, still uninformative. The guarantee concerns the stated model and holds for any output, wherever its input lies. It is informative only when the output is accurate in energy on a grid that resolves the problem.",
+    "authors": [
+      "Konstantinos Dovelos"
+    ],
+    "published": "2026-11-23T18:55:06Z",
+    "updated": "2026-11-23T18:55:06Z",
+    "primaryCategory": "cs.CE",
+    "categories": [
+      "cs.CE",
+      "cs.LG",
+      "math.NA"
+    ],
+    "absUrl": "https://arxiv.org/abs/2611.31211",
+    "pdfUrl": "https://arxiv.org/pdf/2611.31211v1",
+    "comment": "15 pages, 4 figures, 7 tables"
+  },
+  {
+    "id": "2611.31204",
+    "version": "v1",
+    "title": "JAISP: A Joint Rubin-Euclid Foundation Model for Cross-Instrument Source Detection and Astrometry",
+    "abstract": "Joint pixel-level processing of Rubin and Euclid imaging promises deeper source detection and the cross-survey consistency that precision cosmology requires. We introduce JAISP (Joint AI Survey Processing), a foundation model that learns a single representation of ten-band imaging: Rubin ugrizy and Euclid VIS, Y, J, and H, from the first public releases over $\\approx 0.2$ deg$^2$ of the ECDFS deep field. Trained without labels by predicting each band from the other nine, its frozen encoder drives small task-specific networks for source detection and astrometry. The detection network recovers nearly all VIS-selected Euclid Q1 catalog sources on held-out sky, and source injection shows that combining all ten bands extends the point-source detection limit by $\\approx 0.3$ mag beyond VIS alone. The astrometry network transfers the sharp VIS localization to the other nine bands, reducing median cross-band positional offsets from $\\approx 50$ to $6$--$10$ mas while retaining the full precision of its VIS centroid anchor even for faint sources. Separating this per-source scatter exposes the cross-survey concordance field: a coherent $9$--$10$ mas offset between the two independently Gaia-registered astrometric solutions, dominated by a component common to all bands. Applied without retraining to a second Euclid Deep Field, both networks perform without measurable loss. These gains serve the joint-survey science case: a deeper census recovers faint neighbors whose blending biases weak-lensing shapes and photometric redshifts, and VIS-grade positions in every band supply the common astrometric reference that joint photometry and faint-source proper motions require. A single representation learned once from survey pixels thus serves several measurements across the sky.",
+    "authors": [
+      "Shoubaneh Hemmati",
+      "George Helou",
+      "Yu-Heng Lin",
+      "Rachel Akeson",
+      "Charles Darren Dowell",
+      "Andreas Faisst",
+      "Thomas Greene",
+      "David Shupe"
+    ],
+    "published": "2026-11-23T18:51:02Z",
+    "updated": "2026-11-23T18:51:02Z",
+    "primaryCategory": "astro-ph.IM",
+    "categories": [
+      "astro-ph.IM",
+      "astro-ph.CO",
+      "astro-ph.GA"
+    ],
+    "absUrl": "https://arxiv.org/abs/2611.31204",
+    "pdfUrl": "https://arxiv.org/pdf/2611.31204v1",
+    "comment": "24 pages, 11 figures"
+  },
+  {
+    "id": "2611.31198",
+    "version": "v1",
+    "title": "ToolSmith: An Automatic Tool-Generation Framework for Multimodal Search Agents",
+    "abstract": "Recent multimodal search agents use reasoning, vision, and live web search across many turns to answer questions beyond parametric knowledge by orchestrating a small library of hand-crafted search and visual tools. However, the library is laborious to create and maintain, and frozen when new query types, evidence formats, and failure modes are encountered in the wild. Human practitioners, by contrast, cope with insufficient tools by fashioning new ones from familiar parts and reusing them across tasks. Inspired by this, we propose ToolSmith, an automatic tool-generation framework that grows and reuses modules on top of a lean base tool library. We evaluate ToolSmith on three in-domain multimodal search benchmarks and ten out-of-domain benchmarks under a VLM-as-a-Judge protocol. ToolSmith consistently improves over the base library across deployed agents of varying scales, with larger backbones reaping greater gains, demonstrating the scalability of the approach. Our code and data are available at https://threesr.github.io/toolsmith/.",
+    "authors": [
+      "Rui Sun",
+      "Junhua Huang",
+      "Luca Zancato",
+      "Md Mofijul Islam",
+      "Kai-Wei Chang"
+    ],
+    "published": "2026-11-23T18:48:02Z",
+    "updated": "2026-11-23T18:48:02Z",
+    "primaryCategory": "cs.CL",
+    "categories": [
+      "cs.CL",
+      "cs.AI",
+      "cs.CV"
+    ],
+    "absUrl": "https://arxiv.org/abs/2611.31198",
+    "pdfUrl": "https://arxiv.org/pdf/2611.31198v1"
+  }
+]

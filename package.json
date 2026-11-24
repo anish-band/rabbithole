@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "smoke:arxiv": "node --conditions=react-server --import tsx scripts/arxiv-smoke.ts"
+    "smoke:arxiv": "node --conditions=react-server --import tsx scripts/arxiv-smoke.ts",
+    "fixtures": "node --conditions=react-server --import tsx scripts/make-fixtures.ts",
+    "test:e2e": "playwright test"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.13.0",
@@ -18,6 +20,7 @@
     "server-only": "^0.0.1"
   },
   "devDependencies": {
+    "@playwright/test": "^1.65.1",
     "@tailwindcss/turbopack": "4.3.3",
     "@types/node": "^20",
     "@types/react": "^19",
