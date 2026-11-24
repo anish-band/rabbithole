@@ -54,7 +54,7 @@
 - [x] **#5** On-device taste store (localStorage): likes, saves, skips, history; saved-papers drawer
 - [x] **#6** Local embeddings + ranking (`src/lib/rank/`) with disk cache
 - [x] **#7** Mood bar → Claude query expansion (structured output, cached) → `/api/feed` returns ranked real papers; default feed without mood
-- [ ] **#8** Explainer schema + SVG animation player with a hand-written sample script (no Claude yet)
+- [x] **#8** Explainer schema + SVG animation player with a hand-written sample script (no Claude yet)
 - [ ] **#9** Explainer generation via Claude (one call → script + TL;DR + key points), lazy for current/next paper, disk cache, fallback title card
 - [ ] **#10** Budget pill in the top bar + graceful "budget used up" state
 - [ ] **#11** Design pass 2: polish animations, loading skeletons, empty/error states, keyboard shortcut hint overlay (`?`)

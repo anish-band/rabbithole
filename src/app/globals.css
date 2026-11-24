@@ -196,3 +196,63 @@ article:not([data-active]) .reveal-group > * {
     }
   }
 }
+
+/* Explainer stage. Elements animate only composited properties plus
+   stroke-dashoffset on short paths; `pathLength=1` makes "draw" scale-free. */
+@keyframes ex-fade {
+  from { opacity: 0; }
+}
+@keyframes ex-rise {
+  from { opacity: 0; transform: translateY(4px); }
+}
+@keyframes ex-grow {
+  from { opacity: 0; transform: scale(0); }
+}
+@keyframes ex-draw {
+  from { stroke-dasharray: 1; stroke-dashoffset: 1; }
+  to { stroke-dasharray: 1; stroke-dashoffset: 0; }
+}
+@keyframes ex-out {
+  to { opacity: 0; }
+}
+@keyframes ex-move {
+  to { transform: translate(var(--dx), var(--dy)); }
+}
+@keyframes ex-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+.ex-el {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.ex-scene {
+  animation: ex-fade 300ms ease both;
+}
+.ex-progress {
+  animation-name: ex-progress;
+  animation-timing-function: linear;
+  animation-fill-mode: both;
+}
+.ex-math {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  line-height: 1;
+  white-space: nowrap;
+}
+.ex-player[data-paused] .ex-scene,
+.ex-player[data-paused] .ex-scene *,
+.ex-player[data-paused] .ex-progress {
+  /* !important: elements set the `animation` shorthand inline, which would reset it. */
+  animation-play-state: paused !important;
+}
+@media (prefers-reduced-motion: reduce) {
+  /* Appear in place, no travel; timings (and the progress bar) still apply. */
+  .ex-scene,
+  .ex-scene * {
+    animation-duration: 1ms !important;
+  }
+}
