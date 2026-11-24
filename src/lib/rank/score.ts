@@ -26,6 +26,8 @@ export type RankInput<T> = {
   jitter?: number;
   random?: () => number;
   now?: number;
+  /** Overrides for the default weights (used by the ranking eval's sweep). */
+  weights?: Partial<Weights>;
 };
 
 export type Ranked<T> = { item: T; id: string; score: number; parts: Record<string, number> };
@@ -41,6 +43,7 @@ export const WEIGHTS = {
   /** Similarity below this is "different enough" and costs nothing. */
   duplicateFloor: 0.5,
 };
+export type Weights = typeof WEIGHTS;
 /** Recency decays with this half-life. */
 const RECENCY_HALF_LIFE_DAYS = 30;
 
@@ -76,18 +79,20 @@ export function rank<T>({
   jitter = 0,
   random = Math.random,
   now = Date.now(),
+  weights,
 }: RankInput<T>): Ranked<T>[] {
+  const W: Weights = { ...WEIGHTS, ...weights };
   const taste = centroid(liked);
   const unique = new Map<string, Candidate<T>>();
   for (const c of candidates) if (!hidden.has(c.id) && !unique.has(c.id)) unique.set(c.id, c);
 
   const scored = [...unique.values()].map((c) => {
     const parts: Record<string, number> = {};
-    if (mood) parts.mood = WEIGHTS.mood * dot(c.vec, mood);
-    if (taste) parts.taste = WEIGHTS.taste * dot(c.vec, taste);
-    if (disliked.length) parts.dislike = -WEIGHTS.dislike * Math.max(0, ...disliked.map((d) => dot(c.vec, d)));
-    parts.recency = WEIGHTS.recency * recency(c.published, now);
-    if (seen.has(c.id)) parts.seen = -WEIGHTS.seen;
+    if (mood) parts.mood = W.mood * dot(c.vec, mood);
+    if (taste) parts.taste = W.taste * dot(c.vec, taste);
+    if (disliked.length) parts.dislike = -W.dislike * Math.max(0, ...disliked.map((d) => dot(c.vec, d)));
+    parts.recency = W.recency * recency(c.published, now);
+    if (seen.has(c.id)) parts.seen = -W.seen;
     if (jitter) parts.jitter = jitter * (random() * 2 - 1);
     const score = Object.values(parts).reduce((a, b) => a + b, 0);
     return { c, score, parts };
@@ -103,7 +108,7 @@ export function rank<T>({
     // Only the head of the pool can win; keeps this O(n·k) in practice.
     for (let i = 0; i < Math.min(pool.length, 40); i++) {
       const closest = placed.length ? Math.max(...placed.map((p) => dot(pool[i].c.vec, p))) : 0;
-      const penalty = (WEIGHTS.diversity * Math.max(0, closest - WEIGHTS.duplicateFloor)) / (1 - WEIGHTS.duplicateFloor);
+      const penalty = (W.diversity * Math.max(0, closest - W.duplicateFloor)) / (1 - W.duplicateFloor);
       const s = pool[i].score - penalty;
       if (s > bestScore) [best, bestScore] = [i, s];
     }

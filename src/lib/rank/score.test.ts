@@ -52,3 +52,12 @@ test("jitter is bounded and deterministic with a seeded random", () => {
   assert.deepEqual(ids(r1), ["a", "b"]);
   for (const x of r1) assert.ok(Math.abs(x.parts.jitter) <= 0.05);
 });
+
+test("weight overrides change the ordering without touching the defaults", () => {
+  const now = Date.parse("2026-11-24");
+  // "old" matches the mood slightly better; "new" is fresher.
+  const candidates = [c("old", [1, 0.05], "2026-01-01"), c("new", [1, 0.2], "2026-11-23")];
+  const mood = unit(1, 0);
+  assert.deepEqual(ids(rank({ candidates, mood, now, weights: { recency: 0 } })), ["old", "new"]);
+  assert.deepEqual(ids(rank({ candidates, mood, now, weights: { recency: 1 } })), ["new", "old"]);
+});
