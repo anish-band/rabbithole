@@ -23,7 +23,7 @@ export function InfoPanel({ paper, summary, actions, onAction }: InfoPanelProps)
   const updated = paper.updated.slice(0, 10) !== paper.published.slice(0, 10);
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="reveal-group flex flex-col gap-5">
       <div className="flex flex-wrap items-center gap-1.5">
         <span className="rounded-full bg-accent/10 px-2.5 py-1 text-footnote font-medium text-accent-ink" title={paper.primaryCategory}>
           {categoryName(paper.primaryCategory)}

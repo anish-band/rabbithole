@@ -121,3 +121,34 @@ body {
   font-family: ui-monospace, "SF Mono", Menlo, monospace;
   font-size: 0.9em;
 }
+
+/* Paper focus: off-screen papers sit slightly dimmed and lowered; when a paper
+   becomes the active one its info rises into place in a short stagger. These
+   are transitions, not keyframes, so they reverse cleanly mid-scroll. */
+.reveal-group > * {
+  transition:
+    opacity 400ms var(--ease-spring),
+    transform 600ms var(--ease-spring);
+}
+.reveal-group > :nth-child(2) { transition-delay: 40ms; }
+.reveal-group > :nth-child(3) { transition-delay: 80ms; }
+.reveal-group > :nth-child(4) { transition-delay: 120ms; }
+.reveal-group > :nth-child(5) { transition-delay: 160ms; }
+.reveal-group > :nth-child(n + 6) { transition-delay: 200ms; }
+
+article:not([data-active]) .reveal-group > * {
+  opacity: 0.4;
+  transform: translateY(16px);
+  transition-delay: 0ms;
+  transition-duration: 200ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-group > * {
+    transition: opacity 200ms ease;
+    transition-delay: 0ms !important;
+  }
+  article:not([data-active]) .reveal-group > * {
+    transform: none;
+  }
+}
