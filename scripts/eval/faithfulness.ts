@@ -90,16 +90,20 @@ async function snapshot(label: string, ids?: string[]) {
   console.log(`snapshot "${label}": ${explainers.length} explainers (prompt v${promptVersion})`);
 }
 
-async function regenerate(ids: string[]) {
+/** Regenerates each paper once; returns the ids that succeeded (a failed reply is logged, not retried). */
+async function regenerate(ids: string[]): Promise<string[]> {
   if (ids.length > MAX_REGENERATE) throw new Error(`regenerate at most ${MAX_REGENERATE} papers (asked for ${ids.length})`);
+  const done: string[] = [];
   for (const id of ids) {
     checkCap();
     const paper = await knownPaper(id);
     if (!paper) throw new Error(`unknown paper ${id}`);
     const result = await regenerateExplainer(paper);
     console.log(`regenerated ${id}: ${result.status}${result.status === "fallback" ? ` (${result.reason})` : ""} · task spend $${taskSpend().toFixed(4)}`);
-    if (result.status !== "ready") throw new Error(`regeneration failed for ${id}`);
+    if (result.status === "ready") done.push(id);
   }
+  if (done.length === 0) throw new Error("no regeneration succeeded");
+  return done;
 }
 
 const SCHEMA = {
@@ -197,8 +201,8 @@ function examples(all: { id: string; judged: Judged[] }[], max = 12) {
 }
 
 async function main() {
-  const regen = arg("regenerate")?.split(",").filter(Boolean);
-  if (regen) await regenerate(regen);
+  const asked = arg("regenerate")?.split(",").filter(Boolean);
+  const regen = asked ? await regenerate(asked) : undefined;
   const snap = arg("snapshot");
   if (snap) await snapshot(snap, regen);
 
