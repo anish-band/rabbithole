@@ -57,5 +57,5 @@ The workflow was also expensive for that account. It ran long sessions, plus a s
 | Use the subscription login, not the API key, for the development workflow, and check with `/status` before long runs. | Done (18:40) |
 | Review PRs in the main session instead of starting a reviewer agent per PR, which cuts usage substantially. | Done (loop prompt updated) |
 | Make the app treat a usage-limit `400` as an account problem: fall back, mark the API as failing, and show "AI paused" in the budget pill (`isAccountProblem` in `src/lib/claude.ts`). | Done (#7, #10) |
-| Give the development workflow and the app separate API keys (or workspaces) with their own limits, so one can't starve the other. | Open (owner) |
+| Give the development workflow and the app separate API keys (or workspaces) with their own limits, so one can't starve the other. | Done (owner, 2026-11-24) |
 | Alert on account spend (a console usage alert, for example at 50% and 80% of the monthly limit) so a limit is never discovered by hitting it. | Open (owner) |
