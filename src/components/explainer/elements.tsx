@@ -1,6 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import { MathText } from "@/components/math-text";
-import type { Color, ExplainerElement } from "@/lib/explainer/schema";
+import { CANVAS, type Color, type ExplainerElement } from "@/lib/explainer/schema";
 
 /** Stage palette: dark canvas, a few saturated 3Blue1Brown-like hues. Solid colours only. */
 export const PALETTE: Record<Color, string> = {
@@ -32,12 +32,17 @@ function animationStyle(el: ExplainerElement): CSSProperties {
   return { animation: parts.join(", ") };
 }
 
-function moveStyle(el: ExplainerElement): CSSProperties | undefined {
+/** Stage units → CSS length: SVG user units are px; the HTML layer scales with its container width. */
+type Unit = (n: number) => string;
+const svgUnit: Unit = (n) => `${n}px`;
+const htmlUnit: Unit = (n) => `calc(${n} * 100cqw / ${CANVAS.width})`;
+
+function moveStyle(el: ExplainerElement, unit: Unit = svgUnit): CSSProperties | undefined {
   if (!el.move) return undefined;
   const { at, dx, dy, duration } = el.move;
   return {
-    ["--dx" as string]: `${dx}px`,
-    ["--dy" as string]: `${dy}px`,
+    ["--dx" as string]: unit(dx),
+    ["--dy" as string]: unit(dy),
     animation: `ex-move ${duration}ms var(--ease-spring) ${at}ms both`,
   };
 }
@@ -76,17 +81,8 @@ function shape(el: ExplainerElement, ids: string): ReactNode {
           {el.text}
         </text>
       );
-    case "math": {
-      const w = 140;
-      const h = MATH_SIZE[el.size] * 4;
-      return (
-        <foreignObject x={el.x - w / 2} y={el.y - h / 2} width={w} height={h}>
-          <div className="ex-math" style={{ fontSize: MATH_SIZE[el.size], color: PALETTE[el.color] }}>
-            <MathText text={`$${el.tex}$`} />
-          </div>
-        </foreignObject>
-      );
-    }
+    case "math":
+      return null; // drawn in the HTML layer (MathLayer), not inside the SVG
     case "circle":
       return (
         <circle
@@ -184,6 +180,34 @@ export function StageElement({ el, ids }: { el: ExplainerElement; ids: string })
         {shape(el, ids)}
       </g>
     </g>
+  );
+}
+
+/**
+ * Formulas live in an HTML layer laid exactly over the SVG instead of in a
+ * <foreignObject>: WebKit doesn't apply the viewBox scale to foreignObject
+ * content under animated ancestors, so Safari drew them tiny in a corner.
+ * Positions and sizes use container units, so 1 stage unit = 100cqw / 160.
+ */
+export function MathLayer({ elements }: { elements: ExplainerElement[] }) {
+  return (
+    <>
+      {elements.map((el, i) =>
+        el.kind === "math" ? (
+          <div
+            key={i}
+            className="absolute -translate-x-1/2 -translate-y-1/2"
+            style={{ left: `${(el.x / CANVAS.width) * 100}%`, top: `${(el.y / CANVAS.height) * 100}%` }}
+          >
+            <div style={moveStyle(el, htmlUnit)}>
+              <div className="ex-math" style={{ ...animationStyle(el), fontSize: htmlUnit(MATH_SIZE[el.size]), color: PALETTE[el.color] }}>
+                <MathText text={`$${el.tex}$`} />
+              </div>
+            </div>
+          </div>
+        ) : null,
+      )}
+    </>
   );
 }
 
