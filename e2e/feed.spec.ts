@@ -62,6 +62,14 @@ test("rapid key presses accumulate", async ({ page }) => {
   await expectAt(page, 3);
 });
 
+test("presses ~60 ms apart each move one paper", async ({ page }) => {
+  for (let i = 0; i < 3; i++) {
+    await page.keyboard.press("ArrowDown");
+    await page.waitForTimeout(60);
+  }
+  await expectAt(page, 3);
+});
+
 test("does not scroll above the first paper", async ({ page }) => {
   await page.keyboard.press("ArrowUp");
   await expectAt(page, 0);
