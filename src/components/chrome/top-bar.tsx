@@ -16,10 +16,11 @@ const iconButton =
  * Floating frosted bar over the feed: wordmark, a slot for the mood bar and
  * budget pill (#7, #10), and previous/next buttons for pointer users.
  * Content scrolls underneath; the material goes solid with reduced transparency.
+ * It renders inside <main>, so the banner role is set explicitly.
  */
 export function TopBar({ nav, children }: { nav: FeedNav; children?: ReactNode }) {
   return (
-    <header className="fixed inset-x-0 top-0 z-20 bg-bar shadow-bar backdrop-blur-xl backdrop-saturate-150">
+    <header role="banner" className="fixed inset-x-0 top-0 z-20 bg-bar shadow-bar backdrop-blur-xl backdrop-saturate-150">
       <div className="mx-auto flex h-14 max-w-[1600px] items-center gap-4 px-4 min-[900px]:px-10">
         <h1 className="flex items-center gap-2 text-callout font-semibold tracking-[-0.016em]">
           <Rabbit aria-hidden className="size-5 text-accent" strokeWidth={2} />
