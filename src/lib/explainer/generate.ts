@@ -3,18 +3,20 @@ import fs from "fs/promises";
 import path from "path";
 import Anthropic from "@anthropic-ai/sdk";
 import type { Paper } from "@/lib/arxiv/types";
-import { BudgetExceededError, RateLimitedError } from "@/lib/budget";
+import { BudgetExceededError, RateLimitedError, budgetStatus, estimateTokens, worstCaseUsd } from "@/lib/budget";
 import { CLAUDE_MODEL, ClaudeUnavailableError, callClaude, textOf } from "@/lib/claude";
 import { parseReply, validateReply, type Generation } from "./generation-schema";
+import type { FallbackReason, Reply } from "./job";
 import { sampleExplainer } from "./samples";
 import type { Explainer } from "./schema";
 
 /**
  * One Claude call per paper → explainer script + TL;DR + 3 key points.
  * Results are cached on disk forever (data/explainers/<id>.json), so each paper
- * costs once. Failures that would repeat (invalid output, refusal) are
- * remembered for a day so a bad paper can't drain the budget; budget, rate
- * limit and availability failures are not remembered.
+ * costs once. Generation runs on a background worker queue (./worker.ts,
+ * ./job.ts): retries with backoff for rate limits and outages, and a
+ * dead-letter queue for budget refusals and unusable output (retried after a
+ * day, so a bad paper can't drain the budget).
  */
 export const PROMPT_VERSION = 2;
 const DIR = path.join(process.cwd(), "data", "explainers");
@@ -22,7 +24,7 @@ const RETRY_FAILED_AFTER_MS = 24 * 60 * 60 * 1000;
 const MAX_TOKENS = 16_000;
 
 export type Summary = { tldr: string; keyPoints: string[] };
-export type FallbackReason = "budget" | "rate-limited" | "unavailable" | "failed";
+export type { FallbackReason };
 export type ExplainerResult =
   | { status: "ready"; explainer: Explainer; summary?: Summary; source: "claude" | "sample" }
   | { status: "fallback"; reason: FallbackReason };
@@ -45,8 +47,9 @@ async function readJson<T>(file: string): Promise<T | undefined> {
 
 async function writeJson(file: string, data: unknown) {
   await fs.mkdir(DIR, { recursive: true });
-  await fs.writeFile(`${file}.tmp`, JSON.stringify(data, null, 1));
-  await fs.rename(`${file}.tmp`, file);
+  const tmp = `${file}.${process.pid}.${Math.random().toString(36).slice(2)}.tmp`;
+  await fs.writeFile(tmp, JSON.stringify(data, null, 1));
+  await fs.rename(tmp, file);
 }
 
 const SYSTEM = `You write short animated explainers for arXiv papers, in the style of 3Blue1Brown: a dark canvas, a few bright colours, one idea per scene, visuals that build the intuition rather than restate the text.
@@ -100,37 +103,32 @@ function userPrompt(paper: Paper) {
   return `Title: ${paper.title}\nCategory: ${paper.primaryCategory}\nAuthors: ${paper.authors.slice(0, 6).join(", ")}\n\nAbstract:\n${paper.abstract}`;
 }
 
-function fallbackReason(err: unknown): FallbackReason {
+export function fallbackReason(err: unknown): FallbackReason {
   if (err instanceof BudgetExceededError) return "budget";
   if (err instanceof RateLimitedError || err instanceof Anthropic.RateLimitError) return "rate-limited";
   if (err instanceof ClaudeUnavailableError || err instanceof Anthropic.APIError) return "unavailable";
   return "failed";
 }
 
-async function generate(paper: Paper): Promise<ExplainerResult> {
-  let message: Anthropic.Message;
-  try {
-    message = await callClaude("explainer", {
-      max_tokens: MAX_TOKENS,
-      system: SYSTEM,
-      messages: [{ role: "user", content: userPrompt(paper) }],
-      output_config: { effort: "low" },
-    });
-  } catch (err) {
-    const reason = fallbackReason(err);
-    console.warn(`[explainer] ${paper.id}: ${reason}:`, err instanceof Error ? err.message : err);
-    return { status: "fallback", reason };
-  }
+/** The one budget-capped Claude call for a paper; returns the raw reply. */
+export async function callExplainer(paper: Paper): Promise<Reply> {
+  const message = await callClaude("explainer", {
+    max_tokens: MAX_TOKENS,
+    system: SYSTEM,
+    messages: [{ role: "user", content: userPrompt(paper) }],
+    output_config: { effort: "low" },
+  });
+  return { text: textOf(message), model: message.model ?? CLAUDE_MODEL, stopReason: message.stop_reason };
+}
 
-  const text = textOf(message);
-  const parsed = message.stop_reason === "end_turn" ? interpret(text) : { error: `stop_reason ${message.stop_reason}` };
-  if ("error" in parsed) {
-    console.warn(`[explainer] ${paper.id}: rejected output: ${parsed.error}`);
-    const failure: FailureEntry = { id: paper.id, at: Date.now(), reason: parsed.error, reply: text, model: message.model };
-    await writeJson(failFile(paper.id), failure).catch(() => {});
-    return { status: "fallback", reason: "failed" };
-  }
-  return save(paper.id, parsed.data, message.model ?? CLAUDE_MODEL);
+/** Is there room in the budget for this paper's worst-case call? */
+export function canAffordExplainer(paper: Paper) {
+  const { spentUsd, budgetUsd } = budgetStatus();
+  return spentUsd + worstCaseUsd(CLAUDE_MODEL, estimateTokens(SYSTEM + userPrompt(paper)), MAX_TOKENS) <= budgetUsd;
+}
+
+export function interpretReply(reply: Reply): { data: Generation } | { error: string } {
+  return reply.stopReason === "end_turn" ? interpret(reply.text) : { error: `stop_reason ${reply.stopReason}` };
 }
 
 function interpret(text: string): { data: Generation } | { error: string } {
@@ -145,7 +143,11 @@ function interpret(text: string): { data: Generation } | { error: string } {
   return result;
 }
 
-async function save(id: string, data: Generation, model: string): Promise<ExplainerResult> {
+function toResult(entry: CacheEntry): ExplainerResult {
+  return { status: "ready", explainer: entry.explainer, summary: entry.summary, source: "claude" };
+}
+
+export async function saveGeneration(id: string, data: Generation, model: string): Promise<ExplainerResult> {
   const { explainer, tldr, keyPoints } = data;
   const entry: CacheEntry = {
     id,
@@ -155,27 +157,48 @@ async function save(id: string, data: Generation, model: string): Promise<Explai
     explainer,
     summary: { tldr, keyPoints },
   };
-  await writeJson(okFile(id), entry).catch((err) => console.warn("[explainer] cache write failed:", err));
-  return { status: "ready", explainer, summary: entry.summary, source: "claude" };
+  await writeJson(okFile(id), entry);
+  return toResult(entry);
+}
+
+/** The cached explainer for a paper, if one has been generated. */
+export async function cachedExplainer(id: string): Promise<ExplainerResult | undefined> {
+  const cached = await readJson<CacheEntry>(okFile(id));
+  return cached && toResult(cached);
 }
 
 /**
  * Generate again with the current prompt, ignoring (and then replacing) the
- * cache. For the faithfulness eval's before/after comparison; costs one call.
+ * cache, inline rather than through the queue. For the faithfulness eval's
+ * before/after comparison; costs one call.
  */
-export function regenerateExplainer(paper: Paper): Promise<ExplainerResult> {
-  return generate(paper);
+export async function regenerateExplainer(paper: Paper): Promise<ExplainerResult> {
+  let reply: Reply;
+  try {
+    reply = await callExplainer(paper);
+  } catch (err) {
+    return { status: "fallback", reason: fallbackReason(err) };
+  }
+  const parsed = interpretReply(reply);
+  if ("error" in parsed) {
+    const failure: FailureEntry = { id: paper.id, at: Date.now(), reason: parsed.error, reply: reply.text, model: reply.model };
+    await writeJson(failFile(paper.id), failure).catch(() => {});
+    return { status: "fallback", reason: "failed" };
+  }
+  return saveGeneration(paper.id, parsed.data, reply.model);
 }
 
-const inFlight = new Map<string, Promise<ExplainerResult>>();
-
-/** Cached explainer for a paper, generating it (once) if needed. */
-export async function getExplainer(paper: Paper): Promise<ExplainerResult> {
+/**
+ * Everything short of generating: a sample, the cache, offline mode, a
+ * salvageable earlier reply, or a recent failure. `undefined` means it needs
+ * generating (see `getExplainer` in ./worker.ts).
+ */
+export async function explainerWithoutGenerating(paper: Paper): Promise<ExplainerResult | undefined> {
   const sample = sampleExplainer(paper.id);
   if (sample) return { status: "ready", explainer: sample, source: "sample" };
 
-  const cached = await readJson<CacheEntry>(okFile(paper.id));
-  if (cached) return { status: "ready", explainer: cached.explainer, summary: cached.summary, source: "claude" };
+  const cached = await cachedExplainer(paper.id);
+  if (cached) return cached;
 
   if (process.env.RABBITHOLE_FIXTURES === "1") return { status: "fallback", reason: "unavailable" };
 
@@ -183,13 +206,8 @@ export async function getExplainer(paper: Paper): Promise<ExplainerResult> {
   if (failed?.reply) {
     // A reply we couldn't use before may be salvageable now; costs nothing to try.
     const salvaged = interpret(failed.reply);
-    if ("data" in salvaged) return save(paper.id, salvaged.data, failed.model ?? CLAUDE_MODEL);
+    if ("data" in salvaged) return saveGeneration(paper.id, salvaged.data, failed.model ?? CLAUDE_MODEL);
   }
   if (failed && Date.now() - failed.at < RETRY_FAILED_AFTER_MS) return { status: "fallback", reason: "failed" };
-
-  const pending = inFlight.get(paper.id);
-  if (pending) return pending;
-  const request = generate(paper).finally(() => inFlight.delete(paper.id));
-  inFlight.set(paper.id, request);
-  return request;
+  return undefined;
 }

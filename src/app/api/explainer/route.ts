@@ -1,13 +1,14 @@
 import { connection } from "next/server";
 import { knownPaper } from "@/lib/arxiv/known";
-import { getExplainer } from "@/lib/explainer/generate";
+import { getExplainer } from "@/lib/explainer/worker";
 
 /** New-style (2611.31241v2) and old-style (math/0601001) arXiv ids. */
 const ARXIV_ID = /^(\d{4}\.\d{4,5}|[a-z-]+(\.[A-Z]{2})?\/\d{7})(v\d+)?$/;
 
 /**
  * GET /api/explainer?id=<arxiv id> — the explainer and summary for one paper,
- * generated on first request (one budget-capped Claude call) and cached.
+ * generated on first request (one budget-capped Claude call, run by the
+ * background worker queue) and cached.
  * Only papers this server has served in a feed are eligible (paper content
  * never comes from the client, and arbitrary ids can't spend the budget).
  * Always 200 with `status: "fallback"` when generation isn't possible.
