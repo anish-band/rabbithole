@@ -1,6 +1,7 @@
 "use client";
 
 import type { Paper } from "@/lib/arxiv/types";
+import { sampleExplainer } from "@/lib/explainer/samples";
 import { reactionsFor, toggle as toggleReaction, type Reaction } from "@/lib/taste/store";
 import { updateTaste, useTaste } from "@/lib/taste/use-taste";
 import { ExplainerPanel } from "./explainer-panel";
@@ -9,6 +10,8 @@ import { InfoPanel, type PaperSummary } from "./info-panel";
 type PaperScreenProps = {
   paper: Paper;
   summary?: PaperSummary;
+  /** Whether this paper is the one on screen (explainers only play then). */
+  active?: boolean;
 };
 
 /**
@@ -18,14 +21,14 @@ type PaperScreenProps = {
  * hits an edge, then pages the feed). Like/save/not-interested live in the
  * on-device taste store, so they survive scrolling away and reloads.
  */
-export function PaperScreen({ paper, summary }: PaperScreenProps) {
+export function PaperScreen({ paper, summary, active = false }: PaperScreenProps) {
   const actions = reactionsFor(useTaste(), paper.id);
   const toggle = (reaction: Reaction) => updateTaste((s) => toggleReaction(s, paper, reaction));
 
   return (
     <div className="mx-auto flex h-full max-w-[1600px] flex-col gap-5 px-4 pt-[72px] pb-6 min-[900px]:grid min-[900px]:grid-cols-[55fr_45fr] min-[900px]:gap-12 min-[900px]:px-10 min-[900px]:pt-[88px] min-[900px]:pb-10">
       <div className="h-[38%] shrink-0 min-[900px]:h-full">
-        <ExplainerPanel paper={paper} />
+        <ExplainerPanel paper={paper} explainer={sampleExplainer(paper.id)} active={active} />
       </div>
       <div
         data-allow-wheel
