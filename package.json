@@ -14,6 +14,7 @@
     "smoke:rank": "node --conditions=react-server --import tsx scripts/rank-smoke.ts",
     "eval:rank:build": "node --conditions=react-server --import tsx scripts/eval/rank-build.ts",
     "eval:rank": "node --conditions=react-server --import tsx scripts/eval/rank.ts",
+    "eval:faithfulness": "node --conditions=react-server --import tsx scripts/eval/faithfulness.ts",
     "load:feed": "node scripts/load/feed.mjs"
   },
   "dependencies": {
