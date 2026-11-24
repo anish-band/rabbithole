@@ -61,3 +61,15 @@ npm run dev                  # http://localhost:3000
 ```
 
 It works without an API key too: moods fall back to keyword search, and every paper gets the animated title card instead of a full explainer.
+
+## How good is the feed?
+
+An offline eval (`npm run eval:rank`) scores the first page for 30 moods against relevance labels, on a frozen pool of 322 cached arXiv papers. CI fails if the scores drop.
+
+| | Clearly relevant in the first 8 | nDCG@10 |
+|---|---|---|
+| Claude's search plan (what the app does) | 44% | 0.53 |
+| Searching the mood's own words (no API key) | 37% | 0.45 |
+| Ranking every paper in the pool | 57% | 0.75 |
+
+Claude's plans beat plain keyword search, but they're strict: on this small pool their searches find only about a third of the relevant papers, and that limits the feed more than ranking does. The labels come from an LLM judge, and the pool is small and skewed, so treat these as directional. See [eval/rank](eval/rank/README.md) for the method and caveats.
