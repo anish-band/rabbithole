@@ -1,6 +1,7 @@
 import "server-only";
 import fs from "fs";
 import path from "path";
+import type { BudgetStatus } from "./budget-state";
 
 /**
  * Hard spend cap for Claude API calls.
@@ -139,13 +140,26 @@ export function record(route: string, costUsd: number) {
   writeLedger(ledger);
 }
 
-export function budgetStatus() {
+/** API health, so the UI can say "paused" during e.g. an account usage limit. */
+const API_FAILURE_WINDOW_MS = 5 * 60_000;
+let lastApiFailureAt = 0;
+export function noteApiResult(ok: boolean) {
+  lastApiFailureAt = ok ? 0 : Date.now();
+}
+
+export function budgetStatus(): BudgetStatus & { byRoute: Record<string, number>; updatedAt: string } {
   const ledger = readLedger();
+  const now = Date.now();
+  const inWindow = recentCalls.filter((t) => now - t <= 60_000);
   return {
     budgetUsd: BUDGET_USD,
     spentUsd: Number(ledger.spentUsd.toFixed(4)),
-    remainingUsd: Number(Math.max(0, BUDGET_USD - ledger.spentUsd).toFixed(4)),
+    // In-flight reservations count: they are what the next call is checked against.
+    remainingUsd: Number(Math.max(0, BUDGET_USD - ledger.spentUsd - reservedUsd).toFixed(4)),
     calls: ledger.calls,
+    configured: Boolean(process.env.ANTHROPIC_API_KEY),
+    rateLimitedMs: inWindow.length >= RATE_LIMIT_PER_MIN ? 60_000 - (now - inWindow[0]) : 0,
+    apiFailing: lastApiFailureAt > 0 && now - lastApiFailureAt < API_FAILURE_WINDOW_MS,
     byRoute: ledger.byRoute,
     updatedAt: ledger.updatedAt,
   };

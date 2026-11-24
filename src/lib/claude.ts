@@ -1,6 +1,6 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
-import { actualUsd, estimateTokens, record, reserve, worstCaseUsd } from "./budget";
+import { actualUsd, estimateTokens, noteApiResult, record, reserve, worstCaseUsd } from "./budget";
 
 /**
  * The ONLY place the app talks to Claude. Every call goes through the $10
@@ -36,10 +36,20 @@ export async function callClaude(route: string, params: CreateParams): Promise<A
   try {
     const response = await anthropic.messages.create({ ...params, model });
     record(route, actualUsd(model, response.usage));
+    noteApiResult(true);
     return response;
+  } catch (err) {
+    // Account-level trouble (usage limit, auth, overload, outage), not our own bad requests.
+    if (err instanceof Anthropic.APIError && isAccountProblem(err)) noteApiResult(false);
+    throw err;
   } finally {
     release();
   }
+}
+
+function isAccountProblem(err: InstanceType<typeof Anthropic.APIError>) {
+  const status = err.status as number | undefined;
+  return status === undefined || status === 401 || status === 403 || status === 429 || status >= 500 || /usage limit|credit balance/i.test(err.message);
 }
 
 /** Convenience: first text block of a response, or "". */
