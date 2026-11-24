@@ -59,6 +59,7 @@
 - [ ] **#10** Budget pill in the top bar + graceful "budget used up" state
 - [ ] **#11** Design pass 2: polish animations, loading skeletons, empty/error states, keyboard shortcut hint overlay (`?`)
 - [ ] **#12** Final check: fresh `npm run build`, click through the app in the browser, write `README.md` (setup, env vars, how the budget works)
+- [x] **#15** Render LaTeX math in titles and abstracts (KaTeX `<MathText>`, text-mode macros, unit + e2e tests)
 
 ## Blocked
 (none yet)

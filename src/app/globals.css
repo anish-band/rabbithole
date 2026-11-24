@@ -30,3 +30,22 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
 }
+
+/* KaTeX next to SF Pro: KaTeX's default 1.21em looks oversized against a
+   system UI face; keep formulas on the text baseline and in the text colour.
+   Long inline formulas may wrap (KaTeX breaks after relations/operators). */
+.math-inline .katex {
+  font-size: 1.08em;
+  line-height: 1;
+  color: inherit;
+}
+.math-display .katex-display {
+  margin: 0.5em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+.katex-error {
+  color: inherit !important;
+  font-family: ui-monospace, "SF Mono", Menlo, monospace;
+  font-size: 0.9em;
+}
