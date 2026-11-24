@@ -33,7 +33,7 @@ export function Abstract({ text, id }: { text: string; id: string }) {
       <p
         ref={ref}
         id={id}
-        className={`text-[17px] leading-[1.55] text-pretty text-foreground/85 ${expanded ? "" : "line-clamp-6"}`}
+        className={`text-body text-pretty text-foreground/85 ${expanded ? "" : "line-clamp-6"}`}
       >
         <MathText text={text} />
       </p>
@@ -43,7 +43,7 @@ export function Abstract({ text, id }: { text: string; id: string }) {
           onClick={() => setExpanded((v) => !v)}
           aria-expanded={expanded}
           aria-controls={id}
-          className="mt-2 rounded text-[15px] font-medium text-accent hover:opacity-80 focus-visible:outline-2 focus-visible:outline-accent"
+          className="mt-2 rounded text-callout font-medium text-accent hover:opacity-80 focus-visible:outline-2 focus-visible:outline-accent"
         >
           {expanded ? "Less" : "More"}
         </button>

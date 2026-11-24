@@ -31,7 +31,7 @@ export function PaperActions({
             type="button"
             aria-pressed={active}
             onClick={() => onToggle(key)}
-            className={`flex h-11 items-center gap-2 rounded-full ps-4 pe-[18px] text-[15px] font-medium transition-[background-color,color,transform] duration-150 active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
+            className={`flex h-11 items-center gap-2 rounded-full ps-4 pe-[18px] text-callout font-medium transition-[background-color,color,transform] duration-200 ease-spring active:scale-[0.97] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent ${
               active ? "bg-foreground text-background" : "bg-fill text-foreground hover:bg-fill/70"
             }`}
           >

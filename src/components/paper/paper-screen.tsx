@@ -36,7 +36,7 @@ export function PaperScreen({ paper, summary, initialActions = NO_ACTIONS, onAct
   };
 
   return (
-    <div className="mx-auto flex h-full max-w-[1600px] flex-col gap-5 px-4 pt-4 pb-6 min-[900px]:grid min-[900px]:grid-cols-[55fr_45fr] min-[900px]:gap-12 min-[900px]:px-10 min-[900px]:py-10">
+    <div className="mx-auto flex h-full max-w-[1600px] flex-col gap-5 px-4 pt-[72px] pb-6 min-[900px]:grid min-[900px]:grid-cols-[55fr_45fr] min-[900px]:gap-12 min-[900px]:px-10 min-[900px]:pt-[88px] min-[900px]:pb-10">
       <div className="h-[38%] shrink-0 min-[900px]:h-full">
         <ExplainerPanel paper={paper} />
       </div>

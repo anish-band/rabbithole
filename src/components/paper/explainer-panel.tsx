@@ -19,8 +19,8 @@ export function ExplainerPanel({ paper }: { paper: Paper }) {
         <Play aria-hidden className="size-7 translate-x-[2px] text-white/70" fill="currentColor" strokeWidth={0} />
       </span>
       <figcaption className="text-center">
-        <span className="block text-[15px] font-medium text-white/70">Explainer coming soon</span>
-        <span className="mt-1 block text-[13px] text-white/55">{categoryName(paper.primaryCategory)}</span>
+        <span className="block text-callout font-medium text-white/70">Explainer coming soon</span>
+        <span className="mt-1 block text-footnote text-white/55">{categoryName(paper.primaryCategory)}</span>
       </figcaption>
     </figure>
   );

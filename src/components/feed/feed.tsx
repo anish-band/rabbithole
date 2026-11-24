@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ComponentType } from "react";
+import type { FeedNav } from "@/components/chrome/top-bar";
 import type { FeedItem, FeedSource } from "@/lib/feed/types";
 import { PaperScreen } from "@/components/paper/paper-screen";
 import { useActiveIndex } from "./use-active-index";
@@ -16,6 +17,8 @@ const SCROLL_IDLE_MS = 150;
 type FeedProps = {
   source: FeedSource;
   initialItems: FeedItem[];
+  /** Floating chrome (top bar) that gets the feed's navigation. */
+  Header?: ComponentType<{ nav: FeedNav }>;
 };
 
 /**
@@ -24,7 +27,7 @@ type FeedProps = {
  * paper per gesture; the keyboard drives the same scroll container.
  * Focus follows keyboard/wheel navigation so screen readers announce each paper.
  */
-export function Feed({ source, initialItems }: FeedProps) {
+export function Feed({ source, initialItems, Header }: FeedProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { items, status, loadMore } = useFeedItems(source, initialItems);
   const active = useActiveIndex(containerRef, items.length);
@@ -107,37 +110,40 @@ export function Feed({ source, initialItems }: FeedProps) {
     Math.abs(i - active) <= RENDER_WINDOW || (target !== null && Math.abs(i - target) <= RENDER_WINDOW);
 
   return (
-    <div
-      ref={containerRef}
-      role="feed"
-      aria-busy={status === "loading"}
-      aria-label="Papers"
-      className="h-full snap-y snap-mandatory overflow-y-auto overscroll-contain"
-    >
-      {items.map((item, i) => (
-        <article
-          key={item.key}
-          data-index={i}
-          data-active={i === active ? "" : undefined}
-          tabIndex={0}
-          aria-posinset={i + 1}
-          aria-setsize={-1}
-          aria-label={item.paper.title}
-          onBlur={(e) => delete e.currentTarget.dataset.programmaticFocus}
-          className="h-full snap-start snap-always outline-none focus-visible:not-data-programmatic-focus:outline-2 focus-visible:not-data-programmatic-focus:-outline-offset-4 focus-visible:not-data-programmatic-focus:outline-foreground/40"
-        >
-          {inWindow(i) ? <PaperScreen paper={item.paper} /> : null}
-        </article>
-      ))}
+    <>
+      {Header ? <Header nav={{ next: handlers.next, prev: handlers.prev, active: target ?? active, count: items.length }} /> : null}
+      <div
+        ref={containerRef}
+        role="feed"
+        aria-busy={status === "loading"}
+        aria-label="Papers"
+        className="no-scrollbar h-full snap-y snap-mandatory overflow-y-auto overscroll-contain"
+      >
+        {items.map((item, i) => (
+          <article
+            key={item.key}
+            data-index={i}
+            data-active={i === active ? "" : undefined}
+            tabIndex={0}
+            aria-posinset={i + 1}
+            aria-setsize={-1}
+            aria-label={item.paper.title}
+            onBlur={(e) => delete e.currentTarget.dataset.programmaticFocus}
+            className="h-full snap-start snap-always outline-none focus-visible:not-data-programmatic-focus:outline-2 focus-visible:not-data-programmatic-focus:-outline-offset-4 focus-visible:not-data-programmatic-focus:outline-foreground/40"
+          >
+            {inWindow(i) ? <PaperScreen paper={item.paper} /> : null}
+          </article>
+        ))}
 
-      {status === "error" ? (
-        <div className="flex h-32 snap-end items-center justify-center gap-3 text-muted">
-          Couldn’t load more papers.
-          <button type="button" onClick={loadMore} className="font-medium text-foreground underline underline-offset-4">
-            Try again
-          </button>
-        </div>
-      ) : null}
-    </div>
+        {status === "error" ? (
+          <div className="flex h-32 snap-end items-center justify-center gap-3 text-muted">
+            Couldn’t load more papers.
+            <button type="button" onClick={loadMore} className="font-medium text-foreground underline underline-offset-4">
+              Try again
+            </button>
+          </div>
+        ) : null}
+      </div>
+    </>
   );
 }

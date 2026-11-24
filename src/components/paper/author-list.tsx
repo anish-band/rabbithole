@@ -10,7 +10,7 @@ export function AuthorList({ authors }: { authors: string[] }) {
   const shown = expanded ? authors : visible;
 
   return (
-    <p className="text-[15px] leading-snug text-muted">
+    <p className="text-callout leading-snug text-muted">
       {shown.join(", ")}
       {hidden.length > 0 ? (
         <>
