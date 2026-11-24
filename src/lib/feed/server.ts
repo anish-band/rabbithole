@@ -50,8 +50,32 @@ export function moodSearches(plan: MoodPlan, round: number) {
   return all.slice(round * QUERIES_PER_ROUND, (round + 1) * QUERIES_PER_ROUND);
 }
 
+/**
+ * Offline candidates. The default is the 16 UI fixtures in one round;
+ * `RABBITHOLE_FIXTURES_POOL` points at a larger frozen pool (e.g.
+ * eval/rank/pool.json) served 50 per round like live arXiv, for load tests.
+ */
+let fixturePool: Paper[] | undefined;
+async function fixtureCandidates(round: number): Promise<Paper[]> {
+  const file = process.env.RABBITHOLE_FIXTURES_POOL;
+  if (!file) return round === 0 ? (fixtures as Paper[]) : [];
+  if (!fixturePool) {
+    const { readFile } = await import("fs/promises");
+    const raw = JSON.parse(await readFile(file, "utf8")) as Partial<Paper>[];
+    fixturePool = raw.map((p) => ({
+      version: "v1",
+      authors: [],
+      updated: p.published ?? "",
+      absUrl: `https://arxiv.org/abs/${p.id}`,
+      pdfUrl: `https://arxiv.org/pdf/${p.id}`,
+      ...p,
+    })) as Paper[];
+  }
+  return fixturePool.slice(round * DEFAULT_POOL, (round + 1) * DEFAULT_POOL);
+}
+
 async function candidates(round: number, plan: MoodPlan | undefined, categories: string[]): Promise<Paper[]> {
-  if (process.env.RABBITHOLE_FIXTURES === "1") return round === 0 ? (fixtures as Paper[]) : [];
+  if (process.env.RABBITHOLE_FIXTURES === "1") return fixtureCandidates(round);
 
   if (plan && plan.keywords.length) {
     const papers: Paper[] = [];

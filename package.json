@@ -14,7 +14,8 @@
     "smoke:rank": "node --conditions=react-server --import tsx scripts/rank-smoke.ts",
     "eval:rank:build": "node --conditions=react-server --import tsx scripts/eval/rank-build.ts",
     "eval:rank": "node --conditions=react-server --import tsx scripts/eval/rank.ts",
-    "eval:faithfulness": "node --conditions=react-server --import tsx scripts/eval/faithfulness.ts"
+    "eval:faithfulness": "node --conditions=react-server --import tsx scripts/eval/faithfulness.ts",
+    "load:feed": "node scripts/load/feed.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.13.0",
@@ -34,6 +35,7 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "autocannon": "^9.0.0",
     "eslint": "^9",
     "eslint-config-next": "16.4.6",
     "tailwindcss": "4.3.3",

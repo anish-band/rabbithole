@@ -1,0 +1,140 @@
+{
+ "label": "after",
+ "url": "http://localhost:3300",
+ "duration": 10,
+ "at": "2026-11-24T21:49:47.544Z",
+ "rows": [
+  {
+   "scenario": "default feed",
+   "connections": 1,
+   "rps": 345.5,
+   "p50": 2,
+   "p90": 3,
+   "p975": 3,
+   "p99": 5,
+   "errors": 0,
+   "total": 3455
+  },
+  {
+   "scenario": "default feed",
+   "connections": 10,
+   "rps": 437,
+   "p50": 22,
+   "p90": 24,
+   "p975": 27,
+   "p99": 36,
+   "errors": 0,
+   "total": 4370
+  },
+  {
+   "scenario": "default feed",
+   "connections": 50,
+   "rps": 401.9,
+   "p50": 121,
+   "p90": 132,
+   "p975": 141,
+   "p99": 151,
+   "errors": 0,
+   "total": 4019
+  },
+  {
+   "scenario": "mood",
+   "connections": 1,
+   "rps": 346.2,
+   "p50": 2,
+   "p90": 3,
+   "p975": 3,
+   "p99": 5,
+   "errors": 0,
+   "total": 3462
+  },
+  {
+   "scenario": "mood",
+   "connections": 10,
+   "rps": 436.2,
+   "p50": 22,
+   "p90": 24,
+   "p975": 28,
+   "p99": 31,
+   "errors": 0,
+   "total": 4362
+  },
+  {
+   "scenario": "mood",
+   "connections": 50,
+   "rps": 395.4,
+   "p50": 124,
+   "p90": 134,
+   "p975": 139,
+   "p99": 155,
+   "errors": 0,
+   "total": 3954
+  },
+  {
+   "scenario": "mood + taste",
+   "connections": 1,
+   "rps": 207.3,
+   "p50": 4,
+   "p90": 5,
+   "p975": 5,
+   "p99": 5,
+   "errors": 0,
+   "total": 2073
+  },
+  {
+   "scenario": "mood + taste",
+   "connections": 10,
+   "rps": 227.3,
+   "p50": 43,
+   "p90": 47,
+   "p975": 53,
+   "p99": 58,
+   "errors": 0,
+   "total": 2273
+  },
+  {
+   "scenario": "mood + taste",
+   "connections": 50,
+   "rps": 196,
+   "p50": 248,
+   "p90": 264,
+   "p975": 281,
+   "p99": 425,
+   "errors": 0,
+   "total": 1960
+  },
+  {
+   "scenario": "new mood each time",
+   "connections": 1,
+   "rps": 197.6,
+   "p50": 4,
+   "p90": 5,
+   "p975": 7,
+   "p99": 10,
+   "errors": 0,
+   "total": 1976
+  },
+  {
+   "scenario": "new mood each time",
+   "connections": 10,
+   "rps": 249.9,
+   "p50": 38,
+   "p90": 44,
+   "p975": 49,
+   "p99": 54,
+   "errors": 0,
+   "total": 2499
+  },
+  {
+   "scenario": "new mood each time",
+   "connections": 50,
+   "rps": 269.7,
+   "p50": 181,
+   "p90": 193,
+   "p975": 202,
+   "p99": 240,
+   "errors": 0,
+   "total": 2697
+  }
+ ]
+}
