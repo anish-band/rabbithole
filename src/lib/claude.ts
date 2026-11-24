@@ -10,17 +10,31 @@ import { actualUsd, estimateTokens, record, reserve, worstCaseUsd } from "./budg
 
 export const CLAUDE_MODEL = process.env.CLAUDE_MODEL ?? "claude-opus-5-5";
 
-const client = new Anthropic(); // reads ANTHROPIC_API_KEY from .env.local
+/** Thrown when no API key is configured; callers fall back like for budget errors. */
+export class ClaudeUnavailableError extends Error {
+  constructor() {
+    super("ANTHROPIC_API_KEY is not set");
+    this.name = "ClaudeUnavailableError";
+  }
+}
+
+// Created on first use so the app (and its fallbacks) still work without a key.
+let client: Anthropic | undefined;
+function getClient() {
+  if (!process.env.ANTHROPIC_API_KEY) throw new ClaudeUnavailableError();
+  return (client ??= new Anthropic()); // reads ANTHROPIC_API_KEY from .env.local
+}
 
 type CreateParams = Omit<Anthropic.MessageCreateParamsNonStreaming, "model"> & { model?: string };
 
 export async function callClaude(route: string, params: CreateParams): Promise<Anthropic.Message> {
   const model = params.model ?? CLAUDE_MODEL;
+  const anthropic = getClient();
   const inputEstimate = estimateTokens(JSON.stringify({ system: params.system, messages: params.messages, tools: params.tools }));
   const release = reserve(worstCaseUsd(model, inputEstimate, params.max_tokens));
 
   try {
-    const response = await client.messages.create({ ...params, model });
+    const response = await anthropic.messages.create({ ...params, model });
     record(route, actualUsd(model, response.usage));
     return response;
   } finally {
