@@ -7,12 +7,40 @@ import papers from "../src/fixtures/papers.json";
  * - No mood: fixtures in order, 6 per page, then done.
  * - Mood: fixtures whose title/abstract mention any mood word; "zzz" matches nothing.
  * Requests are recorded on `feedRequests` for assertions.
+ *
+ * /api/explainer is faked too (never a real Claude call): papers listed in
+ * `explainers` get that response, everything else the "offline" fallback.
+ * Requested ids are recorded on `explainerRequests`.
  */
 export const PAGE_SIZE = 6;
 
 type FeedBody = { mood?: string; exclude?: string[]; signals?: Record<string, unknown> };
 
-export const test = base.extend<{ feedRequests: FeedBody[]; feedDelayMs: number }>({
+type ExplainerResponse = Record<string, unknown>;
+const OFFLINE: ExplainerResponse = { status: "fallback", reason: "unavailable" };
+
+export const test = base.extend<{
+  feedRequests: FeedBody[];
+  feedDelayMs: number;
+  explainers: Record<string, ExplainerResponse>;
+  explainerDelayMs: number;
+  explainerRequests: string[];
+}>({
+  explainers: [{}, { option: true }],
+  explainerDelayMs: [0, { option: true }],
+  explainerRequests: [
+    async ({ page, explainers, explainerDelayMs }, use) => {
+      const requests: string[] = [];
+      await page.route("**/api/explainer?*", async (route) => {
+        const id = new URL(route.request().url()).searchParams.get("id") ?? "";
+        requests.push(id);
+        await new Promise((r) => setTimeout(r, explainerDelayMs));
+        await route.fulfill({ json: explainers[id] ?? OFFLINE });
+      });
+      await use(requests);
+    },
+    { auto: true },
+  ],
   feedDelayMs: [400, { option: true }],
   feedRequests: [
     async ({ page, feedDelayMs }, use) => {

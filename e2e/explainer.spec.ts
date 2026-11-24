@@ -56,7 +56,7 @@ test("the explainer pauses when its paper scrolls away", async ({ page }) => {
   await expect(player(page)).not.toHaveAttribute("data-paused");
 });
 
-test("papers without a script keep the placeholder", async ({ page }) => {
+test("papers without a script play a title card instead", async ({ page }) => {
   await page.keyboard.press("ArrowDown");
-  await expect(slide(page, 1).getByText("Explainer coming soon")).toBeVisible();
+  await expect(slide(page, 1).getByRole("img", { name: /Animated explainer/ })).toBeVisible();
 });
