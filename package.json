@@ -10,10 +10,12 @@
     "smoke:arxiv": "node --conditions=react-server --import tsx scripts/arxiv-smoke.ts",
     "fixtures": "node --conditions=react-server --import tsx scripts/make-fixtures.ts",
     "test:e2e": "playwright test",
-    "test": "node --import tsx --test \"src/**/*.test.ts\""
+    "test": "node --import tsx --test \"src/**/*.test.ts\"",
+    "smoke:rank": "node --conditions=react-server --import tsx scripts/rank-smoke.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.13.0",
+    "@huggingface/transformers": "^4.3.2",
     "fast-xml-parser": "^5.12.1",
     "katex": "^0.19.1",
     "lucide-react": "^1.79.0",
