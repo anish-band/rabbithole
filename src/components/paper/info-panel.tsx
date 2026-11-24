@@ -25,18 +25,18 @@ export function InfoPanel({ paper, summary, actions, onAction }: InfoPanelProps)
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center gap-1.5">
-        <span className="rounded-full bg-accent/12 px-2.5 py-1 text-[13px] font-medium text-accent" title={paper.primaryCategory}>
+        <span className="rounded-full bg-accent/10 px-2.5 py-1 text-[13px] font-medium text-accent-ink" title={paper.primaryCategory}>
           {categoryName(paper.primaryCategory)}
         </span>
         {others.map((c) => (
-          <span key={c} className="rounded-full bg-fill px-2.5 py-1 text-[13px] text-muted" title={categoryName(c)}>
+          <span key={c} className="rounded-full bg-fill px-2.5 py-1 text-[13px] text-foreground/70" title={categoryName(c)}>
             {c}
           </span>
         ))}
       </div>
 
       <div className="flex flex-col gap-2">
-        <h2 className="text-[clamp(1.5rem,2.2vw,2.25rem)] leading-[1.12] font-semibold tracking-[-0.022em] text-balance">
+        <h2 className="text-[clamp(1.5rem,1rem+1.1vw,2.25rem)] leading-[1.12] font-semibold tracking-[-0.022em] text-balance">
           <MathText text={paper.title} />
         </h2>
         <AuthorList authors={paper.authors} />

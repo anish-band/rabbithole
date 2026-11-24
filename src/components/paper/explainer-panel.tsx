@@ -12,7 +12,7 @@ export function ExplainerPanel({ paper }: { paper: Paper }) {
   return (
     <figure
       aria-label="Explainer"
-      className="relative flex h-full w-full flex-col items-center justify-center gap-4 overflow-hidden rounded-[28px] bg-stage p-8 text-white shadow-card"
+      className="relative flex h-full w-full flex-col items-center justify-center gap-4 overflow-hidden rounded-3xl bg-stage p-8 text-white shadow-card"
     >
       <span className="flex size-16 items-center justify-center rounded-full bg-white/10">
         {/* Play triangles look left-heavy when centred geometrically; nudge right. */}
@@ -20,7 +20,7 @@ export function ExplainerPanel({ paper }: { paper: Paper }) {
       </span>
       <figcaption className="text-center">
         <span className="block text-[15px] font-medium text-white/70">Explainer coming soon</span>
-        <span className="mt-1 block text-[13px] text-white/40">{categoryName(paper.primaryCategory)}</span>
+        <span className="mt-1 block text-[13px] text-white/55">{categoryName(paper.primaryCategory)}</span>
       </figcaption>
     </figure>
   );
