@@ -60,3 +60,16 @@ test("papers without a script play a title card instead", async ({ page }) => {
   await page.keyboard.press("ArrowDown");
   await expect(slide(page, 1).getByRole("img", { name: /Animated explainer/ })).toBeVisible();
 });
+
+test("formulas sit where the script puts them on the stage", async ({ page }) => {
+  // Scene 5 of the sample has a formula centred at (52, 36) on the 160×90 stage.
+  await slide(page, 0).getByRole("button", { name: "Scene 5 of 5" }).click();
+  const math = slide(page, 0).locator(".ex-scene .katex").first();
+  await expect(math).toBeVisible();
+  await page.waitForTimeout(1500);
+  const [m, svg] = await Promise.all([math.boundingBox(), slide(page, 0).locator("svg[role=img]").boundingBox()]);
+  const cx = ((m!.x + m!.width / 2 - svg!.x) / svg!.width) * 160;
+  const cy = ((m!.y + m!.height / 2 - svg!.y) / svg!.height) * 90;
+  expect(Math.abs(cx - 52)).toBeLessThan(4);
+  expect(Math.abs(cy - 36)).toBeLessThan(4);
+});
