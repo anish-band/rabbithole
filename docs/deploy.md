@@ -3,7 +3,8 @@
 Rabbithole runs on AWS for about **$0 a month**: a single Lambda function and a free database.
 
 ```
-browser ──HTTPS──▶ Lambda function URL ──▶ Lambda (arm64 container: Next.js + Lambda Web Adapter)
+browser ──HTTPS──▶ CloudFront ──/_next/static/*──▶ S3 bucket (private, cached for a year)
+                       └──everything else──▶ Lambda function URL ──▶ Lambda (arm64 container: Next.js + Lambda Web Adapter)
                                               ├──▶ Neon Postgres (free tier): spend ledger, caches, arXiv throttle
                                               ├──▶ arXiv API (≤ 1 request / 3 s across all instances)
                                               └──▶ CloudWatch Logs ─▶ metrics, alarms, dashboard ─▶ SNS email
@@ -18,8 +19,10 @@ AWS Budget ($1/month) ──exceeded──▶ SNS ──▶ kill-switch Lambda �
 
 | Item | Free allowance | Our use | Cost |
 |---|---|---|---|
-| Lambda | 1M requests + 400k GB-s / month, always free | 1.5 GB × short requests; capped at 3 concurrent | $0 |
-| Function URL | included with Lambda | public HTTPS endpoint | $0 |
+| Lambda | 1M requests + 400k GB-s / month, always free | 1.5 GB × short requests; capped at 10 concurrent | $0 |
+| Function URL | included with Lambda | origin for CloudFront | $0 |
+| CloudFront | 1 TB + 10M requests / month, always free | the public URL | $0 |
+| S3 | 5 GB for 12 months; pennies after | a few MB of static files | ~$0 |
 | ECR (image storage) | 500 MB for 12 months on older accounts | 3 images × ~100 MB compressed | ~$0.03 |
 | CloudWatch | 10 custom metrics, 10 alarms, 3 dashboards, 5 GB logs | 8 metrics, 5 alarms, 1 dashboard, 7-day log retention | $0 |
 | SNS | 1,000 emails | alerts only | $0 |
@@ -27,7 +30,8 @@ AWS Budget ($1/month) ──exceeded──▶ SNS ──▶ kill-switch Lambda �
 | Neon Postgres | 0.5 GB, always free | < 5 MB | $0 |
 
 **Guardrails:**
-- **Concurrency cap:** reserved concurrency of 3 caps how much any traffic spike can run up.
+- **Static files never reach Lambda:** CloudFront serves `/_next/static` from S3. Through Lambda alone, a page load needed ~15 requests at once and got throttled.
+- **Concurrency cap:** reserved concurrency of 10 caps how much any traffic spike can run up.
 - **Budget alerts:** an email when the forecast passes 80% of $1.
 - **Kill switch:** when actual spend passes $1, the app's concurrency is set to 0. AWS updates budget data a few times a day, so this can lag by hours. The concurrency cap is the real limit.
 
