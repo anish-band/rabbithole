@@ -10,11 +10,12 @@
 import fs from "node:fs";
 import { WEIGHTS, type Weights } from "@/lib/rank/score";
 import { categoryCoverage, mean, ndcgAt, precisionAt, retrieve } from "@/lib/eval/rank-metrics";
-import { SYSTEMS, embedAll, evalNow, file, loadInputs, readJson, run, writeJson, type Ctx, type SystemName } from "./rank-lib";
+import { SYSTEMS, embedAll, evalNow, file, loadInputs, planFor, readJson, run, writeJson, type Ctx, type SystemName } from "./rank-lib";
 
 /** Allowed drop before --check fails (absolute, on a 0–1 scale). */
 const TOLERANCE = 0.02;
 const PRODUCTION: SystemName = "claude plan → rank";
+const FALLBACK: SystemName = "keyword fallback → rank";
 
 type Scores = { p8: number; ndcg10: number; coverage10: number; recall: number; judged10: number };
 const fmt = (x: number) => x.toFixed(3);
@@ -33,7 +34,7 @@ async function main() {
     const ranked = run(ctx, mood, system, weights);
     const relevant = Object.keys(grades);
     const candidates =
-      system === "rank whole pool" ? new Set(pool.map((p) => p.id)) : new Set(retrieve(pool, system === PRODUCTION ? (plans[mood].claude ?? plans[mood].fallback) : plans[mood].fallback).map((p) => p.id));
+      system === "rank whole pool" ? new Set(pool.map((p) => p.id)) : new Set(retrieve(pool, planFor(plans, mood, system)).map((p) => p.id));
     const judgedSet = new Set(judged);
     const top10 = ranked.slice(0, 10);
     return {
@@ -81,20 +82,30 @@ async function main() {
   writeJson("results.json", results);
   writeReport(results);
 
-  const current = { p8: systems[PRODUCTION].p8, ndcg10: systems[PRODUCTION].ndcg10 };
+  // Guarded systems: the Claude plan, and the keyword fallback (what runs when Claude is off).
+  type Pair = { p8: number; ndcg10: number };
+  const pick = (s: SystemName): Pair => ({ p8: systems[s].p8, ndcg10: systems[s].ndcg10 });
+  const current = { ...pick(PRODUCTION), fallback: pick(FALLBACK) };
   if (process.argv.includes("--update-baseline")) {
     writeJson("baseline.json", { system: PRODUCTION, ...current, tolerance: TOLERANCE });
     console.log("\nBaseline updated.");
   }
   if (process.argv.includes("--check")) {
-    const base = readJson<{ p8: number; ndcg10: number } | undefined>("baseline.json", undefined);
+    const base = readJson<(Pair & { fallback?: Pair }) | undefined>("baseline.json", undefined);
     if (!base) throw new Error("No eval/rank/baseline.json to check against.");
-    const drops = (["p8", "ndcg10"] as const).filter((k) => current[k] < base[k] - TOLERANCE);
+    const checks: [string, Pair, Pair | undefined][] = [
+      [PRODUCTION, current, base],
+      [FALLBACK, current.fallback, base.fallback],
+    ];
+    const drops = checks.flatMap(([name, now, was]) =>
+      was ? (["p8", "ndcg10"] as const).filter((k) => now[k] < was[k] - TOLERANCE).map((k) => `${name} ${k} ${fmt(now[k])} < baseline ${fmt(was[k])} − ${TOLERANCE}`) : [],
+    );
     if (drops.length) {
-      console.error(`\nRegression: ${drops.map((k) => `${k} ${fmt(current[k])} < baseline ${fmt(base[k])} − ${TOLERANCE}`).join("; ")}`);
+      console.error(`\nRegression: ${drops.join("; ")}`);
       process.exit(1);
     }
-    console.log(`\nNo regression vs baseline (P@8 ${fmt(base.p8)}, nDCG@10 ${fmt(base.ndcg10)}, tolerance ${TOLERANCE}).`);
+    const describe = ([name, , was]: (typeof checks)[number]) => (was ? `${name}: P@8 ${fmt(was.p8)}, nDCG@10 ${fmt(was.ndcg10)}` : `${name}: no baseline`);
+    console.log(`\nNo regression vs baseline (${checks.map(describe).join("; ")}; tolerance ${TOLERANCE}).`);
   }
 }
 

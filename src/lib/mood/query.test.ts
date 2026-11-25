@@ -23,8 +23,21 @@ test("arxivQuery assembles keywords and categories", () => {
 });
 
 test("fallbackPlan searches the mood's own words", () => {
-  const plan = fallbackPlan("practical LLM agents");
-  assert.deepEqual(plan.keywords, [["practical", "llm", "agents"]]);
-  assert.equal(plan.source, "fallback");
+  assert.deepEqual(fallbackPlan("black holes").keywords, [["black", "holes"]]);
+  assert.deepEqual(fallbackPlan("galaxies").keywords, [["galaxies"]]);
+  assert.equal(fallbackPlan("black holes").source, "fallback");
   assert.deepEqual(fallbackPlan("the").keywords, []);
+});
+
+test("fallbackPlan adds overlapping pairs for longer moods, never single words", () => {
+  assert.deepEqual(fallbackPlan("practical LLM agents").keywords, [
+    ["practical", "llm", "agents"],
+    ["practical", "llm"],
+    ["llm", "agents"],
+    ["practical", "agents"],
+  ]);
+  const long = fallbackPlan("how neutron stars and high-energy astrophysics work").keywords;
+  assert.equal(long.length, 4);
+  assert.deepEqual(long[0], ["neutron", "stars", "high-energy", "astrophysics", "work"]);
+  assert.ok(long.slice(1).every((g) => g.length === 2));
 });

@@ -14,14 +14,14 @@ npm run eval:rank:build      # one-time, resumable setup (the only step that cal
 |---|---|---|
 | `pool.json` | 322 papers | Every paper in the cached arXiv responses (`data/arxiv/`). No new arXiv traffic. |
 | `moods.json` | 30 moods | Hand-written to span the pool's topics at different levels of vagueness. |
-| `plans.json` | Each mood's Claude query plan and its keyword fallback | `expandMood()` (Haiku, through `callClaude()`), the same code the feed uses |
+| `plans.json` | Each mood's Claude query plan (the keyword fallback is free code, so the eval runs it live) | `expandMood()` (Haiku, through `callClaude()`), the same code the feed uses |
 | `labels.json` | Relevance judgments: 2 = clearly fits, 1 = related, unjudged = 0 | A Haiku judge over each mood's pooled candidates (the union of every system's top 30) |
-| `baseline.json` | The production system's P@8 and nDCG@10 | `--update-baseline` |
+| `baseline.json` | P@8 and nDCG@10 for the Claude plan and the keyword fallback (both guarded by `--check`) | `--update-baseline` |
 
 ## Systems
 
 - **claude plan → rank** (production): the Claude plan's searches, emulated over the pool (every keyword must appear, any listed category matches), then ranked with the production weights.
-- **keyword fallback → rank**: what the feed does without Claude, which is to search the mood's own words.
+- **keyword fallback → rank**: what the feed does without Claude (`fallbackPlan`): search the mood's own words, plus overlapping word pairs for longer moods.
 - **rank whole pool**: no retrieval step. Embeddings rank all 322 papers. This is a ceiling for the ranking stage alone.
 
 ## Metrics

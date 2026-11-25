@@ -20,11 +20,11 @@
    "judged10": 1
   },
   "keyword fallback → rank": {
-   "p8": 0.36666666666666664,
-   "ndcg10": 0.4484374040745102,
-   "coverage10": 0.4894444444444444,
-   "recall": 0.2469402172456609,
-   "judged10": 1
+   "p8": 0.475,
+   "ndcg10": 0.5938351574046242,
+   "coverage10": 0.6539682539682538,
+   "recall": 0.4238373279630187,
+   "judged10": 0.9596296296296296
   },
   "rank whole pool": {
    "p8": 0.5666666666666667,
@@ -289,10 +289,10 @@
     "judged10": 1
    },
    "keyword fallback → rank": {
-    "p8": 0.25,
-    "ndcg10": 0.3222722491219546,
-    "coverage10": 0.4,
-    "recall": 0.07692307692307693,
+    "p8": 0.5,
+    "ndcg10": 0.6447356365332964,
+    "coverage10": 1,
+    "recall": 0.6923076923076923,
     "judged10": 1
    },
    "rank whole pool": {
@@ -381,11 +381,11 @@
     "judged10": 1
    },
    "keyword fallback → rank": {
-    "p8": 0,
-    "ndcg10": 0,
-    "coverage10": 0,
-    "recall": 0,
-    "judged10": 1
+    "p8": 0.125,
+    "ndcg10": 0.3406992958233561,
+    "coverage10": 1,
+    "recall": 0.04,
+    "judged10": 0.5
    },
    "rank whole pool": {
     "p8": 0.25,
@@ -430,7 +430,7 @@
     "p8": 1,
     "ndcg10": 1,
     "coverage10": 0.75,
-    "recall": 0.7857142857142857,
+    "recall": 0.9285714285714286,
     "judged10": 1
    },
    "rank whole pool": {
@@ -496,10 +496,10 @@
     "judged10": 1
    },
    "keyword fallback → rank": {
-    "p8": 0.625,
-    "ndcg10": 0.7118141052352056,
-    "coverage10": 0.5,
-    "recall": 0.3235294117647059,
+    "p8": 0.75,
+    "ndcg10": 0.8064934766869569,
+    "coverage10": 0.6666666666666666,
+    "recall": 0.8823529411764706,
     "judged10": 1
    },
    "rank whole pool": {
@@ -520,9 +520,9 @@
    },
    "keyword fallback → rank": {
     "p8": 0.625,
-    "ndcg10": 0.7364518058565852,
+    "ndcg10": 0.6447552160550108,
     "coverage10": 0.42857142857142855,
-    "recall": 0.47058823529411764,
+    "recall": 0.9411764705882353,
     "judged10": 1
    },
    "rank whole pool": {
@@ -542,10 +542,10 @@
     "judged10": 1
    },
    "keyword fallback → rank": {
-    "p8": 0.25,
-    "ndcg10": 0.35895421017163465,
-    "coverage10": 0.2857142857142857,
-    "recall": 0.05128205128205128,
+    "p8": 0.75,
+    "ndcg10": 0.7838409338645025,
+    "coverage10": 0.5714285714285714,
+    "recall": 0.717948717948718,
     "judged10": 1
    },
    "rank whole pool": {
@@ -611,11 +611,11 @@
     "judged10": 1
    },
    "keyword fallback → rank": {
-    "p8": 0.125,
-    "ndcg10": 0.2873431773791806,
+    "p8": 0.5,
+    "ndcg10": 0.8476990338391822,
     "coverage10": 1,
-    "recall": 0.045454545454545456,
-    "judged10": 1
+    "recall": 0.36363636363636365,
+    "judged10": 0.8888888888888888
    },
    "rank whole pool": {
     "p8": 0.625,
@@ -635,9 +635,9 @@
    },
    "keyword fallback → rank": {
     "p8": 0,
-    "ndcg10": 0,
+    "ndcg10": 0.11965140339054489,
     "coverage10": 0,
-    "recall": 0,
+    "recall": 0.0625,
     "judged10": 1
    },
    "rank whole pool": {
@@ -680,10 +680,10 @@
     "judged10": 1
    },
    "keyword fallback → rank": {
-    "p8": 0,
-    "ndcg10": 0,
-    "coverage10": 0,
-    "recall": 0,
+    "p8": 0.125,
+    "ndcg10": 0.2612934079961019,
+    "coverage10": 0.5,
+    "recall": 0.15384615384615385,
     "judged10": 1
    },
    "rank whole pool": {
@@ -726,10 +726,10 @@
     "judged10": 1
    },
    "keyword fallback → rank": {
-    "p8": 0.375,
-    "ndcg10": 0.4690000933206747,
-    "coverage10": 0.3333333333333333,
-    "recall": 0.08333333333333333,
+    "p8": 0.875,
+    "ndcg10": 0.9266360779006398,
+    "coverage10": 0.6666666666666666,
+    "recall": 0.5555555555555556,
     "judged10": 1
    },
    "rank whole pool": {
@@ -749,10 +749,10 @@
     "judged10": 1
    },
    "keyword fallback → rank": {
-    "p8": 0,
-    "ndcg10": 0,
-    "coverage10": 0,
-    "recall": 0,
+    "p8": 0.375,
+    "ndcg10": 0.578343678703395,
+    "coverage10": 0.6666666666666666,
+    "recall": 0.2962962962962963,
     "judged10": 1
    },
    "rank whole pool": {
@@ -772,10 +772,10 @@
     "judged10": 1
    },
    "keyword fallback → rank": {
-    "p8": 0,
-    "ndcg10": 0,
-    "coverage10": 0,
-    "recall": 0,
+    "p8": 0.125,
+    "ndcg10": 0.25937570933770104,
+    "coverage10": 0.25,
+    "recall": 0.10526315789473684,
     "judged10": 1
    },
    "rank whole pool": {
@@ -795,10 +795,10 @@
     "judged10": 1
    },
    "keyword fallback → rank": {
-    "p8": 0.625,
-    "ndcg10": 0.6912068936114337,
+    "p8": 0.375,
+    "ndcg10": 0.5837799102804881,
     "coverage10": 0.6,
-    "recall": 0.5172413793103449,
+    "recall": 0.9310344827586207,
     "judged10": 1
    },
    "rank whole pool": {
@@ -887,11 +887,11 @@
     "judged10": 1
    },
    "keyword fallback → rank": {
-    "p8": 0.125,
-    "ndcg10": 0.21222636597291455,
-    "coverage10": 0.1,
-    "recall": 0.04878048780487805,
-    "judged10": 1
+    "p8": 0.625,
+    "ndcg10": 0.708488271442731,
+    "coverage10": 0.4,
+    "recall": 0.21951219512195122,
+    "judged10": 0.9
    },
    "rank whole pool": {
     "p8": 0.625,
@@ -910,10 +910,10 @@
     "judged10": 1
    },
    "keyword fallback → rank": {
-    "p8": 0.25,
-    "ndcg10": 0.47054263970337656,
-    "coverage10": 0.5,
-    "recall": 0.11764705882352941,
+    "p8": 0.625,
+    "ndcg10": 0.8056106412479717,
+    "coverage10": 1,
+    "recall": 0.9117647058823529,
     "judged10": 1
    },
    "rank whole pool": {
@@ -933,11 +933,11 @@
     "judged10": 1
    },
    "keyword fallback → rank": {
-    "p8": 0,
-    "ndcg10": 0,
-    "coverage10": 0,
-    "recall": 0,
-    "judged10": 1
+    "p8": 0.125,
+    "ndcg10": 0.3103414471745058,
+    "coverage10": 0.3333333333333333,
+    "recall": 0.02564102564102564,
+    "judged10": 0.5
    },
    "rank whole pool": {
     "p8": 0.5,

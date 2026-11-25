@@ -2,5 +2,9 @@
  "system": "claude plan → rank",
  "p8": 0.4375,
  "ndcg10": 0.5316395603554585,
+ "fallback": {
+  "p8": 0.475,
+  "ndcg10": 0.5938351574046242
+ },
  "tolerance": 0.02
 }
