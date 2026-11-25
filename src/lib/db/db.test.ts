@@ -16,6 +16,19 @@ import { claimSlot } from "./throttle";
 
 const URL = process.env.TEST_DATABASE_URL;
 
+/**
+ * A pool confined to one schema. Uses the `options` startup parameter, which
+ * Neon's proxy passes through (it drops a bare `search_path` parameter, which
+ * would silently point the tests at the real tables).
+ */
+const inSchema = (schema: string, max: number) => connect(URL!, { max, connection: { options: `-c search_path=${schema}` } as never });
+
+/** Refuse to run anything unless the pool really is confined to its schema. */
+async function assertIsolated(sql: Sql, schema: string) {
+  const [{ search_path }] = await sql<{ search_path: string }[]>`show search_path`;
+  if (search_path !== schema) throw new Error(`not isolated: search_path is ${search_path}, expected ${schema}; refusing to touch real tables`);
+}
+
 describe("postgres backend", { skip: !URL && "TEST_DATABASE_URL not set" }, () => {
   const schema = `test_${process.pid}_${Date.now()}`;
   let admin: Sql;
@@ -24,7 +37,8 @@ describe("postgres backend", { skip: !URL && "TEST_DATABASE_URL not set" }, () =
   before(async () => {
     admin = connect(URL!, { max: 1 });
     await admin.unsafe(`create schema ${schema}`);
-    sql = connect(URL!, { max: 60, connection: { search_path: schema } });
+    sql = inSchema(schema, 60);
+    await assertIsolated(sql, schema);
     assert.deepEqual(await migrate(sql), ["001_init"]);
   });
 
@@ -89,8 +103,9 @@ describe("postgres backend", { skip: !URL && "TEST_DATABASE_URL not set" }, () =
   test("seeding copies the file ledger into an empty ledger only", async () => {
     const fresh = `${schema}_seed`;
     await admin.unsafe(`create schema ${fresh}`);
-    const s = connect(URL!, { max: 2, connection: { search_path: fresh } });
+    const s = inSchema(fresh, 2);
     try {
+      await assertIsolated(s, fresh);
       await migrate(s);
       const ledger = new PgLedger(() => s);
       assert.equal(await ledger.seedIfEmpty({ spentUsd: 1.72, calls: 40, byRoute: { explainer: 1.5 }, updatedAt: "" }), true);
