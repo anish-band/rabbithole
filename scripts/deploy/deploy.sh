@@ -47,6 +47,22 @@ docker build --platform linux/arm64 --provenance=false --build-arg VERSION="$TAG
 aws ecr get-login-password | docker login --username AWS --password-stdin "${REPO%%/*}"
 docker push "$REPO:$TAG"
 
+# Static files (/_next/static) are served by CloudFront from S3, never by the function.
+# Take them from the image itself so they always match the server, and upload before
+# the new server goes live. Old files are kept, so pages still open in a browser keep working.
+STATIC_DIR="$(mktemp -d)/static"
+CID=$(docker create "$REPO:$TAG")
+docker cp "$CID:/app/.next/static" "$STATIC_DIR" >/dev/null
+docker rm "$CID" >/dev/null
+stack_out() { aws cloudformation describe-stacks --stack-name rabbithole --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text 2>/dev/null || true; }
+upload_static() {
+  local bucket; bucket=$(stack_out StaticBucket)
+  [[ -z $bucket || $bucket == None ]] && return 0
+  echo "==> Static files -> s3://$bucket/_next/static"
+  aws s3 sync "$STATIC_DIR" "s3://$bucket/_next/static" --cache-control "public,max-age=31536000,immutable" --only-show-errors
+}
+upload_static
+
 echo "==> App stack"
 OIDC=true
 if aws iam list-open-id-connect-providers --query 'OpenIDConnectProviderList[].Arn' --output text | grep -q token.actions.githubusercontent.com; then
@@ -57,7 +73,8 @@ aws cloudformation deploy --stack-name rabbithole --template-file infra/app.yaml
   --capabilities CAPABILITY_NAMED_IAM --no-fail-on-empty-changeset \
   --parameter-overrides "ImageUri=$REPO:$TAG" "DatabaseUrl=$DATABASE_URL" "AlertEmail=$ALERT_EMAIL" "CreateGitHubOidcProvider=$OIDC"
 
-out() { aws cloudformation describe-stacks --stack-name rabbithole --query "Stacks[0].Outputs[?OutputKey=='$1'].OutputValue" --output text; }
+upload_static # first deploy: the bucket only exists now
+out() { stack_out "$1"; }
 URL=$(out Url)
 
 echo "==> Health check (first request is a cold start)"
