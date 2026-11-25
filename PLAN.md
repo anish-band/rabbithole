@@ -73,5 +73,15 @@ Evals and infra. Work them in this order. Each task's GitHub issue is the spec, 
 
 Out of the loop (these need the owner's decision): #24 Postgres ledger + caches, #25 AWS deploy + monitoring. If a task above seems to need either of them, take the local alternative and note it in the PR.
 
+## Eval boost (loop log)
+
+Goal: better ranking with Claude off (keyword fallback → rank, what production serves), then retrieval recall and zero-score moods, then a bigger faithfulness sample. Offline eval only (`npm run eval:rank`); loop Claude budget $1.50.
+
+Start (2026-11-24): fallback P@8 0.367, nDCG@10 0.448, Coverage@10 0.489, recall 0.247. Claude plan P@8 0.438, nDCG@10 0.532, recall 0.311. Ledger $1.7179.
+
+| Pass | Issue | Idea | Fallback P@8 / nDCG@10 / recall | Kept? | Claude spend |
+|---|---|---|---|---|---|
+| 1 | #59 | Overlapping word pairs for 3+ word moods (max 4 searches, never single words); a few more filler words. The eval now runs the fallback live. | 0.475 / 0.594 / 0.424 (Judged@10 1.00 → 0.96: a few unlabelled papers now reach the top 10 and count as misses, so this is pessimistic) | yes | $0 |
+
 ## Blocked
 (none yet)
