@@ -52,6 +52,20 @@ create table if not exists arxiv_throttle (
 insert into arxiv_throttle (id) values (1) on conflict do nothing;
 `,
   },
+  {
+    id: "002_embeddings",
+    sql: `
+-- Paper embeddings (float32 little-endian), shared by every instance so each
+-- paper is embedded once, not once per cold start.
+create table if not exists embeddings (
+  model      text not null,
+  id         text not null,
+  vec        bytea not null,
+  created_at timestamptz not null default now(),
+  primary key (model, id)
+);
+`,
+  },
 ];
 
 /** Apply pending migrations. Safe to run concurrently: one runner holds an advisory lock. */

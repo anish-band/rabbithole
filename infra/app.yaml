@@ -1,0 +1,379 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: >-
+  Rabbithole on AWS within the free tier: one arm64 Lambda (container image) behind a
+  public function URL, Neon Postgres outside AWS, CloudWatch alarms and a dashboard,
+  a $1 budget with a kill switch, and a GitHub OIDC role for deploys. See docs/deploy.md.
+
+Parameters:
+  ImageUri:
+    Type: String
+    Description: ECR image to run (set by scripts/deploy/deploy.sh).
+  DatabaseUrl:
+    Type: String
+    NoEcho: true
+    Description: Neon Postgres connection string (sslmode=require).
+  AlertEmail:
+    Type: String
+    Description: Where alarms and budget alerts go (confirm the SNS subscription email).
+  GitHubRepo:
+    Type: String
+    Default: anish-band/rabbithole
+  CreateGitHubOidcProvider:
+    Type: String
+    AllowedValues: ["true", "false"]
+    Default: "true"
+    Description: Set to false if the account already has token.actions.githubusercontent.com.
+  MaxConcurrency:
+    Type: Number
+    Default: 3
+    Description: Reserved concurrency; caps cost if the URL is hammered (and keeps DB connections low).
+  MonthlyBudgetUsd:
+    Type: Number
+    Default: 1
+  ClaudeCapUsd:
+    Type: Number
+    Default: 10
+    Description: The app's Claude budget (BUDGET_USD), shown on the dashboard.
+  ClaudeSpendAlarmUsd:
+    Type: Number
+    Default: 8
+    Description: Alarm when Claude spend passes this (80% of the cap).
+
+Conditions:
+  CreateOidc: !Equals [!Ref CreateGitHubOidcProvider, "true"]
+
+Resources:
+  # ---------- the app ----------
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/rabbithole
+      RetentionInDays: 7
+
+  FunctionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+  Function:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: rabbithole
+      PackageType: Image
+      Code: { ImageUri: !Ref ImageUri }
+      Architectures: [arm64]
+      MemorySize: 1536
+      # Generous: a cold instance may embed a page of new papers before answering.
+      Timeout: 60
+      ReservedConcurrentExecutions: !Ref MaxConcurrency
+      Role: !GetAtt FunctionRole.Arn
+      LoggingConfig: { LogGroup: !Ref LogGroup, LogFormat: Text }
+      Environment:
+        Variables:
+          DATABASE_URL: !Ref DatabaseUrl
+          DATABASE_POOL_MAX: "2"
+          RABBITHOLE_CLAUDE: "off"
+
+  FunctionUrl:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !Ref Function
+      AuthType: NONE
+      InvokeMode: BUFFERED
+
+  FunctionUrlPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref Function
+      Action: lambda:InvokeFunctionUrl
+      Principal: "*"
+      FunctionUrlAuthType: NONE
+
+  # Public function URLs also need InvokeFunction, limited to calls that come through the URL.
+  FunctionUrlInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref Function
+      Action: lambda:InvokeFunction
+      Principal: "*"
+      InvokedViaFunctionUrl: true
+
+  # ---------- alerts ----------
+  AlertsTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: rabbithole-alerts
+      Subscription:
+        - { Protocol: email, Endpoint: !Ref AlertEmail }
+
+  # Budget notifications land here and switch the app off.
+  KillSwitchTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: rabbithole-kill-switch
+
+  TopicsPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics: [!Ref AlertsTopic, !Ref KillSwitchTopic]
+      PolicyDocument:
+        Version: "2012-10-17"
+        # SNS requires one resource per statement.
+        Statement:
+          - Sid: AlertsFromBudgetsAndAlarms
+            Effect: Allow
+            Principal: { Service: [budgets.amazonaws.com, cloudwatch.amazonaws.com] }
+            Action: sns:Publish
+            Resource: !Ref AlertsTopic
+            Condition:
+              StringEquals: { "aws:SourceAccount": !Ref AWS::AccountId }
+          - Sid: KillSwitchFromBudgets
+            Effect: Allow
+            Principal: { Service: budgets.amazonaws.com }
+            Action: sns:Publish
+            Resource: !Ref KillSwitchTopic
+            Condition:
+              StringEquals: { "aws:SourceAccount": !Ref AWS::AccountId }
+
+  # ---------- kill switch: budget exceeded -> reserved concurrency 0 ----------
+  KillSwitchRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: { Service: lambda.amazonaws.com }
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: throttle-app
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: lambda:PutFunctionConcurrency
+                Resource: !GetAtt Function.Arn
+              - Effect: Allow
+                Action: sns:Publish
+                Resource: !Ref AlertsTopic
+
+  KillSwitch:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: rabbithole-kill-switch
+      Runtime: python3.12
+      Architectures: [arm64]
+      Handler: index.handler
+      Timeout: 10
+      MemorySize: 128
+      Role: !GetAtt KillSwitchRole.Arn
+      Environment:
+        Variables:
+          APP_FUNCTION: !Ref Function
+          ALERTS_TOPIC: !Ref AlertsTopic
+      Code:
+        ZipFile: |
+          import os, boto3
+          def handler(event, context):
+              boto3.client("lambda").put_function_concurrency(
+                  FunctionName=os.environ["APP_FUNCTION"], ReservedConcurrentExecutions=0)
+              boto3.client("sns").publish(
+                  TopicArn=os.environ["ALERTS_TOPIC"],
+                  Subject="Rabbithole switched OFF: AWS budget exceeded",
+                  Message="The monthly AWS budget was exceeded, so the app's concurrency was set to 0. "
+                          "See docs/runbook.md ('Kill switch fired') to turn it back on.")
+              return {"throttled": os.environ["APP_FUNCTION"]}
+
+  KillSwitchSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      TopicArn: !Ref KillSwitchTopic
+      Protocol: lambda
+      Endpoint: !GetAtt KillSwitch.Arn
+
+  KillSwitchPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref KillSwitch
+      Action: lambda:InvokeFunction
+      Principal: sns.amazonaws.com
+      SourceArn: !Ref KillSwitchTopic
+
+  Budget:
+    Type: AWS::Budgets::Budget
+    Properties:
+      Budget:
+        BudgetName: rabbithole-monthly
+        BudgetType: COST
+        TimeUnit: MONTHLY
+        BudgetLimit: { Amount: !Ref MonthlyBudgetUsd, Unit: USD }
+      NotificationsWithSubscribers:
+        - Notification: { NotificationType: FORECASTED, ComparisonOperator: GREATER_THAN, Threshold: 80, ThresholdType: PERCENTAGE }
+          Subscribers:
+            - { SubscriptionType: SNS, Address: !Ref AlertsTopic }
+        - Notification: { NotificationType: ACTUAL, ComparisonOperator: GREATER_THAN, Threshold: 100, ThresholdType: PERCENTAGE }
+          Subscribers:
+            - { SubscriptionType: SNS, Address: !Ref KillSwitchTopic }
+
+  # ---------- alarms (5 of the 10 free) ----------
+  Alarm5xx:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: rabbithole-5xx
+      AlarmDescription: The function URL returned 5 or more 5xx responses in 5 minutes.
+      Namespace: AWS/Lambda
+      MetricName: Url5xxCount
+      Dimensions: [{ Name: FunctionName, Value: !Ref Function }]
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 5
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlertsTopic]
+      OKActions: [!Ref AlertsTopic]
+
+  AlarmFeedLatency:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: rabbithole-feed-p95
+      AlarmDescription: Feed p95 latency above 5 s for 15 minutes (cold starts alone don't trip it).
+      Namespace: Rabbithole
+      MetricName: FeedLatency
+      Dimensions: [{ Name: Service, Value: rabbithole }]
+      ExtendedStatistic: p95
+      Period: 300
+      EvaluationPeriods: 3
+      DatapointsToAlarm: 3
+      Threshold: 5000
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlertsTopic]
+      OKActions: [!Ref AlertsTopic]
+
+  AlarmClaudeSpend:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: rabbithole-claude-spend-80pct
+      AlarmDescription: Claude spend passed 80% of the app's cap (sampled by /api/health).
+      Namespace: Rabbithole
+      MetricName: ClaudeSpendUsd
+      Dimensions: [{ Name: Service, Value: rabbithole }]
+      Statistic: Maximum
+      Period: 3600
+      EvaluationPeriods: 1
+      Threshold: !Ref ClaudeSpendAlarmUsd
+      ComparisonOperator: GreaterThanThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlertsTopic]
+
+  AlarmArxivErrors:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: rabbithole-arxiv-errors
+      AlarmDescription: 3 or more failed arXiv requests in 15 minutes.
+      Namespace: Rabbithole
+      MetricName: ArxivError
+      Dimensions: [{ Name: Service, Value: rabbithole }]
+      Statistic: Sum
+      Period: 900
+      EvaluationPeriods: 1
+      Threshold: 3
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlertsTopic]
+      OKActions: [!Ref AlertsTopic]
+
+  AlarmThrottles:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: rabbithole-throttled
+      AlarmDescription: Requests were turned away at the concurrency cap (traffic spike, or the kill switch fired).
+      Namespace: AWS/Lambda
+      MetricName: Throttles
+      Dimensions: [{ Name: FunctionName, Value: !Ref Function }]
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 10
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+      AlarmActions: [!Ref AlertsTopic]
+
+  # ---------- dashboard (1 of the 3 free) ----------
+  Dashboard:
+    Type: AWS::CloudWatch::Dashboard
+    Properties:
+      DashboardName: rabbithole
+      DashboardBody: !Sub |
+        {"widgets":[
+          {"type":"metric","x":0,"y":0,"width":12,"height":6,"properties":{"title":"Feed latency (ms)","region":"${AWS::Region}","stat":"p95","period":300,
+            "metrics":[["Rabbithole","FeedLatency","Service","rabbithole",{"stat":"p50","label":"p50"}],["...",{"stat":"p95","label":"p95"}]]}},
+          {"type":"metric","x":12,"y":0,"width":12,"height":6,"properties":{"title":"Requests and errors","region":"${AWS::Region}","stat":"Sum","period":300,
+            "metrics":[["AWS/Lambda","Invocations","FunctionName","${Function}"],[".","Url5xxCount",".","."],[".","Throttles",".","."],["Rabbithole","FeedError","Service","rabbithole"]]}},
+          {"type":"metric","x":0,"y":6,"width":12,"height":6,"properties":{"title":"arXiv","region":"${AWS::Region}","stat":"Sum","period":300,
+            "metrics":[["Rabbithole","ArxivRequest","Service","rabbithole"],[".","ArxivError",".","."]]}},
+          {"type":"metric","x":12,"y":6,"width":12,"height":6,"properties":{"title":"Fallbacks","region":"${AWS::Region}","stat":"Sum","period":300,
+            "metrics":[["Rabbithole","ExplainerServed","Service","rabbithole"],[".","ExplainerFallback",".","."],[".","MoodFallback",".","."]]}},
+          {"type":"metric","x":0,"y":12,"width":12,"height":6,"properties":{"title":"Claude spend (USD, cap ${ClaudeCapUsd})","region":"${AWS::Region}","stat":"Maximum","period":3600,
+            "metrics":[["Rabbithole","ClaudeSpendUsd","Service","rabbithole"]]}},
+          {"type":"metric","x":12,"y":12,"width":12,"height":6,"properties":{"title":"Lambda duration and concurrency","region":"${AWS::Region}","period":300,
+            "metrics":[["AWS/Lambda","Duration","FunctionName","${Function}",{"stat":"p95"}],[".","ConcurrentExecutions",".",".",{"stat":"Maximum","yAxis":"right"}]]}}
+        ]}
+
+  # ---------- CI deploys via GitHub OIDC (no stored AWS keys) ----------
+  GitHubOidcProvider:
+    Type: AWS::IAM::OIDCProvider
+    Condition: CreateOidc
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList: [sts.amazonaws.com]
+
+  DeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: rabbithole-github-deploy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Sub "arn:aws:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com"
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                "token.actions.githubusercontent.com:aud": sts.amazonaws.com
+                "token.actions.githubusercontent.com:sub": !Sub "repo:${GitHubRepo}:ref:refs/heads/main"
+      Policies:
+        - PolicyName: push-image-update-function
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: ecr:GetAuthorizationToken
+                Resource: "*"
+              - Effect: Allow
+                Action: [ecr:BatchCheckLayerAvailability, ecr:InitiateLayerUpload, ecr:UploadLayerPart, ecr:CompleteLayerUpload, ecr:PutImage, ecr:BatchGetImage, ecr:DescribeImages]
+                Resource: !Sub "arn:aws:ecr:${AWS::Region}:${AWS::AccountId}:repository/rabbithole"
+              - Effect: Allow
+                Action: [lambda:UpdateFunctionCode, lambda:GetFunction, lambda:GetFunctionConfiguration, lambda:GetFunctionUrlConfig]
+                Resource: !GetAtt Function.Arn
+
+Outputs:
+  Url:
+    Description: The public URL.
+    Value: !GetAtt FunctionUrl.FunctionUrl
+  DeployRoleArn:
+    Description: Set as the AWS_DEPLOY_ROLE_ARN repository variable for CI deploys.
+    Value: !GetAtt DeployRole.Arn
+  Dashboard:
+    Value: !Sub "https://${AWS::Region}.console.aws.amazon.com/cloudwatch/home?region=${AWS::Region}#dashboards/dashboard/rabbithole"

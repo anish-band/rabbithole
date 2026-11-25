@@ -1,0 +1,14 @@
+# Keep the build context small; only the embedding model comes from data/.
+.git
+.next
+node_modules
+data/*
+!data/models
+test-results
+playwright-report
+load
+eval
+docs
+.env*
+!.env.example
+*.log

@@ -1,0 +1,95 @@
+name: Deploy
+
+# After CI passes on main, build the arm64 image, push it, point the Lambda at
+# it, and check /api/health; on a failed check, roll back to the previous image.
+# Does nothing until the repository variable DEPLOY_ENABLED is "true" and the
+# secret AWS_DEPLOY_ROLE_ARN is set (an output of the app stack; see
+# docs/deploy.md). The account id is masked in logs (this repo is public).
+# Infrastructure changes (infra/*.yaml) are deployed by hand with `npm run deploy`.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: vars.DEPLOY_ENABLED == 'true' && (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
+    runs-on: ubuntu-24.04-arm
+    timeout-minutes: 20
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION || 'us-east-1' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci --no-audit --no-fund
+
+      - name: Cache embedding model
+        uses: actions/cache@v4
+        with:
+          path: data/models
+          key: model-${{ hashFiles('src/lib/rank/embed.ts') }}
+
+      - run: npm run model:fetch
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+          mask-aws-account-id: true
+
+      - name: Mask the account id
+        run: echo "::add-mask::$(aws sts get-caller-identity --query Account --output text)"
+
+      - id: ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and push
+        id: image
+        env:
+          REPO: ${{ steps.ecr.outputs.registry }}/rabbithole
+        run: |
+          TAG=$(git rev-parse --short HEAD)
+          docker build --provenance=false --build-arg VERSION="$TAG" -t "$REPO:$TAG" .
+          docker push "$REPO:$TAG"
+          echo "uri=$REPO:$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Update the function
+        id: update
+        run: |
+          echo "previous=$(aws lambda get-function --function-name rabbithole --query Code.ImageUri --output text)" >> "$GITHUB_OUTPUT"
+          aws lambda update-function-code --function-name rabbithole --image-uri "${{ steps.image.outputs.uri }}" > /dev/null
+          aws lambda wait function-updated-v2 --function-name rabbithole
+
+      - name: Health check
+        id: health
+        run: |
+          URL=$(aws lambda get-function-url-config --function-name rabbithole --query FunctionUrl --output text)
+          for i in 1 2 3 4 5; do
+            if curl -fsS --max-time 30 "${URL%/}/api/health"; then echo; exit 0; fi
+            sleep 6
+          done
+          exit 1
+
+      - name: Roll back on a failed health check
+        if: failure() && steps.update.outputs.previous != ''
+        run: |
+          aws lambda update-function-code --function-name rabbithole --image-uri "${{ steps.update.outputs.previous }}" > /dev/null
+          aws lambda wait function-updated-v2 --function-name rabbithole
+          echo "::error::Health check failed; rolled back to ${{ steps.update.outputs.previous }}"

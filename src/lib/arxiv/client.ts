@@ -3,6 +3,7 @@ import crypto from "crypto";
 import { db, hasDatabase } from "@/lib/db/client";
 import { dataDir, docs } from "@/lib/db/docs";
 import { claimSlot } from "@/lib/db/throttle";
+import { metric } from "@/lib/observability";
 import { parseAtomFeed } from "./parse";
 import type { Paper, SearchOptions, SearchResult } from "./types";
 
@@ -81,27 +82,37 @@ async function writeCache(key: string, xml: string) {
 
 async function fetchFromNetwork(url: string, key: string): Promise<SearchResult> {
   const xml = await throttled(async () => {
-    const res = await fetch(url, {
-      headers: { "User-Agent": USER_AGENT },
-      signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-    });
-    const body = await res.text();
-    if (!res.ok) {
-      // arXiv reports bad queries as an Atom error entry; surface its message if present.
-      try {
-        parseAtomFeed(body);
-      } catch (err) {
-        throw err instanceof Error && err.message.startsWith("arXiv API error") ? err : new Error(`arXiv API returned ${res.status}`);
-      }
-      throw new Error(`arXiv API returned ${res.status} ${res.statusText}`);
+    metric("ArxivRequest");
+    try {
+      return await request(url);
+    } catch (err) {
+      metric("ArxivError", 1, { error: err instanceof Error ? err.message : String(err) });
+      throw err;
     }
-    return body;
   });
 
   const result = parseAtomFeed(xml); // validate before caching
   // arXiv occasionally returns a spurious empty feed; never cache that.
   if (result.papers.length > 0) await writeCache(key, xml);
   return result;
+}
+
+async function request(url: string): Promise<string> {
+  const res = await fetch(url, {
+    headers: { "User-Agent": USER_AGENT },
+    signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+  });
+  const body = await res.text();
+  if (!res.ok) {
+    // arXiv reports bad queries as an Atom error entry; surface its message if present.
+    try {
+      parseAtomFeed(body);
+    } catch (err) {
+      throw err instanceof Error && err.message.startsWith("arXiv API error") ? err : new Error(`arXiv API returned ${res.status}`);
+    }
+    throw new Error(`arXiv API returned ${res.status} ${res.statusText}`);
+  }
+  return body;
 }
 
 async function fetchFeed(params: URLSearchParams, ttlMs: number | null): Promise<SearchResult> {

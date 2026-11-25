@@ -5,8 +5,9 @@
  *   npm run db:seed      migrate, then copy local data/ into the database:
  *                        - the spend ledger, into an EMPTY ledger only, so moving
  *                          to Postgres can never reset the budget cap
- *                        - cached explainers, mood plans, served papers and arXiv
- *                          responses (existing rows are never overwritten)
+ *                        - cached explainers, mood plans, served papers, arXiv
+ *                          responses and paper embeddings (existing rows are
+ *                          never overwritten)
  *
  * Reads data/ only; never modifies it.
  */
@@ -75,6 +76,19 @@ async function main() {
     await copy<{ mood: string }>("mood_plans", "moods", ".json", (_, v) => v.mood);
     await copy<{ id: string }>("papers", "papers", ".json", (_, v) => v.id);
     await copy<string>("arxiv_cache", "arxiv", ".xml", id(".xml"), true);
+
+    // Paper embeddings: data/embeddings/minilm-l6-v2/<id>.f32 (384 float32s).
+    const vecDir = path.join("embeddings", "minilm-l6-v2");
+    const vecFiles = files(vecDir, ".f32");
+    const rows = vecFiles
+      .map((f) => ({ model: "minilm-l6-v2", id: f.slice(0, -4), vec: fs.readFileSync(path.join(DATA, vecDir, f)) }))
+      .filter((r) => r.vec.byteLength === 384 * 4);
+    let inserted = 0;
+    for (let i = 0; i < rows.length; i += 500) {
+      const res = await sql`insert into embeddings ${sql(rows.slice(i, i + 500), "model", "id", "vec")} on conflict do nothing returning id`;
+      inserted += res.length;
+    }
+    console.log(`embeddings: ${inserted} added, ${rows.length - inserted} already there`);
   } finally {
     await sql.end();
   }
