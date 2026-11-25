@@ -35,12 +35,18 @@ const CHUNK = 50;
 /** Stay under the app's per-minute rate limit. */
 const CALL_GAP_MS = 3_500;
 
-const startSpent = budgetStatus().spentUsd;
-const taskSpend = () => budgetStatus().spentUsd - startSpent;
+// Measured from the first check, which runs before the first call.
+let startSpent: number | undefined;
+const taskSpend = async () => {
+  const { spentUsd } = await budgetStatus();
+  startSpent ??= spentUsd;
+  return spentUsd - startSpent;
+};
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-function checkCap() {
-  if (taskSpend() > TASK_CAP_USD - SAFETY_USD) throw new Error(`task spend cap reached ($${taskSpend().toFixed(4)})`);
+async function checkCap() {
+  const spent = await taskSpend();
+  if (spent > TASK_CAP_USD - SAFETY_USD) throw new Error(`task spend cap reached ($${spent.toFixed(4)})`);
 }
 
 function buildPool() {
@@ -60,7 +66,7 @@ async function buildPlans(moods: string[]) {
   const plans = readJson<Plans>("plans.json", {});
   for (const mood of moods) {
     if (plans[mood]?.claude) continue;
-    checkCap();
+    await checkCap();
     const plan = await expandMood(mood);
     plans[mood] = { claude: plan.source === "claude" ? plan : null, fallback: fallbackPlan(normalizeMood(mood)) };
     writeJson("plans.json", plans);
@@ -119,7 +125,7 @@ async function buildLabels(ctx: Ctx, moods: string[]) {
     const entry = (labels[mood] ??= { judged: [], grades: {} });
     const todo = [...pooled].filter((id) => !entry.judged.includes(id)).slice(0, Math.max(0, MAX_JUDGED - entry.judged.length));
     for (let i = 0; i < todo.length; i += CHUNK) {
-      checkCap();
+      await checkCap();
       const chunk = todo.slice(i, i + CHUNK).map((id) => byId.get(id)!);
       Object.assign(entry.grades, await judge(mood, chunk));
       entry.judged.push(...chunk.map((p) => p.id));
@@ -137,11 +143,11 @@ async function main() {
   const plans = await buildPlans(moods);
   const ctx: Ctx = { ...(await embedAll(pool, moods)), pool, plans, now: evalNow(pool) };
   if (!process.argv.includes("--no-labels")) await buildLabels(ctx, moods);
-  console.log(`task spend: $${taskSpend().toFixed(4)} (cap $${TASK_CAP_USD})`);
+  console.log(`task spend: $${(await taskSpend()).toFixed(4)} (cap $${TASK_CAP_USD})`);
 }
 
-main().catch((err) => {
+main().catch(async (err) => {
   console.error(err instanceof Error ? err.message : err);
-  console.log(`task spend: $${taskSpend().toFixed(4)} (cap $${TASK_CAP_USD})`);
+  console.log(`task spend: $${(await taskSpend()).toFixed(4)} (cap $${TASK_CAP_USD})`);
   process.exit(1);
 });

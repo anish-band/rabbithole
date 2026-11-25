@@ -1,7 +1,10 @@
 import "server-only";
-import fs from "fs";
-import path from "path";
 import type { BudgetStatus } from "./budget-state";
+import { db, hasDatabase } from "./db/client";
+import { dataDir } from "./db/docs";
+import { BudgetExceededError, FileLedger, PgLedger } from "./db/ledger";
+
+export { BudgetExceededError };
 
 /**
  * Hard spend cap for Claude API calls.
@@ -12,7 +15,8 @@ import type { BudgetStatus } from "./budget-state";
  * by the real cost from response.usage. So the ledger can never go over budget,
  * even with concurrent requests.
  *
- * Ledger lives in data/spend.json (gitignored). Delete it to reset.
+ * The ledger (./db/ledger.ts) lives in Postgres when DATABASE_URL is set (safe
+ * across instances), otherwise in data/spend.json (one process only).
  *
  * This is the app-level guard. Also set a monthly spend limit in the Anthropic
  * Console as a backstop (Settings -> Limits).
@@ -29,22 +33,9 @@ export const PRICING: Record<string, { input: number; output: number; cacheRead:
 export const BUDGET_USD = Number(process.env.BUDGET_USD ?? "10");
 const RATE_LIMIT_PER_MIN = Number(process.env.CLAUDE_RATE_LIMIT_PER_MIN ?? "20");
 
-const DATA_DIR = path.join(process.cwd(), "data");
-const LEDGER_PATH = path.join(DATA_DIR, "spend.json");
-
-type Ledger = {
-  spentUsd: number;
-  calls: number;
-  byRoute: Record<string, number>;
-  updatedAt: string;
-};
-
-export class BudgetExceededError extends Error {
-  constructor(public spentUsd: number, public budgetUsd: number) {
-    super(`Claude budget reached: $${spentUsd.toFixed(4)} of $${budgetUsd.toFixed(2)} spent`);
-    this.name = "BudgetExceededError";
-  }
-}
+const fileLedger = new FileLedger(dataDir("spend.json"));
+const pgLedger = new PgLedger(db);
+const ledger = () => (hasDatabase() ? pgLedger : fileLedger);
 
 export class RateLimitedError extends Error {
   constructor(public retryAfterMs: number) {
@@ -53,23 +44,7 @@ export class RateLimitedError extends Error {
   }
 }
 
-function readLedger(): Ledger {
-  try {
-    return JSON.parse(fs.readFileSync(LEDGER_PATH, "utf8")) as Ledger;
-  } catch {
-    return { spentUsd: 0, calls: 0, byRoute: {}, updatedAt: new Date().toISOString() };
-  }
-}
-
-function writeLedger(ledger: Ledger) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-  const tmp = `${LEDGER_PATH}.tmp`;
-  fs.writeFileSync(tmp, JSON.stringify(ledger, null, 2));
-  fs.renameSync(tmp, LEDGER_PATH); // atomic replace
-}
-
-// In-flight reservations (process memory). Single dev server = single process.
-let reservedUsd = 0;
+// Rate limit window (per process; the cap itself is shared through the ledger).
 const recentCalls: number[] = [];
 
 export function priceFor(model: string) {
@@ -107,38 +82,41 @@ export function actualUsd(model: string, u: Usage) {
   );
 }
 
+export type Reservation = {
+  /** Replace the reservation with the real cost. */
+  record(route: string, costUsd: number): Promise<void>;
+  /** Drop it (the call failed). A no-op after `record`. */
+  release(): Promise<void>;
+};
+
 /** Reserve worst-case cost. Throws if over budget or rate limited. */
-export function reserve(amountUsd: number): () => void {
+export async function reserve(amountUsd: number): Promise<Reservation> {
   const now = Date.now();
   while (recentCalls.length && now - recentCalls[0] > 60_000) recentCalls.shift();
   if (recentCalls.length >= RATE_LIMIT_PER_MIN) {
     throw new RateLimitedError(60_000 - (now - recentCalls[0]));
   }
 
-  const { spentUsd } = readLedger();
-  if (spentUsd + reservedUsd + amountUsd > BUDGET_USD) {
-    throw new BudgetExceededError(spentUsd, BUDGET_USD);
-  }
-  reservedUsd += amountUsd;
+  const store = ledger();
+  const id = await store.reserve(amountUsd, BUDGET_USD);
   recentCalls.push(now);
 
-  let released = false;
-  return () => {
-    if (!released) {
-      reservedUsd -= amountUsd;
-      released = true;
-    }
+  let settled = false;
+  return {
+    async record(route, costUsd) {
+      settled = true;
+      await store.settle(id, route, costUsd);
+    },
+    async release() {
+      if (settled) return;
+      settled = true;
+      await store.release(id);
+    },
   };
 }
 
-export function record(route: string, costUsd: number) {
-  const ledger = readLedger();
-  ledger.spentUsd += costUsd;
-  ledger.calls += 1;
-  ledger.byRoute[route] = (ledger.byRoute[route] ?? 0) + costUsd;
-  ledger.updatedAt = new Date().toISOString();
-  writeLedger(ledger);
-}
+/** Is Claude switched on at all? Off without a key, or with RABBITHOLE_CLAUDE=off (e.g. a public deploy). */
+export const claudeEnabled = () => Boolean(process.env.ANTHROPIC_API_KEY) && process.env.RABBITHOLE_CLAUDE !== "off";
 
 /** API health, so the UI can say "paused" during e.g. an account usage limit. */
 const API_FAILURE_WINDOW_MS = 5 * 60_000;
@@ -147,21 +125,21 @@ export function noteApiResult(ok: boolean) {
   lastApiFailureAt = ok ? 0 : Date.now();
 }
 
-export function budgetStatus(): BudgetStatus & { byRoute: Record<string, number>; updatedAt: string } {
-  const ledger = readLedger();
+export async function budgetStatus(): Promise<BudgetStatus & { byRoute: Record<string, number>; updatedAt: string }> {
+  const snap = await ledger().snapshot();
   const now = Date.now();
   const inWindow = recentCalls.filter((t) => now - t <= 60_000);
   return {
     budgetUsd: BUDGET_USD,
-    spentUsd: Number(ledger.spentUsd.toFixed(4)),
+    spentUsd: Number(snap.spentUsd.toFixed(4)),
     // Ledger only: counting in-flight worst-case reservations would make the pill
     // dip ~$0.33 during every generation (the "used up" threshold already allows for one).
-    remainingUsd: Number(Math.max(0, BUDGET_USD - ledger.spentUsd).toFixed(4)),
-    calls: ledger.calls,
-    configured: Boolean(process.env.ANTHROPIC_API_KEY),
+    remainingUsd: Number(Math.max(0, BUDGET_USD - snap.spentUsd).toFixed(4)),
+    calls: snap.calls,
+    configured: claudeEnabled(),
     rateLimitedMs: inWindow.length >= RATE_LIMIT_PER_MIN ? 60_000 - (now - inWindow[0]) : 0,
     apiFailing: lastApiFailureAt > 0 && now - lastApiFailureAt < API_FAILURE_WINDOW_MS,
-    byRoute: ledger.byRoute,
-    updatedAt: ledger.updatedAt,
+    byRoute: snap.byRoute,
+    updatedAt: snap.updatedAt,
   };
 }

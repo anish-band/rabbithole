@@ -1,6 +1,7 @@
 import "server-only";
 import fs from "fs/promises";
 import path from "path";
+import { dataDir } from "@/lib/db/docs";
 import type { FeatureExtractionPipeline } from "@huggingface/transformers";
 import type { Paper } from "@/lib/arxiv/types";
 
@@ -12,8 +13,10 @@ import type { Paper } from "@/lib/arxiv/types";
  */
 export const MODEL_ID = "Xenova/all-MiniLM-L6-v2";
 export const DIMS = 384;
-const DATA = path.join(process.cwd(), "data");
-const CACHE_DIR = path.join(DATA, "embeddings", "minilm-l6-v2");
+// The model can ship read-only inside an image (RABBITHOLE_MODELS_DIR); the
+// embedding cache needs a writable data dir (RABBITHOLE_DATA_DIR, e.g. /tmp).
+const MODELS_DIR = process.env.RABBITHOLE_MODELS_DIR ?? path.join(process.cwd(), "data", "models");
+const CACHE_DIR = dataDir("embeddings", "minilm-l6-v2");
 const BATCH = 16;
 const QUERY_CACHE_LIMIT = 200;
 
@@ -26,7 +29,7 @@ const g = globalThis as GlobalEmbed;
 function extractor(): Promise<FeatureExtractionPipeline> {
   g.__embedPipeline ??= (async () => {
     const { pipeline, env } = await import("@huggingface/transformers");
-    env.cacheDir = path.join(DATA, "models");
+    env.cacheDir = MODELS_DIR;
     return pipeline("feature-extraction", MODEL_ID, { dtype: "q8" });
   })().catch((err) => {
     g.__embedPipeline = undefined; // allow a retry after a failed download

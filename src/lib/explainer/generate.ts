@@ -1,8 +1,7 @@
 import "server-only";
-import fs from "fs/promises";
-import path from "path";
 import Anthropic from "@anthropic-ai/sdk";
 import type { Paper } from "@/lib/arxiv/types";
+import { dataDir, docs, safeName } from "@/lib/db/docs";
 import { BudgetExceededError, RateLimitedError, budgetStatus, estimateTokens, worstCaseUsd } from "@/lib/budget";
 import { CLAUDE_MODEL, ClaudeUnavailableError, callClaude, textOf } from "@/lib/claude";
 import { parseReply, validateReply, type Generation } from "./generation-schema";
@@ -19,7 +18,6 @@ import type { Explainer } from "./schema";
  * day, so a bad paper can't drain the budget).
  */
 export const PROMPT_VERSION = 2;
-const DIR = path.join(process.cwd(), "data", "explainers");
 const RETRY_FAILED_AFTER_MS = 24 * 60 * 60 * 1000;
 const MAX_TOKENS = 16_000;
 
@@ -33,24 +31,9 @@ type CacheEntry = { id: string; model: string; promptVersion: number; createdAt:
 /** `reply` keeps the raw text so a later, more forgiving parser can salvage it for free. */
 type FailureEntry = { id: string; at: number; reason: string; reply?: string; model?: string };
 
-const safe = (id: string) => id.replace(/[^\w.-]/g, "_");
-const okFile = (id: string) => path.join(DIR, `${safe(id)}.json`);
-const failFile = (id: string) => path.join(DIR, `${safe(id)}.failed.json`);
-
-async function readJson<T>(file: string): Promise<T | undefined> {
-  try {
-    return JSON.parse(await fs.readFile(file, "utf8")) as T;
-  } catch {
-    return undefined;
-  }
-}
-
-async function writeJson(file: string, data: unknown) {
-  await fs.mkdir(DIR, { recursive: true });
-  const tmp = `${file}.${process.pid}.${Math.random().toString(36).slice(2)}.tmp`;
-  await fs.writeFile(tmp, JSON.stringify(data, null, 1));
-  await fs.rename(tmp, file);
-}
+// Postgres tables when DATABASE_URL is set, otherwise data/explainers/<id>.json and <id>.failed.json.
+const explainers = docs<CacheEntry>("explainers", { dir: dataDir("explainers"), name: (id) => `${safeName(id)}.json` });
+const failures = docs<FailureEntry>("explainer_failures", { dir: dataDir("explainers"), name: (id) => `${safeName(id)}.failed.json` });
 
 const SYSTEM = `You write short animated explainers for arXiv papers, in the style of 3Blue1Brown: a dark canvas, a few bright colours, one idea per scene, visuals that build the intuition rather than restate the text.
 
@@ -122,8 +105,8 @@ export async function callExplainer(paper: Paper): Promise<Reply> {
 }
 
 /** Is there room in the budget for this paper's worst-case call? */
-export function canAffordExplainer(paper: Paper) {
-  const { spentUsd, budgetUsd } = budgetStatus();
+export async function canAffordExplainer(paper: Paper) {
+  const { spentUsd, budgetUsd } = await budgetStatus();
   return spentUsd + worstCaseUsd(CLAUDE_MODEL, estimateTokens(SYSTEM + userPrompt(paper)), MAX_TOKENS) <= budgetUsd;
 }
 
@@ -157,13 +140,13 @@ export async function saveGeneration(id: string, data: Generation, model: string
     explainer,
     summary: { tldr, keyPoints },
   };
-  await writeJson(okFile(id), entry);
+  await explainers.put(id, entry);
   return toResult(entry);
 }
 
 /** The cached explainer for a paper, if one has been generated. */
 export async function cachedExplainer(id: string): Promise<ExplainerResult | undefined> {
-  const cached = await readJson<CacheEntry>(okFile(id));
+  const cached = (await explainers.get(id))?.value;
   return cached && toResult(cached);
 }
 
@@ -182,7 +165,7 @@ export async function regenerateExplainer(paper: Paper): Promise<ExplainerResult
   const parsed = interpretReply(reply);
   if ("error" in parsed) {
     const failure: FailureEntry = { id: paper.id, at: Date.now(), reason: parsed.error, reply: reply.text, model: reply.model };
-    await writeJson(failFile(paper.id), failure).catch(() => {});
+    await failures.put(paper.id, failure).catch(() => {});
     return { status: "fallback", reason: "failed" };
   }
   return saveGeneration(paper.id, parsed.data, reply.model);
@@ -202,7 +185,7 @@ export async function explainerWithoutGenerating(paper: Paper): Promise<Explaine
 
   if (process.env.RABBITHOLE_FIXTURES === "1") return { status: "fallback", reason: "unavailable" };
 
-  const failed = await readJson<FailureEntry>(failFile(paper.id));
+  const failed = (await failures.get(paper.id))?.value;
   if (failed?.reply) {
     // A reply we couldn't use before may be salvageable now; costs nothing to try.
     const salvaged = interpret(failed.reply);

@@ -1,6 +1,6 @@
 import "server-only";
 import Anthropic from "@anthropic-ai/sdk";
-import { actualUsd, estimateTokens, noteApiResult, record, reserve, worstCaseUsd } from "./budget";
+import { actualUsd, claudeEnabled, estimateTokens, noteApiResult, reserve, worstCaseUsd } from "./budget";
 
 /**
  * The ONLY place the app talks to Claude. Every call goes through the $10
@@ -13,7 +13,7 @@ export const CLAUDE_MODEL = process.env.CLAUDE_MODEL ?? "claude-opus-5-5";
 /** Thrown when no API key is configured; callers fall back like for budget errors. */
 export class ClaudeUnavailableError extends Error {
   constructor() {
-    super("ANTHROPIC_API_KEY is not set");
+    super(process.env.RABBITHOLE_CLAUDE === "off" ? "Claude is switched off (RABBITHOLE_CLAUDE=off)" : "ANTHROPIC_API_KEY is not set");
     this.name = "ClaudeUnavailableError";
   }
 }
@@ -21,7 +21,7 @@ export class ClaudeUnavailableError extends Error {
 // Created on first use so the app (and its fallbacks) still work without a key.
 let client: Anthropic | undefined;
 function getClient() {
-  if (!process.env.ANTHROPIC_API_KEY) throw new ClaudeUnavailableError();
+  if (!claudeEnabled()) throw new ClaudeUnavailableError();
   return (client ??= new Anthropic()); // reads ANTHROPIC_API_KEY from .env.local
 }
 
@@ -31,11 +31,11 @@ export async function callClaude(route: string, params: CreateParams): Promise<A
   const model = params.model ?? CLAUDE_MODEL;
   const anthropic = getClient();
   const inputEstimate = estimateTokens(JSON.stringify({ system: params.system, messages: params.messages, tools: params.tools }));
-  const release = reserve(worstCaseUsd(model, inputEstimate, params.max_tokens));
+  const reservation = await reserve(worstCaseUsd(model, inputEstimate, params.max_tokens));
 
   try {
     const response = await anthropic.messages.create({ ...params, model });
-    record(route, actualUsd(model, response.usage));
+    await reservation.record(route, actualUsd(model, response.usage));
     noteApiResult(true);
     return response;
   } catch (err) {
@@ -43,7 +43,7 @@ export async function callClaude(route: string, params: CreateParams): Promise<A
     if (err instanceof Anthropic.APIError && isAccountProblem(err)) noteApiResult(false);
     throw err;
   } finally {
-    release();
+    await reservation.release();
   }
 }
 

@@ -1,0 +1,23 @@
+# Local Postgres for development and the database tests.
+#   docker compose up -d db
+#   export DATABASE_URL=postgres://rabbithole:rabbithole@localhost:54329/rabbithole
+#   npm run db:migrate && npm run db:seed
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: rabbithole
+      POSTGRES_PASSWORD: rabbithole
+      POSTGRES_DB: rabbithole
+    ports:
+      - "127.0.0.1:54329:5432"
+    volumes:
+      - rabbithole-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rabbithole"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  rabbithole-db:

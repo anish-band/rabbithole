@@ -15,7 +15,10 @@
     "eval:rank:build": "node --conditions=react-server --import tsx scripts/eval/rank-build.ts",
     "eval:rank": "node --conditions=react-server --import tsx scripts/eval/rank.ts",
     "eval:faithfulness": "node --conditions=react-server --import tsx scripts/eval/faithfulness.ts",
-    "load:feed": "node scripts/load/feed.mjs"
+    "load:feed": "node scripts/load/feed.mjs",
+    "db:migrate": "node --conditions=react-server --import tsx scripts/db/setup.ts",
+    "db:seed": "node --conditions=react-server --import tsx scripts/db/setup.ts --seed",
+    "test:db": "TEST_DATABASE_URL=${TEST_DATABASE_URL:-postgres://rabbithole:rabbithole@localhost:54329/rabbithole} node --import tsx --test src/lib/db/db.test.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^1.13.0",
@@ -24,6 +27,7 @@
     "katex": "^0.19.1",
     "lucide-react": "^1.79.0",
     "next": "16.4.6",
+    "postgres": "^4.1.1",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "server-only": "^0.0.1",

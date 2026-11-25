@@ -37,7 +37,7 @@ const JUDGE_MODEL = "claude-haiku-5-5";
 const JUDGE_VERSION = 1;
 const CALL_GAP_MS = 3_500;
 
-const startSpent = budgetStatus().spentUsd;
+let startSpent: number | undefined;
 /** Spend from earlier runs of this task (eval/faithfulness/spend.json), so the cap covers the whole task. */
 const priorSpend = (() => {
   try {
@@ -46,8 +46,13 @@ const priorSpend = (() => {
     return 0;
   }
 })();
-const taskSpend = () => priorSpend + budgetStatus().spentUsd - startSpent;
-const saveSpend = () => writeJson("spend.json", { usd: Number(taskSpend().toFixed(6)), capUsd: TASK_CAP_USD });
+// Measured from the first check, which runs before the first call.
+const taskSpend = async () => {
+  const { spentUsd } = await budgetStatus();
+  startSpent ??= spentUsd;
+  return priorSpend + spentUsd - startSpent;
+};
+const saveSpend = async () => writeJson("spend.json", { usd: Number((await taskSpend()).toFixed(6)), capUsd: TASK_CAP_USD });
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const arg = (name: string) => {
   const i = process.argv.indexOf(`--${name}`);
@@ -58,9 +63,10 @@ const writeJson = (name: string, data: unknown) => {
   fs.mkdirSync(path.dirname(path.join(DIR, name)), { recursive: true });
   fs.writeFileSync(path.join(DIR, name), `${JSON.stringify(data, null, 1)}\n`);
 };
-function checkCap() {
-  saveSpend();
-  if (taskSpend() > TASK_CAP_USD - SAFETY_USD) throw new Error(`task spend cap reached ($${taskSpend().toFixed(4)})`);
+async function checkCap() {
+  await saveSpend();
+  const spent = await taskSpend();
+  if (spent > TASK_CAP_USD - SAFETY_USD) throw new Error(`task spend cap reached ($${spent.toFixed(4)})`);
 }
 
 type CacheEntry = { id: string; promptVersion: number; explainer: { scenes: { caption: string; elements: Parameters<typeof sceneLabels>[0] }[] }; summary: ExplainerSnapshot["summary"] };
@@ -95,11 +101,11 @@ async function regenerate(ids: string[]): Promise<string[]> {
   if (ids.length > MAX_REGENERATE) throw new Error(`regenerate at most ${MAX_REGENERATE} papers (asked for ${ids.length})`);
   const done: string[] = [];
   for (const id of ids) {
-    checkCap();
+    await checkCap();
     const paper = await knownPaper(id);
     if (!paper) throw new Error(`unknown paper ${id}`);
     const result = await regenerateExplainer(paper);
-    console.log(`regenerated ${id}: ${result.status}${result.status === "fallback" ? ` (${result.reason})` : ""} · task spend $${taskSpend().toFixed(4)}`);
+    console.log(`regenerated ${id}: ${result.status}${result.status === "fallback" ? ` (${result.reason})` : ""} · task spend $${(await taskSpend()).toFixed(4)}`);
     if (result.status === "ready") done.push(id);
   }
   if (done.length === 0) throw new Error("no regeneration succeeded");
@@ -144,7 +150,7 @@ const claimKey = (s: ExplainerSnapshot) =>
 async function judge(s: ExplainerSnapshot, cache: Record<string, Judged[]>): Promise<Judged[]> {
   const key = claimKey(s);
   if (cache[key]) return cache[key];
-  checkCap();
+  await checkCap();
   const claims = extractClaims(s);
   const list = claims.map((c, i) => `[${i + 1}] (${c.kind}${c.scene ? `, scene ${c.scene}` : ""}) ${c.text}`).join("\n");
   const message = await callClaude("eval-faithfulness", {
@@ -255,13 +261,13 @@ async function main() {
     fs.writeFileSync(path.join(DIR, `report-${single}.md`), lines.join("\n"));
     console.log(lines.join("\n"));
   }
-  saveSpend();
-  console.log(`\ntask spend so far: $${taskSpend().toFixed(4)} (cap $${TASK_CAP_USD})`);
+  await saveSpend();
+  console.log(`\ntask spend so far: $${(await taskSpend()).toFixed(4)} (cap $${TASK_CAP_USD})`);
 }
 
-main().catch((err) => {
+main().catch(async (err) => {
   console.error(err instanceof Error ? err.message : err);
-  saveSpend();
-  console.log(`task spend so far: $${taskSpend().toFixed(4)} (cap $${TASK_CAP_USD})`);
+  await saveSpend();
+  console.log(`task spend so far: $${(await taskSpend()).toFixed(4)} (cap $${TASK_CAP_USD})`);
   process.exit(1);
 });
