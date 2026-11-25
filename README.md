@@ -62,6 +62,17 @@ npm run dev                  # http://localhost:3000
 
 It works without an API key too: moods fall back to keyword search, and every paper gets the animated title card instead of a full explainer.
 
+### With Postgres (optional)
+
+By default the spend ledger and caches live in `data/`, which is fine for one server process. To run several instances, put them in Postgres:
+
+```bash
+docker compose up -d db
+echo 'DATABASE_URL=postgres://rabbithole:rabbithole@localhost:54329/rabbithole' >> .env.local
+npm run db:seed      # migrates, then copies data/ in (spend carries over, so the cap never resets)
+npm run test:db      # includes the test that 50 parallel reservations never pass the cap
+```
+
 ## How good is the feed?
 
 An offline eval (`npm run eval:rank`) scores the first page for 30 moods against relevance labels, on a frozen pool of 322 cached arXiv papers. CI fails if the scores drop.
