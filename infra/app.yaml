@@ -1,7 +1,7 @@
 AWSTemplateFormatVersion: "2010-09-09"
 Description: >-
-  Rabbithole on AWS within the free tier: one arm64 Lambda (container image) behind a
-  public function URL, Neon Postgres outside AWS, CloudWatch alarms and a dashboard,
+  Rabbithole on AWS within the free tier: CloudFront in front of one arm64 Lambda
+  (container image, via its function URL) and an S3 bucket of static files, Neon Postgres outside AWS, CloudWatch alarms and a dashboard,
   a $1 budget with a kill switch, and a GitHub OIDC role for deploys. See docs/deploy.md.
 
 Parameters:
@@ -25,8 +25,10 @@ Parameters:
     Description: Set to false if the account already has token.actions.githubusercontent.com.
   MaxConcurrency:
     Type: Number
-    Default: 3
-    Description: Reserved concurrency; caps cost if the URL is hammered (and keeps DB connections low).
+    Default: 10
+    Description: >-
+      Reserved concurrency; caps cost if the site is hammered (and keeps DB connections low).
+      A page load makes ~5 dynamic requests (static files come from CloudFront), so keep this above that.
   MonthlyBudgetUsd:
     Type: Number
     Default: 1
@@ -104,6 +106,80 @@ Resources:
       Action: lambda:InvokeFunction
       Principal: "*"
       InvokedViaFunctionUrl: true
+
+  # ---------- CDN: CloudFront in front; static files from S3, the rest from the function ----------
+  StaticBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "rabbithole-static-${AWS::AccountId}-${AWS::Region}"
+      OwnershipControls:
+        Rules: [{ ObjectOwnership: BucketOwnerEnforced }]
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  StaticOriginAccess:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: rabbithole-static
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  StaticBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref StaticBucket
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Sid: CloudFrontReadsStaticFiles
+            Effect: Allow
+            Principal: { Service: cloudfront.amazonaws.com }
+            Action: s3:GetObject
+            Resource: !Sub "${StaticBucket.Arn}/*"
+            Condition:
+              StringEquals:
+                "AWS:SourceArn": !Sub "arn:aws:cloudfront::${AWS::AccountId}:distribution/${Distribution}"
+
+  Distribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        Comment: rabbithole
+        HttpVersion: http2and3
+        PriceClass: PriceClass_100
+        Origins:
+          - Id: app
+            # https://<id>.lambda-url.<region>.on.aws/ -> <id>.lambda-url.<region>.on.aws
+            DomainName: !Select [2, !Split ["/", !GetAtt FunctionUrl.FunctionUrl]]
+            CustomOriginConfig:
+              OriginProtocolPolicy: https-only
+              OriginSSLProtocols: [TLSv1.2]
+          - Id: static
+            DomainName: !GetAtt StaticBucket.RegionalDomainName
+            OriginAccessControlId: !GetAtt StaticOriginAccess.Id
+            S3OriginConfig: { OriginAccessIdentity: "" }
+        DefaultCacheBehavior:
+          TargetOriginId: app
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD, OPTIONS, PUT, PATCH, POST, DELETE]
+          CachedMethods: [GET, HEAD]
+          Compress: true
+          CachePolicyId: 4135ea2d-6df8-44a3-9df3-4b5a84be39ad # Managed-CachingDisabled
+          OriginRequestPolicyId: b689b0a8-53d0-40ab-baf2-68738e2966ac # Managed-AllViewerExceptHostHeader
+        CacheBehaviors:
+          - PathPattern: /_next/static/*
+            TargetOriginId: static
+            ViewerProtocolPolicy: redirect-to-https
+            AllowedMethods: [GET, HEAD]
+            CachedMethods: [GET, HEAD]
+            Compress: true
+            CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6 # Managed-CachingOptimized
 
   # ---------- alerts ----------
   AlertsTopic:
@@ -367,11 +443,22 @@ Resources:
               - Effect: Allow
                 Action: [lambda:UpdateFunctionCode, lambda:GetFunction, lambda:GetFunctionConfiguration, lambda:GetFunctionUrlConfig]
                 Resource: !GetAtt Function.Arn
+              - Effect: Allow
+                Action: [s3:PutObject, s3:GetObject]
+                Resource: !Sub "${StaticBucket.Arn}/*"
+              - Effect: Allow
+                Action: s3:ListBucket
+                Resource: !GetAtt StaticBucket.Arn
 
 Outputs:
   Url:
-    Description: The public URL.
+    Description: The public URL (CloudFront).
+    Value: !Sub "https://${Distribution.DomainName}/"
+  FunctionUrl:
+    Description: The function's own URL (no CDN; static files would go through Lambda).
     Value: !GetAtt FunctionUrl.FunctionUrl
+  StaticBucket:
+    Value: !Ref StaticBucket
   DeployRoleArn:
     Description: Set as the AWS_DEPLOY_ROLE_ARN repository variable for CI deploys.
     Value: !GetAtt DeployRole.Arn
