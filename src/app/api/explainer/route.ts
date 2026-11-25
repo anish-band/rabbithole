@@ -1,6 +1,7 @@
 import { connection } from "next/server";
 import { knownPaper } from "@/lib/arxiv/known";
 import { getExplainer } from "@/lib/explainer/worker";
+import { metric } from "@/lib/observability";
 
 /** New-style (2611.31241v2) and old-style (math/0601001) arXiv ids. */
 const ARXIV_ID = /^(\d{4}\.\d{4,5}|[a-z-]+(\.[A-Z]{2})?\/\d{7})(v\d+)?$/;
@@ -21,5 +22,8 @@ export async function GET(request: Request) {
   const paper = await knownPaper(id);
   if (!paper) return Response.json({ error: "Unknown paper" }, { status: 404 });
 
-  return Response.json(await getExplainer(paper));
+  const result = await getExplainer(paper);
+  if (result.status === "ready") metric("ExplainerServed", 1, { source: result.source });
+  else metric("ExplainerFallback", 1, { reason: result.reason });
+  return Response.json(result);
 }

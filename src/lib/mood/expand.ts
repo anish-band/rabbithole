@@ -2,6 +2,7 @@ import "server-only";
 import crypto from "crypto";
 import { callClaude, textOf } from "@/lib/claude";
 import { dataDir, docs } from "@/lib/db/docs";
+import { log, metric } from "@/lib/observability";
 import { cleanCategories, cleanKeywords, fallbackPlan, normalizeMood, type MoodPlan } from "./query";
 
 /**
@@ -90,7 +91,8 @@ export async function expandMood(rawMood: string): Promise<MoodPlan> {
       await writeCache(mood, plan).catch(() => {});
       return plan;
     } catch (err) {
-      console.warn(`[mood] falling back for "${mood}":`, err instanceof Error ? err.message : err);
+      log("warn", "mood.fallback", { error: err instanceof Error ? err.message : String(err) });
+      metric("MoodFallback");
       return fallbackPlan(mood);
     } finally {
       inFlight.delete(mood);

@@ -1,5 +1,6 @@
 import { getFeedPage } from "@/lib/feed/server";
 import { parseFeedRequest } from "@/lib/feed/validate";
+import { log, metric } from "@/lib/observability";
 
 /** Signals are capped at 300 ids per list; anything far beyond that is not from our client. */
 const MAX_BODY_CHARS = 64_000;
@@ -18,11 +19,14 @@ export async function POST(request: Request) {
   } catch {
     return Response.json({ error: "Invalid JSON" }, { status: 400 });
   }
+  const started = Date.now();
   try {
     const page = await getFeedPage(parseFeedRequest(body));
+    metric("FeedLatency", Date.now() - started, { papers: page.papers.length, mood: Boolean(page.mood) });
     return Response.json(page);
   } catch (err) {
-    console.error("[feed]", err);
+    metric("FeedError");
+    log("error", "feed.failed", { error: err instanceof Error ? err.message : String(err), ms: Date.now() - started });
     return Response.json({ error: "Couldn't reach arXiv. Try again in a moment." }, { status: 502 });
   }
 }
