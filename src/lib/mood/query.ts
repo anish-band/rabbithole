@@ -14,7 +14,7 @@ export type MoodPlan = {
 };
 
 const STOPWORDS = new Set(
-  "a an and are about anything any for from i im i'm in into is it like me mood my of on or papers paper please show some something stuff that the things to want with".split(" "),
+  "a an and are about anything any for from how i im i'm in into is it like me mood my of on or papers paper please show some something stuff that the things to using want what why with".split(" "),
 );
 const CATEGORY = /^[a-z-]{2,12}(\.[A-Za-z-]{2,6})?$/;
 
@@ -33,10 +33,25 @@ export function cleanKeywords(words: string[], max = 5): string[] {
 
 export const cleanCategories = (codes: string[]) => [...new Set(codes.filter((c) => CATEGORY.test(c)))].slice(0, 6);
 
-/** No Claude: search for the mood's own words. */
+/** Most searches a plan makes; matches what Claude plans use. */
+const MAX_GROUPS = 4;
+
+/**
+ * No Claude: search for the mood's own words. Every word at once is too strict
+ * for longer moods (one missing word and nothing matches), so 3+ words also
+ * get overlapping pairs: neighbours first, as they're most often a phrase. A
+ * search never drops below two words; the ranker sorts out the broader pool.
+ */
 export function fallbackPlan(mood: string): MoodPlan {
   const words = cleanKeywords([normalizeMood(mood)]);
-  return { label: mood.trim().slice(0, 40), keywords: words.length ? [words] : [], categories: [], source: "fallback" };
+  const groups: string[][] = words.length ? [words] : [];
+  if (words.length >= 3) {
+    const pairs: string[][] = [];
+    for (let gap = 1; gap < words.length; gap++)
+      for (let i = 0; i + gap < words.length; i++) pairs.push([words[i], words[i + gap]]);
+    groups.push(...pairs.slice(0, MAX_GROUPS - 1));
+  }
+  return { label: mood.trim().slice(0, 40), keywords: groups, categories: [], source: "fallback" };
 }
 
 /** Build the arXiv `search_query` for one keyword group. */
