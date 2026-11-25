@@ -73,6 +73,8 @@ npm run db:seed      # migrates, then copies data/ in (spend carries over, so th
 npm run test:db      # includes the test that 50 parallel reservations never pass the cap
 ```
 
+Once you've moved to Postgres, stay on it: spend recorded there isn't copied back to `data/spend.json`, so going back to file mode would undercount what's been spent.
+
 ## How good is the feed?
 
 An offline eval (`npm run eval:rank`) scores the first page for 30 moods against relevance labels, on a frozen pool of 322 cached arXiv papers. CI fails if the scores drop.
