@@ -1,7 +1,8 @@
 import "server-only";
-import path from "path";
 import { knownPaper } from "@/lib/arxiv/known";
 import type { Paper } from "@/lib/arxiv/types";
+import { claudeEnabled } from "@/lib/budget";
+import { dataDir } from "@/lib/db/docs";
 import { FileQueue } from "@/lib/queue/file-queue";
 import {
   PROMPT_VERSION,
@@ -23,7 +24,7 @@ import { deadReasonToFallback, runExplainerJob, type ExplainerJob } from "./job"
  * keeps going after a request gives up, and jobs left behind by a crash or
  * restart are picked up the next time it runs.
  */
-const queue = new FileQueue<ExplainerJob>(path.join(process.cwd(), "data", "queue", "explainers"));
+const queue = new FileQueue<ExplainerJob>(dataDir("queue", "explainers"));
 const OWNER = `${process.pid}-${Math.random().toString(36).slice(2, 8)}`;
 /** Two at a time: the paper on screen and the next one. */
 const CONCURRENCY = 2;
@@ -103,6 +104,8 @@ function startWorker() {
 export async function getExplainer(paper: Paper): Promise<ExplainerResult> {
   const ready = await explainerWithoutGenerating(paper);
   if (ready) return ready;
+  // Switched off (no key, or RABBITHOLE_CLAUDE=off on a public deploy): cached explainers only.
+  if (!claudeEnabled()) return { status: "fallback", reason: "unavailable" };
 
   const key = jobKey(paper.id);
   const job = await queue.enqueue(key, { paperId: paper.id });

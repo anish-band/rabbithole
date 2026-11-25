@@ -1,7 +1,8 @@
 import "server-only";
 import crypto from "crypto";
-import fs from "fs/promises";
-import path from "path";
+import { db, hasDatabase } from "@/lib/db/client";
+import { dataDir, docs } from "@/lib/db/docs";
+import { claimSlot } from "@/lib/db/throttle";
 import { parseAtomFeed } from "./parse";
 import type { Paper, SearchOptions, SearchResult } from "./types";
 
@@ -10,8 +11,9 @@ import type { Paper, SearchOptions, SearchResult } from "./types";
  *
  * - Throttled to at most one request every 3 seconds (arXiv's published limit),
  *   shared by every caller in this process (state lives on globalThis so dev
- *   HMR and separately bundled routes share one queue).
- * - Responses are cached on disk in data/arxiv/. Search results expire after
+ *   HMR and separately bundled routes share one queue) and, with a database,
+ *   by every instance (a shared slot in Postgres).
+ * - Responses are cached (Postgres, or on disk in data/arxiv/). Search results expire after
  *   SEARCH_TTL_MS; lookups by ID never expire. Empty results are never cached.
  * - Identical concurrent requests share one in-flight fetch.
  */
@@ -20,7 +22,7 @@ const API_URL = "https://export.arxiv.org/api/query";
 const MIN_INTERVAL_MS = 3_000;
 const REQUEST_TIMEOUT_MS = 30_000;
 const SEARCH_TTL_MS = 6 * 60 * 60 * 1000;
-const CACHE_DIR = path.join(process.cwd(), "data", "arxiv");
+const cache = docs<string>("arxiv_cache", { dir: dataDir("arxiv"), name: (key) => `${key}.xml`, raw: true });
 const USER_AGENT = "rabbithole/0.1 (personal arXiv reader)";
 
 type ThrottleState = {
@@ -39,7 +41,7 @@ const state = (globalForArxiv.__arxivThrottle ??= {
 /** Run fn after the previous request finished and at least 3 s have passed since it started. */
 function throttled<T>(fn: () => Promise<T>): Promise<T> {
   const run = state.queue.then(async () => {
-    const wait = state.lastRequestAt + MIN_INTERVAL_MS - Date.now();
+    const wait = hasDatabase() ? await sharedWait() : state.lastRequestAt + MIN_INTERVAL_MS - Date.now();
     if (wait > 0) await new Promise((r) => setTimeout(r, wait));
     state.lastRequestAt = Date.now();
     return fn();
@@ -48,30 +50,32 @@ function throttled<T>(fn: () => Promise<T>): Promise<T> {
   return run;
 }
 
-async function readCache(key: string, ttlMs: number | null): Promise<string | null> {
-  const file = path.join(CACHE_DIR, `${key}.xml`);
+/** Wait for this request's slot in the cross-instance schedule; local spacing if the database is unreachable. */
+async function sharedWait() {
   try {
-    if (ttlMs !== null) {
-      const { mtimeMs } = await fs.stat(file);
-      if (Date.now() - mtimeMs > ttlMs) return null;
-    }
-    return await fs.readFile(file, "utf8");
+    return await claimSlot(db(), MIN_INTERVAL_MS);
+  } catch (err) {
+    console.warn("[arxiv] shared throttle unavailable, spacing locally:", err instanceof Error ? err.message : err);
+    return state.lastRequestAt + MIN_INTERVAL_MS - Date.now();
+  }
+}
+
+async function readCache(key: string, ttlMs: number | null): Promise<string | null> {
+  try {
+    const hit = await cache.get(key);
+    if (!hit || (ttlMs !== null && Date.now() - hit.updatedAt > ttlMs)) return null;
+    return hit.value;
   } catch {
     return null;
   }
 }
 
-/** Atomic write with a unique temp file. Failures are logged, never thrown: the data was fetched fine. */
+/** Failures are logged, never thrown: the data was fetched fine. */
 async function writeCache(key: string, xml: string) {
-  const file = path.join(CACHE_DIR, `${key}.xml`);
-  const tmp = `${file}.${process.pid}.${crypto.randomUUID()}.tmp`;
   try {
-    await fs.mkdir(CACHE_DIR, { recursive: true });
-    await fs.writeFile(tmp, xml);
-    await fs.rename(tmp, file);
+    await cache.put(key, xml);
   } catch (err) {
     console.warn("[arxiv] cache write failed:", err instanceof Error ? err.message : err);
-    await fs.rm(tmp, { force: true }).catch(() => undefined);
   }
 }
 
