@@ -2,9 +2,10 @@ name: Deploy
 
 # After CI passes on main, build the arm64 image, push it, point the Lambda at
 # it, and check /api/health; on a failed check, roll back to the previous image.
-# Does nothing until the repository variable AWS_DEPLOY_ROLE_ARN is set (an
-# output of the app stack; see docs/deploy.md). Infrastructure changes
-# (infra/*.yaml) are deployed by hand with `npm run deploy`.
+# Does nothing until the repository variable DEPLOY_ENABLED is "true" and the
+# secret AWS_DEPLOY_ROLE_ARN is set (an output of the app stack; see
+# docs/deploy.md). The account id is masked in logs (this repo is public).
+# Infrastructure changes (infra/*.yaml) are deployed by hand with `npm run deploy`.
 on:
   workflow_run:
     workflows: [CI]
@@ -22,7 +23,7 @@ concurrency:
 
 jobs:
   deploy:
-    if: vars.AWS_DEPLOY_ROLE_ARN != '' && (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
+    if: vars.DEPLOY_ENABLED == 'true' && (github.event_name == 'workflow_dispatch' || github.event.workflow_run.conclusion == 'success')
     runs-on: ubuntu-24.04-arm
     timeout-minutes: 20
     env:
@@ -49,8 +50,12 @@ jobs:
 
       - uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
           aws-region: ${{ env.AWS_REGION }}
+          mask-aws-account-id: true
+
+      - name: Mask the account id
+        run: echo "::add-mask::$(aws sts get-caller-identity --query Account --output text)"
 
       - id: ecr
         uses: aws-actions/amazon-ecr-login@v2

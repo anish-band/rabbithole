@@ -52,7 +52,11 @@ AWS Budget ($1/month) ──exceeded──▶ SNS ──▶ kill-switch Lambda �
 
    It prints the public URL, the dashboard link and the deploy role ARN.
 3. Confirm the subscription email from AWS SNS. Alarms and budget alerts go there.
-4. **CI deploys:** add a repository variable `AWS_DEPLOY_ROLE_ARN` set to the printed role ARN (Settings → Secrets and variables → Actions → Variables). From then on, every green CI run on `main` deploys through GitHub OIDC. No AWS keys are stored in GitHub.
+4. **CI deploys:** in Settings → Secrets and variables → Actions:
+   - add a **secret** `AWS_DEPLOY_ROLE_ARN` set to the printed role ARN (a secret, so the account id stays out of public logs)
+   - add a **variable** `DEPLOY_ENABLED` set to `true`
+
+   From then on, every green CI run on `main` deploys through GitHub OIDC. No AWS keys are stored in GitHub.
 
 After that:
 - **App changes** deploy automatically on merge.
