@@ -70,6 +70,17 @@ jobs:
           docker push "$REPO:$TAG"
           echo "uri=$REPO:$TAG" >> "$GITHUB_OUTPUT"
 
+      # Static files are served by CloudFront from S3; upload them (from the image, so they
+      # match the server) before the new server goes live. Old files are kept.
+      - name: Upload static files
+        run: |
+          ACCOUNT=$(aws sts get-caller-identity --query Account --output text)
+          CID=$(docker create "${{ steps.image.outputs.uri }}")
+          docker cp "$CID:/app/.next/static" ./static-out
+          docker rm "$CID" > /dev/null
+          aws s3 sync ./static-out "s3://rabbithole-static-$ACCOUNT-$AWS_REGION/_next/static" \
+            --cache-control "public,max-age=31536000,immutable" --only-show-errors
+
       - name: Update the function
         id: update
         run: |
@@ -81,6 +92,7 @@ jobs:
         id: health
         run: |
           URL=$(aws lambda get-function-url-config --function-name rabbithole --query FunctionUrl --output text)
+          # The function directly: CloudFront only adds caching for static files in front of it.
           for i in 1 2 3 4 5; do
             if curl -fsS --max-time 30 "${URL%/}/api/health"; then echo; exit 0; fi
             sleep 6
