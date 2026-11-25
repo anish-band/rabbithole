@@ -115,11 +115,20 @@ Resources:
       Topics: [!Ref AlertsTopic, !Ref KillSwitchTopic]
       PolicyDocument:
         Version: "2012-10-17"
+        # SNS requires one resource per statement.
         Statement:
-          - Effect: Allow
+          - Sid: AlertsFromBudgetsAndAlarms
+            Effect: Allow
             Principal: { Service: [budgets.amazonaws.com, cloudwatch.amazonaws.com] }
             Action: sns:Publish
-            Resource: [!Ref AlertsTopic, !Ref KillSwitchTopic]
+            Resource: !Ref AlertsTopic
+            Condition:
+              StringEquals: { "aws:SourceAccount": !Ref AWS::AccountId }
+          - Sid: KillSwitchFromBudgets
+            Effect: Allow
+            Principal: { Service: budgets.amazonaws.com }
+            Action: sns:Publish
+            Resource: !Ref KillSwitchTopic
             Condition:
               StringEquals: { "aws:SourceAccount": !Ref AWS::AccountId }
 
