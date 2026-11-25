@@ -21,6 +21,21 @@ jobs:
     env:
       CI: "true"
       NEXT_TELEMETRY_DISABLED: "1"
+    # Postgres for the database tests (#24): the budget ledger's concurrency test runs against it.
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: rabbithole
+          POSTGRES_PASSWORD: rabbithole
+          POSTGRES_DB: rabbithole
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U rabbithole"
+          --health-interval 2s
+          --health-timeout 3s
+          --health-retries 20
     steps:
       - uses: actions/checkout@v4
 
@@ -36,6 +51,11 @@ jobs:
 
       - name: Unit tests
         run: npm test
+
+      - name: Database tests (Postgres)
+        run: npm run test:db
+        env:
+          TEST_DATABASE_URL: postgres://rabbithole:rabbithole@localhost:5432/rabbithole
 
       # Local embedding model (~23 MB from Hugging Face) and the pool's embeddings.
       - name: Cache embeddings
