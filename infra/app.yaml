@@ -95,6 +95,15 @@ Resources:
       Principal: "*"
       FunctionUrlAuthType: NONE
 
+  # Public function URLs also need InvokeFunction, limited to calls that come through the URL.
+  FunctionUrlInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref Function
+      Action: lambda:InvokeFunction
+      Principal: "*"
+      InvokedViaFunctionUrl: true
+
   # ---------- alerts ----------
   AlertsTopic:
     Type: AWS::SNS::Topic
