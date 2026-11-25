@@ -11,7 +11,7 @@ import { after, before, describe, test } from "node:test";
 import { connect, type Sql } from "./client";
 import { PgDocs } from "./docs";
 import { BudgetExceededError, FileLedger, PgLedger } from "./ledger";
-import { migrate } from "./migrations";
+import { MIGRATIONS, migrate } from "./migrations";
 import { claimSlot } from "./throttle";
 
 const URL = process.env.TEST_DATABASE_URL;
@@ -39,7 +39,7 @@ describe("postgres backend", { skip: !URL && "TEST_DATABASE_URL not set" }, () =
     await admin.unsafe(`create schema ${schema}`);
     sql = inSchema(schema, 60);
     await assertIsolated(sql, schema);
-    assert.deepEqual(await migrate(sql), ["001_init"]);
+    assert.deepEqual(await migrate(sql), MIGRATIONS.map((m) => m.id));
   });
 
   after(async () => {
