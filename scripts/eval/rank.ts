@@ -10,7 +10,7 @@
 import fs from "node:fs";
 import { WEIGHTS, type Weights } from "@/lib/rank/score";
 import { categoryCoverage, mean, ndcgAt, precisionAt, retrieve } from "@/lib/eval/rank-metrics";
-import { SYSTEMS, embedAll, evalNow, file, loadInputs, readJson, run, writeJson, type Ctx, type SystemName } from "./rank-lib";
+import { SYSTEMS, embedAll, evalNow, file, loadInputs, planFor, readJson, run, writeJson, type Ctx, type SystemName } from "./rank-lib";
 
 /** Allowed drop before --check fails (absolute, on a 0–1 scale). */
 const TOLERANCE = 0.02;
@@ -33,7 +33,7 @@ async function main() {
     const ranked = run(ctx, mood, system, weights);
     const relevant = Object.keys(grades);
     const candidates =
-      system === "rank whole pool" ? new Set(pool.map((p) => p.id)) : new Set(retrieve(pool, system === PRODUCTION ? (plans[mood].claude ?? plans[mood].fallback) : plans[mood].fallback).map((p) => p.id));
+      system === "rank whole pool" ? new Set(pool.map((p) => p.id)) : new Set(retrieve(pool, planFor(plans, mood, system)).map((p) => p.id));
     const judgedSet = new Set(judged);
     const top10 = ranked.slice(0, 10);
     return {

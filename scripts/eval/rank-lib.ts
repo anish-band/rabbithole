@@ -41,13 +41,17 @@ export async function embedAll(pool: PoolPaper[], moods: string[]) {
 
 export type Ctx = Awaited<ReturnType<typeof embedAll>> & { pool: PoolPaper[]; plans: Plans; now: number };
 
+/**
+ * The plan a system searches with. The Claude plan is frozen (it costs money);
+ * the keyword fallback is free, deterministic code, so it runs live and the
+ * eval measures changes to it.
+ */
+export const planFor = (plans: Plans, mood: string, system: SystemName): MoodPlan =>
+  system === "claude plan → rank" ? (plans[mood]?.claude ?? fallbackPlan(mood)) : fallbackPlan(mood);
+
 /** Ranked ids for one mood under one system (deterministic: no jitter). */
 export function run(ctx: Ctx, mood: string, system: SystemName, weights?: Partial<Weights>): string[] {
-  const plan = ctx.plans[mood];
-  const candidates =
-    system === "rank whole pool"
-      ? ctx.pool
-      : retrieve(ctx.pool, system === "claude plan → rank" ? (plan?.claude ?? plan?.fallback ?? fallbackPlan(mood)) : (plan?.fallback ?? fallbackPlan(mood)));
+  const candidates = system === "rank whole pool" ? ctx.pool : retrieve(ctx.pool, planFor(ctx.plans, mood, system));
   return rank({
     candidates: candidates.map((p) => ({ item: p.id, id: p.id, vec: ctx.paperVecs.get(p.id)!, published: p.published })),
     mood: ctx.moodVecs.get(mood),
