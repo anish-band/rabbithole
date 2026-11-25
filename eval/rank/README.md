@@ -16,7 +16,7 @@ npm run eval:rank:build      # one-time, resumable setup (the only step that cal
 | `moods.json` | 30 moods | Hand-written to span the pool's topics at different levels of vagueness. |
 | `plans.json` | Each mood's Claude query plan (the keyword fallback is free code, so the eval runs it live) | `expandMood()` (Haiku, through `callClaude()`), the same code the feed uses |
 | `labels.json` | Relevance judgments: 2 = clearly fits, 1 = related, unjudged = 0 | A Haiku judge over each mood's pooled candidates (the union of every system's top 30) |
-| `baseline.json` | The production system's P@8 and nDCG@10 | `--update-baseline` |
+| `baseline.json` | P@8 and nDCG@10 for the Claude plan and the keyword fallback (both guarded by `--check`) | `--update-baseline` |
 
 ## Systems
 
