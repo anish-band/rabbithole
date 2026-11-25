@@ -70,7 +70,8 @@ Resources:
       Code: { ImageUri: !Ref ImageUri }
       Architectures: [arm64]
       MemorySize: 1536
-      Timeout: 30
+      # Generous: a cold instance may embed a page of new papers before answering.
+      Timeout: 60
       ReservedConcurrentExecutions: !Ref MaxConcurrency
       Role: !GetAtt FunctionRole.Arn
       LoggingConfig: { LogGroup: !Ref LogGroup, LogFormat: Text }
